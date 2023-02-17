@@ -1,0 +1,23 @@
+.popup-div {
+    margin-bottom: 1rem;
+    border-color: black;
+    border-style: solid;
+    padding: 0.5rem;
+    border-radius: 20px;
+    border-width: 2px;
+}
+
+.popup-div label {
+    padding-right: 10px;
+}
+
+.card-body {
+    padding: 0.2rem;
+}
+
+.modal-backdrop {
+    z-index: 10;
+}
+.modal {
+    z-index: 15;
+}

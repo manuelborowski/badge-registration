@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        .form-group {
+            margin-bottom: 0;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    {{ super() }}
+    <div class="container-fluid">
+        <div class="center">
+            <div class="container-form">
+                <div id="formio-form"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        let data = {{ data | tojson }};
+    </script>
+    <script type="module" src="/static/js/base/formio.js"></script>
+{% endblock %}

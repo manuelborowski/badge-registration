@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block styles %}
+{% endblock %}
+
+{% block body %}
+<div class="content-section  background-image">
+    <br>
+    <br>
+    <br>
+    <br>
+    <div class="center">
+        <div class="container">
+            <div class="thick-green-border" style="width: 450px">
+                <div class="row">
+                    <h1>Selecteer uw locatie </h1>
+                    {% for location in locations %}
+                        <a href="{{ url_for('register.show', location_key=location.key) }}">Klik hier om aan te melden op volgende locatie: {{ location.locatie }}</a>
+                    {% endfor %}
+                </div>
+                <div class="row">
+                    <h1>Of hier inloggen </h1>
+                </div>
+                <div class="row thick-green-border" >
+                    <form style="width: 100%" method="post" action="{{url_for('auth.login')}}">
+                        {{ form.csrf_token }}
+                        <div style="display: flex; justify-content: space-between">{{ form.username.label }} {{ form.username() }}</div>
+                        <div style="display: flex; justify-content: space-between">{{ form.password.label }} {{ form.password() }}</div>
+                    <br>
+                    <button class="btn btn-default" type="submit" >Aanmelden</button>
+                    </form>
+                </div>
+                <br>
+                <a href="{{ url_for('auth.login_ss') }}"><img src="/static/img/btn_aanmelden_op_smartschool_290x40.png" alt="aanmelden via smartschool"></a>
+            </div>
+        </div>
+    </div>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+</div>
+
+{% endblock %}

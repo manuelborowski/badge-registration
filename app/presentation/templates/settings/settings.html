@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block body %}
+    {{ super() }}
+    <div class="content-section">
+        <div class="center">
+            <div class="container-form">
+                <div id="configuration-settings"></div>
+            </div>
+        </div>
+       </div>
+    <style>
+    .card-header, .form-control, .btn {
+        padding: 0;
+    }
+    .form-group {
+        margin: 0;
+    }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+   {{ super() }}
+    <script>
+    var data = {{ data | tojson }}
+    </script>
+    <script type="module" src="/static/js/project/settings.js"></script>
+{% endblock %}

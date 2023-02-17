@@ -1,0 +1,13 @@
+[Unit]
+Description=uWSGI instance to serve timeslots-generic
+After=network.target
+
+[Service]
+User=aboro
+Group=www-data
+WorkingDirectory=/home/aboro/projects/timeslots-generic
+Environment="PATH=/home/aboro/projects/timeslots-generic/venv/bin"
+ExecStart=/home/aboro/projects/timeslots-generic/venv/bin/python run.py
+
+[Install]
+WantedBy=multi-user.target

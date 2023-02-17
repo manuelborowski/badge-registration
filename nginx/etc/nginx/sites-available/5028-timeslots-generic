@@ -1,0 +1,29 @@
+server {
+    listen 5000;
+    server_name timeslots-generic.ict.campussintursula.be;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://127.0.0.1:5028;
+    }
+
+    location /static {
+        alias /home/aboro/projects/timeslots-generic/app/static;
+        expires 30d;
+    }
+
+    location /socket.io {
+        include proxy_params;
+        proxy_http_version 1.1;
+        proxy_buffering off;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_pass http://127.0.0.1:5028/socket.io;
+    }
+}
+
+server {
+    listen 80;
+    server_name timeslots-generic.ict.campussintursula.be;
+    return 301 https://timeslots-generic.ict.campussintursula.be$request_uri;
+}

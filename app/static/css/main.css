@@ -1,0 +1,218 @@
+
+td.details-control {
+    background: url('../img/details_open.png') no-repeat center center;
+    cursor: pointer;
+}
+tr.details td.details-control {
+    background: url('../img/details_close.png') no-repeat center center;
+}
+
+body {
+    padding-top: 50px;  /*assuming the height of the navbar is 50px */
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.dropdown-menu>li>a {
+    color: #aec251;
+}
+
+.btn-default {
+    background-color: #aec251;
+    font-weight: bold;
+    /* font-size: 16px; */
+}
+
+.background-image {
+  background-image: url("../img/datahub.png");
+  background-position: left;
+  background-repeat: repeat;
+}
+
+.thick-green-border {
+    border-radius: 10px;
+    border: 10px solid #aec251;
+    padding: 30px;
+    background-color: white;
+}
+
+.thin-green-border {
+    border-radius: 10px;
+    border: 2px solid #aec251;
+    padding: 5px;
+    margin-bottom: 5px;
+    background-color: white;
+}
+
+hr.nice-green-line {
+    border-top: 10px solid #d1dc9c;
+    margin-top: -5px;
+    margin-bottom: 10px;
+}
+
+
+.busy-indicator {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+  position: fixed; /* Sit on top of the page content */
+  display: none; /* Hidden by default */
+  width: 500px;
+  height: 500px;
+  top: calc(50% - 250px);
+  left: calc(50% - 250px);
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0); /* Black background with opacity */
+  z-index: 20; /* Specify a stack order in case you're using a different order for other elements */
+  cursor: pointer; /* Add a pointer on hover */
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+figure.imagecaption {
+    padding: 1px;
+    margin: 1px;
+    float: left;
+    border: 1px solid black;
+    display: inline;
+}
+
+figure.selected {
+  background-color: yellow;
+  box-shadow: 0px 12px 22px 1px #333;
+}
+
+.flex-container {
+    display: flex;
+    align-content: stretch;
+    align-items: center;
+}
+
+.flex-container > div {
+    margin-right: 10px;
+}
+
+.bootbox-confirm div div div button.btn-primary{
+    background-color: #aec251;
+    font-weight: bold;
+    font-size: 16px;
+    color: #333;
+    border-color: #ccc;
+    border-color: #adadad;
+    font-weight: bold;
+    font-size: 16px;
+    border: 1px solid transparent;
+}
+
+.bootbox-alert div div div button.btn-primary, .legend-badge{
+    background-color: #aec251;
+    font-weight: bold;
+    font-size: 16px;
+    color: #333;
+    border-color: #ccc;
+    border-color: #adadad;
+    font-weight: bold;
+    font-size: 16px;
+    border: 1px solid transparent;
+}
+
+.tooltip-inner {
+    max-width: 500px;
+    /* If max-width does not work, try using width instead */
+    width: 500px;
+}
+
+.glyphicon {
+    font-size: 20px;
+}
+
+table.dataTable thead th, table.dataTable thead td {
+    padding: 5px;
+}
+
+.single-line {
+    display: flex;
+}
+
+.single-line label {
+    margin-right: 20px;
+    padding-top: 5px;
+}
+
+.default-hidden {
+    display: none;
+}
+
+.school-select {
+    color: #aec251;
+    font-weight: bold;
+    font-size: 20px;
+    padding: 10px 15px;
+    border: 0px;
+    background-color: transparent;
+}
+
+table.dataTable tbody th, table.dataTable tbody td {
+    padding: 1px 1px;
+}
+
+table.dataTable tfoot th {
+    padding: 0px;
+}
+
+.cell-selected {
+	background-color:#ccffcc;
+}
+
+input {
+    margin-top: 5px;
+}
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding: 5px;
+}
+
+.icon-button {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    outline: none;
+    border: 0;
+    background: transparent;
+}
+
+.hidden-template {
+  display: none;
+}
+
+table.dataTable tbody td {
+    padding: 0px;
+}
+
+.celledit-input {
+    width: 100%;
+    margin: 0px;
+}
+
+.noborder {
+    border: none;
+}
+
+@media (min-width: 1200px) {.container-form {
+        max-width: 100%;
+    }
+}
