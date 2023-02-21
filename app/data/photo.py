@@ -1,6 +1,7 @@
 import sys, json, datetime
+import app.data
 from app import log, db
-from sqlalchemy import func
+from sqlalchemy import func, delete
 from sqlalchemy.dialects.mysql import MEDIUMBLOB
 from sqlalchemy_serializer import SerializerMixin
 
@@ -23,31 +24,12 @@ class Photo(db.Model, SerializerMixin):
     changed = db.Column(db.Boolean, default=False)
 
 
-def add_photo(data = {}, commit=True):
-    try:
-        photo = Photo()
-        photo.filename = data['filename']
-        photo.photo = data['photo']
-        photo.timestamp = datetime.datetime.now()
-        db.session.add(photo)
-        if commit:
-            db.session.commit()
-        return photo
-    except Exception as e:
-        db.session.rollback()
-        log.error(f'{sys._getframe().f_code.co_name}: {e}')
-    return None
+def photo_add(data = {}, commit=True):
+    return app.data.models.add_single(Photo, data, commit, timestamp=True)
 
 
-def add_photos(data = []):
-    try:
-        for d in data:
-            add_photo(d, commit=False)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        log.error(f'{sys._getframe().f_code.co_name}: {e}')
-    return None
+def photo_add_m(data=[]):
+    return app.data.models.add_multiple(Photo, data, timestamp=True)
 
 
 def commit():
@@ -59,7 +41,11 @@ def commit():
     return None
 
 
-def update_photo(filename, data, commit=True):
+def photo_update_m(data = []):
+    return app.data.models.update_multiple(Photo, data, timestamp=True)
+
+
+def photo_update(filename, data, commit=True):
     try:
         q = db.session.query(Photo)
         q = q.filter(Photo.filename == filename)
@@ -104,15 +90,11 @@ def flag_wisa_photos(data = []):
     return None
 
 
-# def get_photos_size():
-
-
-
-def delete_photos(ids=None):
+def photo_delete_m(ids=None):
     try:
-        for id in ids:
-            photo = get_first_photo({"id": id})
-            db.session.delete(photo)
+        if ids:
+            delete_statement = delete(Photo).where(Photo.id.in_(ids))
+            db.session.execute(delete_statement)
         db.session.commit()
     except Exception as e:
         db.session.rollback()
@@ -120,7 +102,7 @@ def delete_photos(ids=None):
     return None
 
 
-def get_photos(data={}, special={}, order_by=None, first=False, count=False):
+def photo_get_m(data={}, special={}, order_by=None, first=False, count=False):
     try:
         q = Photo.query
         for k, v in data.items():
@@ -140,16 +122,16 @@ def get_photos(data={}, special={}, order_by=None, first=False, count=False):
     return None
 
 
-def get_first_photo(data={}):
+def photo_get(data={}):
     try:
-        user = get_photos(data, first=True)
+        user = photo_get_m(data, first=True)
         return user
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
     return None
 
 
-def get_photos_size():
+def photo_get_size_m():
     try:
         q = db.session.query(Photo.id, Photo.filename, Photo.new, Photo.changed, Photo.delete, func.octet_length(Photo.photo))
         q = q.all()

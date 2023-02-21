@@ -55,7 +55,7 @@ def student_from_wisa_to_database(local_file=None, max=0):
             response_text = response_text.replace(f'"{key.upper()}"', f'"{key}"')
         data = json.loads(response_text)
         # (Photo.id, Photo.filename, Photo.new, Photo.changed, Photo.delete, func.octet_length(Photo.photo))
-        saved_photos = {p[1]: p[0] for p in mphoto.get_photos_size()}
+        saved_photos = {p[1]: p[0] for p in mphoto.photo_get_size_m()}
         db_students = {} # the current, active students in the database
         # default previous and current schoolyear
         _, current_schoolyear, prev_schoolyear = msettings.get_changed_schoolyear()

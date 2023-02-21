@@ -16,8 +16,14 @@ class Registration(db.Model, SerializerMixin):
 
     username = db.Column(db.String(256), default='')
     location = db.Column(db.String(256), default='')
-    time_in = db.Column(db.DateTime)
-    time_out = db.Column(db.DateTime)
+    time_in = db.Column(db.DateTime, default=None)
+    time_out = db.Column(db.DateTime, default=None)
+
+    new = db.Column(db.Boolean, default=True)
+    delete = db.Column(db.Boolean, default=False)
+    active = db.Column(db.Boolean, default=True)
+    enable = db.Column(db.Boolean, default=True)
+    changed = db.Column(db.Boolean, default=False)
 
 
 def get_columns():
@@ -28,27 +34,27 @@ def commit():
     return app.data.models.commit()
 
 
-def Registration_add(data = {}, commit=True):
+def registration_add(data = {}, commit=True):
     return app.data.models.add_single(Registration, data, commit)
 
 
-def Registration_add_m(data = []):
+def registration_add_m(data = []):
     return app.data.models.add_multiple(Registration, data)
 
 
-def Registration_update(Registration, data={}, commit=True):
-    return app.data.models.update_single(Registration, Registration, data, commit)
+def registration_update(registration, data={}, commit=True):
+    return app.data.models.update_single(Registration, registration, data, commit)
 
 
-def Registration_delete_m(ids=[], Registrations=[]):
-    return app.data.models.delete_multiple(ids, Registrations)
+def registration_delete_m(ids=[], registrations=[]):
+    return app.data.models.delete_multiple(ids, registrations)
 
 
-def Registration_get_m(data={}, fields=[], order_by=None, first=False, count=False, active=True):
+def registration_get_m(data={}, fields=[], order_by=None, first=False, count=False, active=True):
     return app.data.models.get_multiple(Registration, data=data, fields=fields, order_by=order_by, first=first, count=count, active=active)
 
 
-def Registration_get(data={}):
+def registration_get(data={}):
     return app.data.models.get_first_single(Registration, data)
 
 
@@ -59,7 +65,7 @@ def Registration_get(data={}):
 # property#1: the first property changed
 # property#2: ....
 # overwrite: if True, overwrite the changed field, else extend the changed field
-def Registration_change_m(data=[], overwrite=False):
+def registration_change_m(data=[], overwrite=False):
     try:
         for d in data:
             Registration = d['Registration']
@@ -86,7 +92,7 @@ def Registration_change_m(data=[], overwrite=False):
     return None
 
 
-def Registration_flag_m(data=[]):
+def registration_flag_m(data=[]):
     try:
         for d in data:
             Registration = d['Registration']

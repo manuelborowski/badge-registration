@@ -50,13 +50,15 @@ def commit():
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
 
 
-def add_single(model, data = {}, commit=True):
+def add_single(model, data={}, commit=True, timestamp=False):
     try:
         obj = model()
         for k, v in data.items():
             if hasattr(obj, k):
                 if getattr(model, k).expression.type.python_type == type(v):
                     setattr(obj, k, v.strip() if isinstance(v, str) else v)
+        if timestamp:
+            obj.timestamp = datetime.datetime.now()
         db.session.add(obj)
         if commit:
             db.session.commit()
@@ -67,10 +69,10 @@ def add_single(model, data = {}, commit=True):
     return None
 
 
-def add_multiple(model, data = []):
+def add_multiple(model, data=[], timestamp=False):
     try:
         for d in data:
-            add_single(model, d, commit=False)
+            add_single(model, d, commit=False, timestamp=timestamp)
         db.session.commit()
     except Exception as e:
         db.session.rollback()
@@ -78,12 +80,14 @@ def add_multiple(model, data = []):
     return None
 
 
-def update_single(model, obj, data={}, commit=True):
+def update_single(model, obj, data={}, commit=True, timestamp=False):
     try:
         for k, v in data.items():
             if hasattr(obj, k):
                 if getattr(model, k).expression.type.python_type == type(v) or isinstance(getattr(model, k).expression.type, db.Date) and v == None:
                     setattr(obj, k, v.strip() if isinstance(v, str) else v)
+        if timestamp:
+            obj.timestamp = datetime.datetime.now()
         if commit:
             db.session.commit()
         return obj
@@ -93,10 +97,23 @@ def update_single(model, obj, data={}, commit=True):
     return None
 
 
-def delete_multiple(ids=[], objs=[]):
+def update_multiple(model, data = [], timestamp=False):
+    try:
+        for d in data:
+            item = d["item"]
+            del(d["item"])
+            update_single(model, item, d, commit=False, timestamp=timestamp)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+    return None
+
+
+def delete_multiple(model, ids=[], objs=[]):
     try:
         for id in ids:
-            obj = get_first_single({"id": id})
+            obj = get_first_single(model, {"id": id})
             db.session.delete(obj)
         for obj in objs:
             db.session.delete(obj)
@@ -119,6 +136,9 @@ def get_multiple(model, data={}, fields=[], order_by=None, first=False, count=Fa
             if k[0] == '-':
                 if hasattr(model, k[1::]):
                     q = q.filter(getattr(model, k[1::]) != v)
+            elif k[0] == '>':
+                if hasattr(model, k[1::]):
+                    q = q.filter(getattr(model, k[1::]) > v)
             else:
                 if hasattr(model, k):
                     q = q.filter(getattr(model, k) == v)

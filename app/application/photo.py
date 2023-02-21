@@ -13,7 +13,7 @@ log.addFilter(MyLogFilter())
 
 
 def photo_get(id):
-    photo = mphoto.get_first_photo({"id": id})
+    photo = mphoto.photo_get({"id": id})
     return base64.b64encode(photo.photo)
 
 #to have access to the photo's, mount the windowsshare
@@ -39,7 +39,7 @@ def cron_task_photo(opaque=None):
             nbr_processed = 0
             nbr_deleted = 0
 
-            photo_sizes = mphoto.get_photos_size()
+            photo_sizes = mphoto.photo_get_size_m()
             # (Photo.id, Photo.filename, Photo.new, Photo.changed, Photo.delete, func.octet_length(Photo.photo)
             saved_photos = {p[1]: {'size': p[5], 'new': p[2], 'changed': p[3], 'delete': p[4]} for p in photo_sizes}
 
@@ -47,7 +47,7 @@ def cron_task_photo(opaque=None):
                 base_name = os.path.basename(mapped_photo)
                 if base_name not in saved_photos:
                     photo = open(mapped_photo, 'rb').read()  # new photo
-                    mphoto.add_photo({'filename': base_name, 'photo': photo}, commit=False)
+                    mphoto.photo_add({'filename': base_name, 'photo': photo}, commit=False)
                     nbr_new += 1
                     if verbose_logging:
                         log.info(f'New photo {base_name}')
@@ -55,20 +55,20 @@ def cron_task_photo(opaque=None):
                     mapped_size = os.path.getsize(mapped_photo)
                     if mapped_size != saved_photos[base_name]['size']:
                         photo = open(mapped_photo, 'rb').read()  # updated photo, different size
-                        mphoto.update_photo(base_name, {'photo': photo, 'new': False, 'changed': True, 'delete': False}, commit=False)
+                        mphoto.photo_update(base_name, {'photo': photo, 'new': False, 'changed': True, 'delete': False}, commit=False)
                         nbr_updated += 1
                         if verbose_logging:
                             log.info(f'Updated photo {base_name}')
                     else:
                         if saved_photos[base_name]['new'] or saved_photos[base_name]['changed'] or saved_photos[base_name]['delete']:
-                            mphoto.update_photo(base_name, {'new': False, 'changed': False, 'delete': False}, commit=False)  # no update
+                            mphoto.photo_update(base_name, {'new': False, 'changed': False, 'delete': False}, commit=False)  # no update
                     del (saved_photos[base_name])
                 nbr_processed += 1
                 if (nbr_processed % 100) == 0:
                     log.info(f'get_photos: processed {nbr_processed} photo\'s...')
             for filename, item in saved_photos.items():
                 if not saved_photos[filename]['delete']:
-                    mphoto.update_photo(filename, {'new': False, 'changed': False, 'delete': True}, commit=False)  # delete only when not already marked as delete
+                    mphoto.photo_update(filename, {'new': False, 'changed': False, 'delete': True}, commit=False)  # delete only when not already marked as delete
                     nbr_deleted += 1
             mphoto.commit()
             log.info(f'get_new_photos: processed: {nbr_processed}, new {nbr_new}, updated {nbr_updated}, deleted {nbr_deleted}')
