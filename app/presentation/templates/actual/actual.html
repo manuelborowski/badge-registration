@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">
+{% endblock %}
+
+{% block body %}
+    {{ super() }}
+    <div class="flex-container">
+        {% for f in filters %}
+            {% if f.type == "select" %}
+                <div class="form-group "><label class="control-label" for="{{ f.name }}"
+                                                title="{{ f.tt }}">{{ f.label }}</label>
+                    <select class="form-control table-filter" id="{{ f.name }}"
+                            name="{{ f.name }} {{ f.multiple }}">
+                        {% for o in f.choices %}
+                            <option value="{{ o[0] }}"
+                                    {% if o[0] == f.default %}selected{% endif %}>{{ o[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+        {% endfor %}
+        <button class="btn btn-danger" type="button" onclick="clear_filter_setting()">Reset</button>
+    </div>
+    <hr class="nice-green-line">
+    <div id="canvas"></div>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+        <script type="module" src="/static/js/project/actual.js"></script>
+{% endblock %}

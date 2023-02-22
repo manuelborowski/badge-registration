@@ -1,5 +1,5 @@
-import datetime, sys
-from app.data import student as mstudent, registration as mregistration, utils as mutils
+import datetime, sys, base64
+from app.data import student as mstudent, registration as mregistration, utils as mutils, settings as msettings, photo as mphoto
 
 
 #logging on file level
@@ -28,8 +28,26 @@ def registration_add(rfid, location):
                 return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "time": mutils.datetime_to_dutch_datetime_string(now)}}
             log.info(f'{sys._getframe().f_code.co_name}:  {student.username} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}
-        log.info(f'{sys._getframe().f_code.co_name}:  {student.username} not found in database')
+        log.info(f'{sys._getframe().f_code.co_name}:  {rfid} not found in database')
         return {"status": False, "data": f"Kan student met rfid {rfid} niet vinden in database"}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": f"Fout, {str(e)}"}
+
+
+def get_all_actual_registrations(location):
+    try:
+        now = datetime.datetime.now()
+        today = now.replace(hour=0, minute=0, second=0)
+        registrations = mregistration.registration_get_m({"location": location, ">time_in": today, "time_out": None}, order_by="id")
+        data = []
+        for registration in registrations:
+            student = mstudent.student_get({"username": registration.username})
+            photo = mphoto.photo_get({"id": student.foto_id})
+            data.append({
+                "naam": f"{student.voornaam} {student.naam}",
+                "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''
+            })
+        return data
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')

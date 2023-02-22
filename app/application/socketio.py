@@ -63,5 +63,5 @@ def broadcast_message(msg):
     emit('send_to_client', msg, broadcast=True, namespace='/')
 
 
-def send_to_client(client_sid, type, msg):
-    emit(type, msg, room=client_sid)
+def send_to_client(msg):
+    emit("send_to_client", msg)

@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css"/>
     <link rel='stylesheet' href='https://cdn.form.io/formiojs/formio.full.min.css'>
     <link href="{{ url_for('static', filename = 'css/main.css') }}" rel="stylesheet">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/datahub.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/badge-registration.png') }}">
     {{ JSGlue.include() }}
     {% block styles %}
         <style>
@@ -49,16 +49,8 @@
                 {% if current_user.is_authenticated %}
                     <ul class="navbar-nav mr-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('student.show') }}">Studenten</a>
+                        <a class="nav-link" href="{{ url_for('actual.show') }}">Overzicht</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('staff.show') }}">Personeel</a>
-                    </li>
-                    {% if  current_user.is_at_least_supervisor %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('cardpresso.show') }}">Cardpresso</a>
-                    </li>
-                    {% endif %}
                     {% if  current_user.is_at_least_admin %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('user.show') }}">Gebruikers</a>

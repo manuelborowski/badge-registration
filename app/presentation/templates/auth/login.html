@@ -14,7 +14,7 @@
                 <div class="row">
                     <h1>Selecteer uw locatie </h1>
                     {% for location in locations %}
-                        <a href="{{ url_for('register.show', location_key=location.key) }}">Klik hier om aan te melden op volgende locatie: {{ location.locatie }}</a>
+                        <a href="{{ url_for('register.show', location_key=location.key) }}">Klik hier om te registreren op volgende locatie: {{ location.locatie }}</a>
                     {% endfor %}
                 </div>
                 <div class="row">

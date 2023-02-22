@@ -158,8 +158,9 @@ else:
             return func(*args, **kwargs)
         return decorated_view
 
-    from app.presentation.view import auth, user, settings,  api, warning, student, staff, cardpresso, register
+    from app.presentation.view import auth, user, settings,  api, warning, student, staff, cardpresso, register, actual
     flask_app.register_blueprint(api.api)
+    flask_app.register_blueprint(actual.actual)
     flask_app.register_blueprint(register.register)
     flask_app.register_blueprint(auth.auth)
     flask_app.register_blueprint(user.user)

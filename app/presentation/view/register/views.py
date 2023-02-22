@@ -2,7 +2,7 @@ from flask import render_template
 from . import register
 from app import flask_app
 from flask_login import login_required
-from app.application import registration as mregistration
+from app.application import registration as mregistration, socketio as msocketio
 import json
 
 
@@ -14,6 +14,7 @@ def show(location_key):
 @register.route('/registration/new/<string:location_key>/<string:badge_code>', methods=['GET'])
 def registration_new(location_key, badge_code):
     ret = mregistration.registration_add(badge_code, location_key)
+    msocketio.broadcast_message({'type': 'update-actual-status', 'data': {'status': True, "message": "dit is een test"}})
     return(json.dumps(ret))
 
 
