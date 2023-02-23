@@ -62,54 +62,6 @@ def registration_get(data={}):
     return app.data.models.get_first_single(Registration, data)
 
 
-
-# data is a list, with:
-# Registration: the ORM-Registration-object
-# changed: a list of properties that are changed
-# property#1: the first property changed
-# property#2: ....
-# overwrite: if True, overwrite the changed field, else extend the changed field
-def registration_change_m(data=[], overwrite=False):
-    try:
-        for d in data:
-            Registration = d['Registration']
-            for property in d['changed']:
-                v = d[property]
-                if hasattr(Registration, property):
-                    if getattr(Registration, property).expression.type.python_type == type(v):
-                        setattr(Registration, property, v.strip() if isinstance(v, str) else v)
-            # if the Registration is new, do not set the changed flag in order not to confuse other modules that need to process the Registrations (new has priority over changed)
-            if Registration.new:
-                Registration.changed = ''
-            else:
-                if overwrite:
-                    Registration.changed = json.dumps(d['changed'])
-                else:
-                    changed = json.loads(Registration.changed) if Registration.changed != '' else []
-                    changed.extend(d['changed'])
-                    changed = list(set(changed))
-                    Registration.changed = json.dumps(changed)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        log.error(f'{sys._getframe().f_code.co_name}: {e}')
-    return None
-
-
-def registration_flag_m(data=[]):
-    try:
-        for d in data:
-            Registration = d['Registration']
-            for k, v in d.items():
-                if hasattr(Registration, k):
-                    setattr(Registration, k, v)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        log.error(f'{sys._getframe().f_code.co_name}: {e}')
-    return None
-
-
 ############ Registration overview list #########
 def pre_sql_query():
     return db.session.query(Registration).filter(Registration.active == True)

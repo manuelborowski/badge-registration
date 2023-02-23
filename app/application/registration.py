@@ -1,5 +1,5 @@
 import datetime, sys, base64
-from app.data import student as mstudent, registration as mregistration, utils as mutils, settings as msettings, photo as mphoto
+from app.data import student as mstudent, registration as mregistration, utils as mutils, photo as mphoto
 
 
 #logging on file level

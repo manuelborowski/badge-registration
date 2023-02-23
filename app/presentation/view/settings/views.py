@@ -2,7 +2,7 @@ from flask import render_template
 from flask_login import login_required
 
 from app import admin_required
-from app.application import socketio as msocketio, event as mevent
+from app.application import socketio as msocketio
 from . import settings
 from app.application import settings as msettings, cron as mcron, formio as mformio, cron_table
 import json

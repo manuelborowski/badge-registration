@@ -59,37 +59,6 @@ def photo_update(filename, data, commit=True):
     return None
 
 
-def update_wisa_photos(data = []):
-    try:
-        for d in data:
-            photo = d['photo']
-            for property in d['changed']:
-                v = d[property]
-                if hasattr(photo, property):
-                    if getattr(Photo, property).expression.type.python_type == type(v):
-                        setattr(photo, property, v.strip() if isinstance(v, str) else v)
-            photo.changed = json.dumps(d['changed'])
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        log.error(f'{sys._getframe().f_code.co_name}: {e}')
-    return None
-
-
-def flag_wisa_photos(data = []):
-    try:
-        for d in data:
-            photo = d['photo']
-            photo.new = d['new']
-            photo.changed = d['changed']
-            photo.delete = d['delete']
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        log.error(f'{sys._getframe().f_code.co_name}: {e}')
-    return None
-
-
 def photo_delete_m(ids=None):
     try:
         if ids:

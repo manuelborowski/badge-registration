@@ -20,10 +20,11 @@ flask_app.config.from_object(app_config[config_name])
 flask_app.config.from_pyfile('config.py')
 
 # V0.1: based on school-data-hub V1.3
+# 0.2: first working version
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.1', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.2', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()
@@ -158,16 +159,13 @@ else:
             return func(*args, **kwargs)
         return decorated_view
 
-    from app.presentation.view import auth, user, settings,  api, warning, student, staff, cardpresso, register, actual
+    from app.presentation.view import auth, user, settings,  api, warning, register, actual
     flask_app.register_blueprint(api.api)
     flask_app.register_blueprint(actual.actual)
     flask_app.register_blueprint(register.register)
     flask_app.register_blueprint(auth.auth)
     flask_app.register_blueprint(user.user)
     flask_app.register_blueprint(settings.settings)
-    flask_app.register_blueprint(student.student)
-    flask_app.register_blueprint(staff.staff)
-    flask_app.register_blueprint(cardpresso.cardpresso)
     flask_app.register_blueprint(warning.warning)
 
     @flask_app.errorhandler(403)

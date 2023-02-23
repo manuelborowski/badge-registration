@@ -2,7 +2,6 @@ from app import ap_scheduler, flask_app
 import datetime
 from apscheduler.triggers.cron import CronTrigger
 from app.application.settings import get_configuration_setting, subscribe_handle_button_clicked, subscribe_handle_update_setting
-from app.application.test import test_cron_task
 from . import cron_table
 
 #logging on file level
@@ -17,7 +16,6 @@ CRON_TASK = 'datacollector-task'
 
 def cron_task():
     settings = get_configuration_setting('cron-enable-modules')
-    test_cron_task()
     for task in cron_table:
         if task[0] in settings and settings[task[0]]:
             task[1]()

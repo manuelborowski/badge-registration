@@ -1,15 +1,11 @@
-from . import actual
-from app import log
-from flask import redirect, url_for, request, render_template
-from flask_login import login_required, current_user
-from app.data.datatables import DatatableConfig
-from app.presentation.view import datatables
-from app.application import socketio as msocketio, settings as msettings, cardpresso as mcardpresso, location as mlocation, registration as mregistration
-
 import sys
-import app.data
-import app.application.student
-from app.application.settings import get_configuration_setting
+
+from flask import render_template
+from flask_login import login_required
+
+from app import log
+from app.application import socketio as msocketio, location as mlocation, registration as mregistration
+from . import actual
 
 
 @actual.route('/actual/show', methods=['POST', 'GET'])
