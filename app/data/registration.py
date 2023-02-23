@@ -46,6 +46,10 @@ def registration_update(registration, data={}, commit=True):
     return app.data.models.update_single(Registration, registration, data, commit)
 
 
+def registration_update_m(data={}, commit=True):
+    return app.data.models.update_multiple(Registration, data, commit)
+
+
 def registration_delete_m(ids=[], registrations=[]):
     return app.data.models.delete_multiple(ids, registrations)
 

@@ -22,7 +22,7 @@
                 </div>
             {% endif %}
         {% endfor %}
-        <button class="btn btn-danger" type="button" onclick="clear_filter_setting()">Reset</button>
+        <button class="btn btn-danger" type="button" onclick="remove_all_photos()">Alles verwijderen?</button>
     </div>
     <hr class="nice-green-line">
     <div id="canvas"></div>
@@ -31,5 +31,10 @@
 
 {% block scripts %}
     {{ super() }}
-        <script type="module" src="/static/js/project/actual.js"></script>
+    <script type="module">
+        import {remove_all_photos} from "/static/js/project/actual.js";
+        window.remove_all_photos = remove_all_photos;
+    </script>
+
+    <script type="module" src="/static/js/project/actual.js"></script>
 {% endblock %}

@@ -14,7 +14,20 @@ def show(location_key):
 @register.route('/registration/new/<string:location_key>/<string:badge_code>', methods=['GET'])
 def registration_new(location_key, badge_code):
     ret = mregistration.registration_add(badge_code, location_key)
-    msocketio.broadcast_message({'type': 'update-actual-status', 'data': {'status': True, "message": "dit is een test"}})
+    if ret["status"]:
+        actual_status_data = {
+            "status": True,
+            "action": "add" if ret["data"]["direction"] == "in" else "delete",
+            "data": [{
+                "username": ret["data"]["username"],
+                "naam": ret["data"]["naam"],
+                "voornaam": ret["data"]["voornaam"],
+                "photo": ret["data"]["photo"],
+            }]
+        }
+    else:
+        actual_status_data = {"status": False, "data": ret["data"]}
+    msocketio.broadcast_message({'type': 'update-actual-status', 'data': actual_status_data})
     return(json.dumps(ret))
 
 

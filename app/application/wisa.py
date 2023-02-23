@@ -1,6 +1,5 @@
 from app import flask_app
 from app.data import student as mstudent, photo as mphoto, settings as msettings, staff as mstaff
-from app.data.utils import belgische_gemeenten
 from app.application import warning as mwarning
 import datetime
 import json, requests, sys
@@ -102,7 +101,7 @@ def student_from_wisa_to_database(local_file=None, max=0):
             if not item: # skip empty items
                 continue
             orig_geboorteplaats = None
-            if "," in item['geboorteplaats'] or "-" in item['geboorteplaats'] and item['geboorteplaats'] not in belgische_gemeenten:
+            if "," in item['geboorteplaats'] or "-" in item['geboorteplaats']:
                 if "," in item['geboorteplaats']:   # sometimes, geboorteplaats is mis-used to also include geboorteland.
                     gl = item['geboorteplaats'].split(",")
                 else:

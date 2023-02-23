@@ -6,7 +6,7 @@ from app.data.datatables import DatatableConfig
 from app.presentation.view import datatables
 from app.application import socketio as msocketio, settings as msettings, cardpresso as mcardpresso, location as mlocation, registration as mregistration
 
-import json
+import sys
 import app.data
 import app.application.student
 from app.application.settings import get_configuration_setting
@@ -20,14 +20,21 @@ def show():
 
 def get_all_actual_registrations(msg, client_sid=None):
     try:
-        print(msg)
         ret = mregistration.get_all_actual_registrations(msg["data"]["location"])
-        msocketio.send_to_client({'type': 'update-actual-status', 'data': {'status': True, 'message': {"action": "add", "data": ret}}})
+        msocketio.send_to_client({'type': 'update-actual-status', 'data': {'status': True, "action": "add", "data": ret}})
     except Exception as e:
         msocketio.send_to_client({'type': 'settings', 'data': {'status': False, 'message': str(e)}})
 
 
+def clear_all_registrations(msg, client_sid=None):
+    try:
+        ret = mregistration.clear_all_registrations(msg["data"]["location"])
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+
+
 msocketio.subscribe_on_type('get-all-actual-registrations', get_all_actual_registrations)
+msocketio.subscribe_on_type('clear-all-registrations', clear_all_registrations)
 
 
 def get_filters():
