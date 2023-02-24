@@ -69,7 +69,7 @@ def login_ss():
                     profile['first_name'] = profile['name']
                     profile['last_name'] = profile['surname']
                     profile['user_type'] = muser.User.USER_TYPE.OAUTH
-                    profile['level'] = muser.User.LEVEL.USER
+                    profile['level'] = msettings.get_configuration_setting("generic-new-via-smartschool-default-level")
                     user = muser.add_user(profile)
                 else:
                     log.info('New users not allowed via smartschool')

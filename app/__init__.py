@@ -23,11 +23,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.2: first working version
 # 0.3: clean-up settings.  Bugfixed empty locations
 # 0.4: badge-registration-popup-delay: make it a setting
+# 0.5: Bugfix Smartschool OAuth2
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.4', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.5', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()

@@ -91,6 +91,8 @@ def set_setting(name, value, id=-1):
 
 default_configuration_settings = {
     'generic-register-popup-delay': (1000, Settings.SETTING_TYPE.E_INT),
+    'generic-new-via-smartschool-default-level': (1, Settings.SETTING_TYPE.E_INT),
+    'generic-new-via-smartschool': (True, Settings.SETTING_TYPE.E_BOOL),
 
     'sdh-inform-emails': ('t1', Settings.SETTING_TYPE.E_STRING),
     'sdh-prev-schoolyear': ('', Settings.SETTING_TYPE.E_STRING),
