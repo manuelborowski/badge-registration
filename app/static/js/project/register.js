@@ -1,6 +1,8 @@
 import {badge_raw2hex} from "../base/decode_rfid.js";
 
-let badge_input = document.querySelector(("#badge-input"))
+let badge_input = document.querySelector("#badge-input");
+let badge_box_element = document.querySelector("#badge-box");
+let badge_box_current_background = badge_box_element.style.background;
 
 export const badge_process_badge = async event => {
     if (event.key === 'Enter') {
@@ -13,17 +15,20 @@ export const badge_process_badge = async event => {
             const ret = await fetch(Flask.url_for('register.registration_new', {location_key: location_key, badge_code: res.code}), {headers: {'x-api-key': api_key,}});
             const status = await ret.json();
             if (status.status) {
+                badge_box_element.style.background = status.data.direction === "in" ? "green" : "blue";
                 msg = `Dag ${status.data.voornaam}, je ${ status.data.direction === "in" ? "komt binnen"  : "gaat buiten" } om ${status.data.time}`;
                 popup_delay = ("popup_delay" in status.data) ? status.data.popup_delay : popup_delay;
             } else {
+                badge_box_element.style.background = "red";
                 msg = status.data;
             }
         } else {
+            badge_box_element.style.background = "red";
             msg = `${res.code} is geen geldige code`;
         }
-        let bb_alert = bootbox.alert(msg);
-        console.log(popup_delay);
-        setTimeout(() => {bb_alert.modal("hide")}, popup_delay);
+        // let bb_alert = bootbox.alert(msg);
+        // setTimeout(() => {bb_alert.modal("hide")}, popup_delay);
+        setTimeout(() => {badge_box_element.style.background = badge_box_current_background}, popup_delay);
     }
 }
 
