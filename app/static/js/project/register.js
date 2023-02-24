@@ -5,6 +5,7 @@ let badge_input = document.querySelector(("#badge-input"))
 export const badge_process_badge = async event => {
     if (event.key === 'Enter') {
         let msg = '';
+        let popup_delay = 2000;
         const res = badge_raw2hex(badge_input.value);
         badge_input.value = '';
 
@@ -13,6 +14,7 @@ export const badge_process_badge = async event => {
             const status = await ret.json();
             if (status.status) {
                 msg = `Dag ${status.data.voornaam}, je ${ status.data.direction === "in" ? "komt binnen"  : "gaat buiten" } om ${status.data.time}`;
+                popup_delay = ("popup_delay" in status.data) ? status.data.popup_delay : popup_delay;
             } else {
                 msg = status.data;
             }
@@ -20,7 +22,8 @@ export const badge_process_badge = async event => {
             msg = `${res.code} is geen geldige code`;
         }
         let bb_alert = bootbox.alert(msg);
-        setTimeout(() => {bb_alert.modal("hide")}, 2000);
+        console.log(popup_delay);
+        setTimeout(() => {bb_alert.modal("hide")}, popup_delay);
     }
 }
 

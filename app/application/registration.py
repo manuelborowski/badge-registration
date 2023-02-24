@@ -1,5 +1,5 @@
 import datetime, sys, base64
-from app.data import student as mstudent, registration as mregistration, utils as mutils, photo as mphoto
+from app.data import student as mstudent, registration as mregistration, utils as mutils, photo as mphoto, settings as msettings
 
 
 #logging on file level
@@ -16,18 +16,19 @@ def registration_add(rfid, location):
         student = mstudent.student_get({"rfid": rfid})
         if student:
             photo = mphoto.photo_get({"id": student.foto_id})
+            popup_delay = msettings.get_configuration_setting("generic-register-popup-delay")
             registrations = mregistration.registration_get_m({"username": student.username, "location": location, ">time_in": today}, order_by="id")
             if registrations:
                 last_registration = registrations[-1]
                 if last_registration.time_out is None:
                     mregistration.registration_update(last_registration, {"time_out": now})
                     log.info(f'{sys._getframe().f_code.co_name}: Badge out, {student.username} at {now}')
-                    return {"status": True, "data": {"direction": "uit", "naam": student.naam, "voornaam": student.voornaam, "username": student.username,
+                    return {"status": True, "data": {"direction": "uit", "naam": student.naam, "voornaam": student.voornaam, "username": student.username, "popup_delay": popup_delay,
                                                      "time":  mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
             registration = mregistration.registration_add({"username": student.username, "location": location, "time_in": now})
             if registration:
                 log.info(f'{sys._getframe().f_code.co_name}: Badge in, {student.username} at {now}')
-                return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "username": student.username,
+                return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "username": student.username, "popup_delay": popup_delay,
                                                  "time": mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
             log.info(f'{sys._getframe().f_code.co_name}:  {student.username} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}

@@ -186,6 +186,49 @@ settings_formio = \
         "tableView": false,
         "components": [
           {
+            "label": "generic",
+            "tableView": false,
+            "key": "generic",
+            "type": "container",
+            "input": true,
+            "components": [
+              {
+                "title": "Algemeen",
+                "theme": "primary",
+                "collapsible": true,
+                "key": "algemeen",
+                "type": "panel",
+                "label": "Smartschool",
+                "collapsed": true,
+                "input": false,
+                "tableView": false,
+                "components": [
+                  {
+                    "label": "Opslaan ",
+                    "showValidations": false,
+                    "theme": "warning",
+                    "tableView": false,
+                    "key": "submit",
+                    "type": "button",
+                    "input": true
+                  },
+                  {
+                    "label": "Registreer-badge-popup vertraging (ms)",
+                    "labelPosition": "left-left",
+                    "tooltip": "Hoe lang (in ms) blijft de popup zichtbaar wanneer een badge wordt geregistreerd",
+                    "tableView": true,
+                    "defaultValue": "1000",
+                    "persistent": false,
+                    "key": "generic-register-popup-delay",
+                    "type": "textfield",
+                    "labelWidth": 40,
+                    "input": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "label": "Cron-generic",
             "tableView": false,
             "key": "cron-generic",
