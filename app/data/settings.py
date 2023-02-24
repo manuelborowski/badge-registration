@@ -90,10 +90,6 @@ def set_setting(name, value, id=-1):
 
 
 default_configuration_settings = {
-    'generic-default-student-code': ('t1', Settings.SETTING_TYPE.E_STRING),
-    'generic-standard-password': ('', Settings.SETTING_TYPE.E_STRING),
-    'generic-new-via-smartschool': (False, Settings.SETTING_TYPE.E_BOOL),
-
     'sdh-inform-emails': ('t1', Settings.SETTING_TYPE.E_STRING),
     'sdh-prev-schoolyear': ('', Settings.SETTING_TYPE.E_STRING),
     'sdh-current-schoolyear': ('', Settings.SETTING_TYPE.E_STRING),
@@ -110,84 +106,8 @@ default_configuration_settings = {
 
     'location-profiles': ({}, Settings.SETTING_TYPE.E_JSON),
 
-    'student-formio-template': ({}, Settings.SETTING_TYPE.E_JSON),
-    'student-datatables-template': ({}, Settings.SETTING_TYPE.E_JSON),
-    'student-max-students-to-view-with-one-click': (5, Settings.SETTING_TYPE.E_INT),
-
-    'staff-formio-template': ({}, Settings.SETTING_TYPE.E_JSON),
-    'staff-datatables-template': ({}, Settings.SETTING_TYPE.E_JSON),
-    'staff-new-staff-email-template': ('', Settings.SETTING_TYPE.E_STRING),
-
-    'cardpresso-formio-template': ({}, Settings.SETTING_TYPE.E_JSON),
-    'cardpresso-datatables-template': ({}, Settings.SETTING_TYPE.E_JSON),
-
     'cron-scheduler-template': ('', Settings.SETTING_TYPE.E_STRING),
-    'cron-enable-update-student-from-wisa': (False, Settings.SETTING_TYPE.E_BOOL),
-    'cron-enable-update-staff-from-wisa': (False, Settings.SETTING_TYPE.E_BOOL),
-    'cron-enable-update-student-photo': (False, Settings.SETTING_TYPE.E_BOOL),
-    'cron-enable-update-vsk-numbers': (False, Settings.SETTING_TYPE.E_BOOL),
-    'cron-enable-update-student-badge': (False, Settings.SETTING_TYPE.E_BOOL),
-    'cron-enable-update-student-rfid': (False, Settings.SETTING_TYPE.E_BOOL),
-    'cron-enable-update-student-ad': (False, Settings.SETTING_TYPE.E_BOOL),
-    'cron-enable-update-staff-ad': (False, Settings.SETTING_TYPE.E_BOOL),
-    'cron-enable-update-student-smartschool': (False, Settings.SETTING_TYPE.E_BOOL),
-    'cron-deactivate-deleted-students': (False, Settings.SETTING_TYPE.E_BOOL),
-    'cron-deactivate-deleted-staff': (False, Settings.SETTING_TYPE.E_BOOL),
-    'cron-clear-changed-year-flag': (False, Settings.SETTING_TYPE.E_BOOL),
     'cron-enable-modules': ({}, Settings.SETTING_TYPE.E_JSON),
-
-    'cron-veyon-scheduler-template': ('', Settings.SETTING_TYPE.E_STRING),
-
-    'smartschool-scheduler-cron': ('', Settings.SETTING_TYPE.E_STRING),
-    'smartschool-teacher-group': ('', Settings.SETTING_TYPE.E_STRING),
-    'smartschool-api-url': ('', Settings.SETTING_TYPE.E_STRING),
-    'smartschool-api-key': ('', Settings.SETTING_TYPE.E_STRING),
-    'smartschool-update-teachers': (False, Settings.SETTING_TYPE.E_BOOL),
-    'smartschool-update-students': (False, Settings.SETTING_TYPE.E_BOOL),
-
-    'cardpresso-scheduler-cron': ('', Settings.SETTING_TYPE.E_STRING),
-    'cardpresso-url': ('', Settings.SETTING_TYPE.E_STRING),
-    'cardpresso-file': ('', Settings.SETTING_TYPE.E_STRING),
-    'cardpresso-login': ('', Settings.SETTING_TYPE.E_STRING),
-    'cardpresso-password': ('', Settings.SETTING_TYPE.E_STRING),
-    'cardpresso-inform-emails': ('', Settings.SETTING_TYPE.E_STRING),
-    'cardpresso-vsk-startnumber': (-1, Settings.SETTING_TYPE.E_INT),
-    'cardpresso-update-students': (False, Settings.SETTING_TYPE.E_BOOL),
-
-    'ad-url': ('', Settings.SETTING_TYPE.E_STRING),
-    'ad-login': ('', Settings.SETTING_TYPE.E_STRING),
-    'ad-password': ('', Settings.SETTING_TYPE.E_STRING),
-    'ad-update-accounts': (False, Settings.SETTING_TYPE.E_BOOL),
-    'ad-schoolyear-changed': (False, Settings.SETTING_TYPE.E_BOOL),
-    'ad-reset-student-password': (False, Settings.SETTING_TYPE.E_BOOL),
-    'ad-verbose-logging': (False, Settings.SETTING_TYPE.E_BOOL),
-    'ad-deactivate-deleled-student': (False, Settings.SETTING_TYPE.E_BOOL),
-    'ad-staff-profiles': ({}, Settings.SETTING_TYPE.E_JSON),
-
-    'papercut-url': ('', Settings.SETTING_TYPE.E_STRING),
-    'papercut-login': ('', Settings.SETTING_TYPE.E_STRING),
-    'papercut-password': ('', Settings.SETTING_TYPE.E_STRING),
-    'papercutscript-update-accounts': (False, Settings.SETTING_TYPE.E_BOOL),
-    'papercut-script-path': ('', Settings.SETTING_TYPE.E_STRING),
-    'papercut-script-pc_get_user_property-ps1': ('', Settings.SETTING_TYPE.E_STRING),
-    'papercut-scripts': ('', Settings.SETTING_TYPE.E_STRING),
-
-    'papercut-server-url': ('', Settings.SETTING_TYPE.E_STRING),
-    'papercut-server-port': ('', Settings.SETTING_TYPE.E_STRING),
-    'papercut-auth-token': ('', Settings.SETTING_TYPE.E_STRING),
-
-    'wisa-url': ('', Settings.SETTING_TYPE.E_STRING),
-    'wisa-login': ('', Settings.SETTING_TYPE.E_STRING),
-    'wisa-password': ('', Settings.SETTING_TYPE.E_STRING),
-    'wisa-student-query': ('', Settings.SETTING_TYPE.E_STRING),
-    'wisa-staff-query': ('', Settings.SETTING_TYPE.E_STRING),
-    'wisa-photo-dir': ('', Settings.SETTING_TYPE.E_STRING),
-    'wisa-schoolyear': ('', Settings.SETTING_TYPE.E_STRING),
-    'wisa-student-use-previous-schoolyear': (False, Settings.SETTING_TYPE.E_BOOL),
-    'wisa-update-teachers': (False, Settings.SETTING_TYPE.E_BOOL),
-    'wisa-update-students': (False, Settings.SETTING_TYPE.E_BOOL),
-
-    'photo-verbose-logging': (False, Settings.SETTING_TYPE.E_BOOL),
 
     'api-keys': ([], Settings.SETTING_TYPE.E_JSON),
 
@@ -198,23 +118,9 @@ default_configuration_settings = {
     'email-enable-send-email': (False, Settings.SETTING_TYPE.E_BOOL),
     'email-new-staff-html': ('', Settings.SETTING_TYPE.E_STRING),
 
-    'test-prepare': (False, Settings.SETTING_TYPE.E_BOOL),
-    'test-wisa-json-list': ('', Settings.SETTING_TYPE.E_STRING),
-    'test-wisa-current-json': ('', Settings.SETTING_TYPE.E_STRING),
-    'test-rfid-start-code': ('', Settings.SETTING_TYPE.E_STRING),
-    'test-staff-prepare': (False, Settings.SETTING_TYPE.E_BOOL),
-    'test-staff-wisa-json-list': ('', Settings.SETTING_TYPE.E_STRING),
-    'test-staff-wisa-current-json': ('', Settings.SETTING_TYPE.E_STRING),
-    'test-staff-rfid-start-code': ('', Settings.SETTING_TYPE.E_STRING),
-
     'popup-new-update-user': ({}, Settings.SETTING_TYPE.E_JSON),
-    'popup-student-teacher-update-password': ({}, Settings.SETTING_TYPE.E_JSON),
-    'popup-database-integrity-check': ({}, Settings.SETTING_TYPE.E_JSON),
-    'popup-student-new-update': ({}, Settings.SETTING_TYPE.E_JSON),
-    'popup-new-update-staff': ({}, Settings.SETTING_TYPE.E_JSON),
 
     'logging-inform-emails': ('', Settings.SETTING_TYPE.E_STRING),
-
 }
 
 
@@ -270,16 +176,6 @@ def get_datatables_config(key):
     return get_configuration_setting(f'{key}-datatables-template')
 
 
-def get_and_increment_default_student_code():
-    try:
-        _, code = get_setting('generic-default-student-code', 1)
-        new_code = f"t{(int(code[1::]) + 1)}"
-        set_setting('generic-default-student-code', new_code, 1)
-        return code
-    except Exception as e:
-        log.error(f'{sys._getframe().f_code.co_name}: {e}')
-
-
 # Lines with # or empty lines are ignored
 def get_list(list_name):
     out = []
@@ -288,20 +184,3 @@ def get_list(list_name):
         settings_list = settings_list.split('\n')
         out = [r.strip() for r in settings_list if '#' not in r and r !=""]
     return out
-
-
-def set_changed_schoolyear(prev, current):
-    set_configuration_setting('sdh-schoolyear-changed', True)
-    set_configuration_setting('sdh-prev-schoolyear', prev)
-    set_configuration_setting('sdh-current-schoolyear', current)
-
-
-def reset_changed_schoolyear():
-    set_configuration_setting('sdh-schoolyear-changed', False)
-
-
-def get_changed_schoolyear():
-    changed = get_configuration_setting('sdh-schoolyear-changed')
-    prev = get_configuration_setting('sdh-prev-schoolyear')
-    current = get_configuration_setting('sdh-current-schoolyear')
-    return changed, prev, current
