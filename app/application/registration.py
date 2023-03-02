@@ -23,12 +23,12 @@ def registration_add(rfid, location):
                 if last_registration.time_out is None:
                     mregistration.registration_update(last_registration, {"time_out": now})
                     log.info(f'{sys._getframe().f_code.co_name}: Badge out, {student.username} at {now}')
-                    return {"status": True, "data": {"direction": "uit", "naam": student.naam, "voornaam": student.voornaam, "username": student.username, "popup_delay": popup_delay,
+                    return {"status": True, "data": {"direction": "uit", "naam": student.naam, "voornaam": student.voornaam, "username": student.username, "popup_delay": popup_delay, "klascode": student.klascode,
                                                      "time":  mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
             registration = mregistration.registration_add({"username": student.username, "location": location, "time_in": now})
             if registration:
                 log.info(f'{sys._getframe().f_code.co_name}: Badge in, {student.username} at {now}')
-                return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "username": student.username, "popup_delay": popup_delay,
+                return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "username": student.username, "popup_delay": popup_delay, "klascode": student.klascode,
                                                  "time": mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
             log.info(f'{sys._getframe().f_code.co_name}:  {student.username} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}
@@ -52,6 +52,7 @@ def get_all_actual_registrations(location):
                 "username": student.username,
                 "naam": student.naam,
                 "voornaam": student.voornaam,
+                "klascode": student.klascode,
                 "photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else ''
             })
         return data

@@ -23,6 +23,8 @@ def registration_new(location_key, badge_code):
                 "naam": ret["data"]["naam"],
                 "voornaam": ret["data"]["voornaam"],
                 "photo": ret["data"]["photo"],
+                "klascode": ret["data"]["klascode"],
+                "popup_delay": ret["data"]["popup_delay"],
             }]
         }
     else:
