@@ -3,7 +3,9 @@ import {socketio} from "../base/socketio.js";
 let location_element = document.querySelector("#filter-location");
 let canvas_element = document.querySelector("#canvas");
 let photo_size_element = document.querySelector("#photo-size-select");
+let nbr_registered_element = document.querySelector("#nbr-registered");
 let photo_size_factor = 100;
+let nbr_registered = 0;
 
 $(document).ready(function () {
     socketio.start(null, null);
@@ -43,11 +45,13 @@ const socketio_update_status = (type, data) => {
                         break;
                     }
                 }
+                update_nbr_registered();
             });
         } else if (data.action === "delete") {
             data.data.forEach(item => {
                 let figures = document.querySelectorAll("." + item.username);
                 figures.forEach(item => {item.remove()});
+                update_nbr_registered(true);
             });
         }
     } else {
@@ -63,6 +67,7 @@ const get_actual_registrations = () => {
     figure.classList.add("fig-group");
     canvas_element.appendChild(figure);
     socketio.send_to_server("get-all-actual-registrations", {location: location_element.value});
+    reset_nbr_registered();
 }
 
 
@@ -74,4 +79,16 @@ export const remove_all_photos = () => {
 const resize_photos = () => {
     photo_size_factor = photo_size_element.value;
     get_actual_registrations();
+}
+
+const update_nbr_registered = (delete_registration = false) => {
+    if (delete_registration) nbr_registered--
+    else nbr_registered++;
+    if (nbr_registered < 0) nbr_registered = 0;
+    nbr_registered_element.value = nbr_registered;
+}
+
+const reset_nbr_registered = () => {
+    nbr_registered = 0;
+    nbr_registered_element.value = nbr_registered;
 }
