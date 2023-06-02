@@ -27,11 +27,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.6: Show status when badging by changing the backgroundcolor for a short amount of time.
 # 0.7: added select to resize photos.  Add classgroup to caption.
 # 0.8: added registered counter
+# 0.9: bugfix, take also changed photo_id into account
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.8', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.9', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()

@@ -22,11 +22,11 @@ def student_load_from_sdh(opaque=None, **kwargs):
             if sdh_students['status']:
                 log.info(f'{sys._getframe().f_code.co_name}, retrieved {len(sdh_students["data"])} students from SDH')
                 db_students = mstudent.student_get_m()
-                username_to_student = {s.username: s for s in db_students}
+                db_username_to_student = {s.username: s for s in db_students}
                 for sdh_student in sdh_students["data"]:
-                    if sdh_student["username"] in username_to_student:
+                    if sdh_student["username"] in db_username_to_student:
                         # check for changed rfid or classgroup
-                        db_student = username_to_student[sdh_student["username"]]
+                        db_student = db_username_to_student[sdh_student["username"]]
                         update = {}
                         if db_student.rfid != sdh_student["rfid"]:
                             update["rfid"] = sdh_student["rfid"]
@@ -34,19 +34,21 @@ def student_load_from_sdh(opaque=None, **kwargs):
                             update["klascode"] = sdh_student["klascode"]
                         if db_student.middag != sdh_student["middag"]:
                             update["middag"] = sdh_student["middag"]
+                        if db_student.foto_id != sdh_student["foto_id"]:
+                            update["foto_id"] = sdh_student["foto_id"]
                         if update:
                             update.update({"item": db_student})
                             updated_students.append(update)
                             log.info(f'{sys._getframe().f_code.co_name}, Update student {db_student.username}, update {update}')
-                        del(username_to_student[sdh_student["username"]])
+                        del(db_username_to_student[sdh_student["username"]])
                     else:
                         new_students.append({"username": sdh_student["username"], "klascode": sdh_student["klascode"], "naam": sdh_student["naam"],
                                              "voornaam": sdh_student["voornaam"], "middag": sdh_student["middag"], "rfid": sdh_student["rfid"], "foto_id": sdh_student["foto_id"]})
                         log.info(f'{sys._getframe().f_code.co_name}, New student {sdh_student["username"]}')
-                deleted_students = [v for (k, v) in username_to_student.items()]
+                deleted_students = [v for (k, v) in db_username_to_student.items()]
                 for student in deleted_students:
                     log.info(f'{sys._getframe().f_code.co_name}, Delete student {student.username}')
-                deleted_photos = [v.foto_id for (k, v) in username_to_student.items()]
+                deleted_photos = [v.foto_id for (k, v) in db_username_to_student.items()]
                 mstudent.student_add_m(new_students)
                 mstudent.student_update_m(updated_students)
                 mstudent.student_delete_m(students=deleted_students)
@@ -63,15 +65,14 @@ def student_load_from_sdh(opaque=None, **kwargs):
         photo_ids = [str(s.foto_id) for s in db_students]
         sliced_photo_ids = mutils.slice_list(photo_ids, 200)
         photos_to_check = []
-        id_to_photo_size = {}
+        db_photo_sizes = mphoto.photo_get_size_m()
+        id_to_photo_size = {p[0]: p[5] for p in db_photo_sizes}
         for slice in sliced_photo_ids:
             res = requests.get(sdh_photo_size_url, params={"ids": ",".join(slice)}, headers={'x-api-key': sdh_key})
             if res.status_code == 200:
                 sdh_photo_data = res.json()
                 if sdh_photo_data["status"]:
                     log.info(f'{sys._getframe().f_code.co_name}, retrieved {len(sdh_photo_data["data"])} photo sizes from SDH')
-                    db_photo_sizes = mphoto.photo_get_size_m()
-                    id_to_photo_size.update({p[0]: p[5] for p in db_photo_sizes})
                     for sdh_photo in sdh_photo_data["data"]:
                         if sdh_photo["id"] in id_to_photo_size:
                             if sdh_photo["size"] != id_to_photo_size[sdh_photo["id"]]:
@@ -114,9 +115,6 @@ def student_load_from_sdh(opaque=None, **kwargs):
                         log.info(f'{sys._getframe().f_code.co_name}, error retrieving photos from SDH, {sdh_photo_data["data"]}')
                 else:
                     log.error(f'{sys._getframe().f_code.co_name}: api call to {sdh_photo_url} returned {res.status_code}')
-
-
-
         log.info(f"{sys._getframe().f_code.co_name}, STOP")
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
