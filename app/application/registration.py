@@ -17,20 +17,20 @@ def registration_add(rfid, location):
         if student:
             photo = mphoto.photo_get({"id": student.foto_id})
             popup_delay = msettings.get_configuration_setting("generic-register-popup-delay")
-            registrations = mregistration.registration_get_m({"username": student.username, "location": location, ">time_in": today}, order_by="id")
+            registrations = mregistration.registration_get_m({"leerlingnummer": student.leerlingnummer, "location": location, ">time_in": today}, order_by="id")
             if registrations:
                 last_registration = registrations[-1]
                 if last_registration.time_out is None:
                     mregistration.registration_update(last_registration, {"time_out": now})
-                    log.info(f'{sys._getframe().f_code.co_name}: Badge out, {student.username} at {now}')
-                    return {"status": True, "data": {"direction": "uit", "naam": student.naam, "voornaam": student.voornaam, "username": student.username, "popup_delay": popup_delay, "klascode": student.klascode,
+                    log.info(f'{sys._getframe().f_code.co_name}: Badge out, {student.leerlingnummer} at {now}')
+                    return {"status": True, "data": {"direction": "uit", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
                                                      "time":  mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
-            registration = mregistration.registration_add({"username": student.username, "location": location, "time_in": now})
+            registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location, "time_in": now})
             if registration:
-                log.info(f'{sys._getframe().f_code.co_name}: Badge in, {student.username} at {now}')
-                return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "username": student.username, "popup_delay": popup_delay, "klascode": student.klascode,
+                log.info(f'{sys._getframe().f_code.co_name}: Badge in, {student.leerlingnummer} at {now}')
+                return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
                                                  "time": mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
-            log.info(f'{sys._getframe().f_code.co_name}:  {student.username} could not make a registration')
+            log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}
         log.info(f'{sys._getframe().f_code.co_name}:  {rfid} not found in database')
         return {"status": False, "data": f"Kan student met rfid {rfid} niet vinden in database"}
@@ -46,10 +46,10 @@ def get_all_actual_registrations(location):
         registrations = mregistration.registration_get_m({"location": location, ">time_in": today, "time_out": None}, order_by="id")
         data = []
         for registration in registrations:
-            student = mstudent.student_get({"username": registration.username})
+            student = mstudent.student_get({"leerlingnummer": registration.leerlingnummer})
             photo = mphoto.photo_get({"id": student.foto_id})
             data.append({
-                "username": student.username,
+                "leerlingnummer": student.leerlingnummer,
                 "naam": student.naam,
                 "voornaam": student.voornaam,
                 "klascode": student.klascode,

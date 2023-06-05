@@ -1,4 +1,4 @@
-﻿/*! CellToggle 0.0.1
+/*! CellToggle 0.0.1
  * ©2021 Manuel Borowski
  */
 

@@ -22,7 +22,7 @@ const socketio_update_status = (type, data) => {
             data.data.forEach(item => {
                 let figures = document.querySelectorAll(".fig-group");
                 let figure = document.createElement("figure");
-                figure.classList.add(item.username);
+                figure.classList.add(item.leerlingnummer);
                 figure.dataset.sort_on = item.klascode + item.naam + item.voornaam;
                 figure.classList.add("fig-group");
                 figure.style.display = "inline-block";
@@ -49,7 +49,7 @@ const socketio_update_status = (type, data) => {
             });
         } else if (data.action === "delete") {
             data.data.forEach(item => {
-                let figures = document.querySelectorAll("." + item.username);
+                let figures = document.querySelectorAll("." + item.leerlingnummer);
                 figures.forEach(item => {item.remove()});
                 update_nbr_registered(true);
             });

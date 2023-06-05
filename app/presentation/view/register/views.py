@@ -19,7 +19,7 @@ def registration_new(location_key, badge_code):
             "status": True,
             "action": "add" if ret["data"]["direction"] == "in" else "delete",
             "data": [{
-                "username": ret["data"]["username"],
+                "leerlingnummer": ret["data"]["leerlingnummer"],
                 "naam": ret["data"]["naam"],
                 "voornaam": ret["data"]["voornaam"],
                 "photo": ret["data"]["photo"],

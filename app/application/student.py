@@ -22,11 +22,11 @@ def student_load_from_sdh(opaque=None, **kwargs):
             if sdh_students['status']:
                 log.info(f'{sys._getframe().f_code.co_name}, retrieved {len(sdh_students["data"])} students from SDH')
                 db_students = mstudent.student_get_m()
-                db_username_to_student = {s.username: s for s in db_students}
+                db_leerlingnummer_to_student = {s.leerlingnummer: s for s in db_students}
                 for sdh_student in sdh_students["data"]:
-                    if sdh_student["username"] in db_username_to_student:
+                    if sdh_student["leerlingnummer"] in db_leerlingnummer_to_student:
                         # check for changed rfid or classgroup
-                        db_student = db_username_to_student[sdh_student["username"]]
+                        db_student = db_leerlingnummer_to_student[sdh_student["leerlingnummer"]]
                         update = {}
                         if db_student.rfid != sdh_student["rfid"]:
                             update["rfid"] = sdh_student["rfid"]
@@ -39,16 +39,16 @@ def student_load_from_sdh(opaque=None, **kwargs):
                         if update:
                             update.update({"item": db_student})
                             updated_students.append(update)
-                            log.info(f'{sys._getframe().f_code.co_name}, Update student {db_student.username}, update {update}')
-                        del(db_username_to_student[sdh_student["username"]])
+                            log.info(f'{sys._getframe().f_code.co_name}, Update student {db_student.leerlingnummer}, update {update}')
+                        del(db_leerlingnummer_to_student[sdh_student["leerlingnummer"]])
                     else:
-                        new_students.append({"username": sdh_student["username"], "klascode": sdh_student["klascode"], "naam": sdh_student["naam"],
+                        new_students.append({"leerlingnummer": sdh_student["leerlingnummer"], "klascode": sdh_student["klascode"], "naam": sdh_student["naam"],
                                              "voornaam": sdh_student["voornaam"], "middag": sdh_student["middag"], "rfid": sdh_student["rfid"], "foto_id": sdh_student["foto_id"]})
-                        log.info(f'{sys._getframe().f_code.co_name}, New student {sdh_student["username"]}')
-                deleted_students = [v for (k, v) in db_username_to_student.items()]
+                        log.info(f'{sys._getframe().f_code.co_name}, New student {sdh_student["leerlingnummer"]}')
+                deleted_students = [v for (k, v) in db_leerlingnummer_to_student.items()]
                 for student in deleted_students:
-                    log.info(f'{sys._getframe().f_code.co_name}, Delete student {student.username}')
-                deleted_photos = [v.foto_id for (k, v) in db_username_to_student.items()]
+                    log.info(f'{sys._getframe().f_code.co_name}, Delete student {student.leerlingnummer}')
+                deleted_photos = [v.foto_id for (k, v) in db_leerlingnummer_to_student.items()]
                 mstudent.student_add_m(new_students)
                 mstudent.student_update_m(updated_students)
                 mstudent.student_delete_m(students=deleted_students)

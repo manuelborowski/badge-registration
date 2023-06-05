@@ -1,4 +1,4 @@
-﻿/*! CellEdit 1.0.19
+/*! CellEdit 1.0.19
  * ©2016 Elliott Beaty - datatables.net/license
  */
 

@@ -14,16 +14,16 @@ class Registration(db.Model, SerializerMixin):
 
     id = db.Column(db.Integer(), primary_key=True)
 
-    username = db.Column(db.String(256), default='')
+    leerlingnummer = db.Column(db.String(256), default='')
     location = db.Column(db.String(256), default='')
     time_in = db.Column(db.DateTime, default=None)
     time_out = db.Column(db.DateTime, default=None)
 
-    new = db.Column(db.Boolean, default=True)
-    delete = db.Column(db.Boolean, default=False)
+    # new = db.Column(db.Boolean, default=True)
+    # delete = db.Column(db.Boolean, default=False)
     active = db.Column(db.Boolean, default=True)
-    enable = db.Column(db.Boolean, default=True)
-    changed = db.Column(db.Boolean, default=False)
+    # enable = db.Column(db.Boolean, default=True)
+    # changed = db.Column(db.Boolean, default=False)
 
 
 def get_columns():
@@ -80,7 +80,7 @@ def pre_sql_filter(query, filter):
 
 def pre_sql_search(search_string):
     search_constraints = []
-    search_constraints.append(Registration.username.like(search_string))
+    search_constraints.append(Registration.leerlingnummer.like(search_string))
     search_constraints.append(Registration.computer.like(search_string))
     search_constraints.append(Registration.roepnaam.like(search_string))
     search_constraints.append(Registration.naam.like(search_string))
