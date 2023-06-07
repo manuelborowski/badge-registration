@@ -51,12 +51,12 @@ def registration_delete_m(ids=[], registrations=[]):
     return app.data.models.delete_multiple(ids, registrations)
 
 
-def registration_get_m(data={}, fields=[], order_by=None, first=False, count=False, active=True):
-    return app.data.models.get_multiple(Registration, data=data, fields=fields, order_by=order_by, first=first, count=count, active=active)
+def registration_get_m(filters=[], fields=[], order_by=None, first=False, count=False, active=True):
+    return app.data.models.get_multiple(Registration, filters=filters, fields=fields, order_by=order_by, first=first, count=count, active=active)
 
 
-def registration_get(data={}):
-    return app.data.models.get_first_single(Registration, data)
+def registration_get(filters=[]):
+    return app.data.models.get_first_single(Registration, filters)
 
 
 ############ Registration overview list #########

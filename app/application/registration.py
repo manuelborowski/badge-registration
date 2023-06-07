@@ -1,4 +1,6 @@
 import datetime, sys, base64
+import app.application.api
+import app
 from app.data import student as mstudent, registration as mregistration, utils as mutils, photo as mphoto, settings as msettings
 
 
@@ -9,11 +11,14 @@ log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
 
-def registration_add(rfid, location_key):
+def registration_add(rfid, location_key, timestamp=None):
     try:
-        now = datetime.datetime.now()
+        if timestamp:
+            now = datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
+        else:
+            now = datetime.datetime.now()
         today = now.replace(hour=0, minute=0, second=0)
-        student = mstudent.student_get({"rfid": rfid})
+        student = mstudent.student_get([("rfid", "=", rfid)])
         if student:
             photo = mphoto.photo_get({"id": student.foto_id})
             popup_delay = msettings.get_configuration_setting("generic-register-popup-delay")
@@ -24,7 +29,7 @@ def registration_add(rfid, location_key):
             location = location_settings[location_key]
 
             if location["type"] == "registreren":
-                registrations = mregistration.registration_get_m({"leerlingnummer": student.leerlingnummer, "location": location_key, ">time_in": today}, order_by="id")
+                registrations = mregistration.registration_get_m([("leerlingnummer", "=", student.leerlingnummer), ("location", "=", location_key), ("time_in", ">", today)], order_by="id")
                 if registrations:
                     last_registration = registrations[-1]
                     if last_registration.time_out is None:
@@ -42,7 +47,7 @@ def registration_add(rfid, location_key):
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now,
                                                                "prijs_per_item": location["prijs-per-item"], "aantal_items": nbr_items})
                 if registration:
-                    log.info(f'{sys._getframe().f_code.co_name}: Verkoop, {student.leerlingnummer} at {now}, price-per-item {location["prijs-per-item"]}, nbr items {nbr_items}')
+                    log.info(f'{sys._getframe().f_code.co_name}: Verkoop({location["locatie"]}), {student.leerlingnummer} at {now}, price-per-item {location["prijs-per-item"]}, nbr items {nbr_items}')
                     return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
                                                      "time": mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
 
@@ -59,10 +64,10 @@ def get_all_actual_registrations(location):
     try:
         now = datetime.datetime.now()
         today = now.replace(hour=0, minute=0, second=0)
-        registrations = mregistration.registration_get_m({"location": location, ">time_in": today, "time_out": None}, order_by="id")
+        registrations = mregistration.registration_get_m([("location", "=", location), ("time_in", ">", today), ("time_out", "=", None)], order_by="id")
         data = []
         for registration in registrations:
-            student = mstudent.student_get({"leerlingnummer": registration.leerlingnummer})
+            student = mstudent.student_get([("leerlingnummer", "=", registration.leerlingnummer)])
             photo = mphoto.photo_get({"id": student.foto_id})
             data.append({
                 "leerlingnummer": student.leerlingnummer,
@@ -80,7 +85,7 @@ def clear_all_registrations(location):
     try:
         now = datetime.datetime.now()
         today = now.replace(hour=0, minute=0, second=0)
-        registrations = mregistration.registration_get_m({"location": location, ">time_in": today, "time_out": None}, order_by="id")
+        registrations = mregistration.registration_get_m([("location", "=", location), ("time_in", ">", today), ("time_out", "=", None)], order_by="id")
         clear_registrations = [{"item": r, "time_out": now} for r in registrations]
         mregistration.registration_update_m(clear_registrations)
         return True
@@ -89,13 +94,34 @@ def clear_all_registrations(location):
         return False
 
 
-def api_schoolrekening_get():
+def api_schoolrekening_get(options):
     try:
-        now = datetime.datetime.now()
-        today = now.replace(hour=0, minute=0, second=0)
-        return True
+        _, filters, _, _ = app.application.api.api_process_options(options)
+        locations = msettings.get_configuration_setting("location-profiles")
+        location_keys = [k for k,v in locations.items() if v["type"] == "verkoop"]
+        data_out = {}
+        for key in location_keys:
+            leerlingnummers = {}
+            filters.append(("location", "=", key))
+            registrations = mregistration.registration_get_m(filters)
+            for item in registrations:
+                if item.leerlingnummer in leerlingnummers:
+                    leerlingnummers[item.leerlingnummer] += 1
+                else:
+                    leerlingnummers[item.leerlingnummer] = 1
+            for leerlingnummer, nbr in leerlingnummers.items():
+                info = locations[key]["info"]
+                info = info.replace("$aantal$", str(nbr))
+                amount = locations[key]["prijs-per-item"] * nbr / 100
+                if leerlingnummer in data_out:
+                    data_out[leerlingnummer].append({"info": info, "bedrag": amount})
+                else:
+                    data_out[leerlingnummer] = [{"info": info, "bedrag": amount}]
+            filters = filters[:-1]
+        data_list = [{"leerlingnummer": k, "items": v} for k,v in data_out.items()]
+        return {"status": True, "data": data_list}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-        return False
+        return {"status": False, "data": str(e)}
 
 

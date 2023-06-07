@@ -1,6 +1,6 @@
 from flask import request
 from . import api
-from app.application import user as muser, settings as msettings
+from app.application import user as muser, settings as msettings, registration as mregistration
 from app import log
 import json, sys, html, itertools
 from functools import wraps
@@ -87,5 +87,5 @@ def user_get():
 @user_key_required
 def schoolrekening_get():
     options = request.args
-    ret = muser.api_user_get(options)
+    ret = mregistration.api_schoolrekening_get(options)
     return(json.dumps(ret))

@@ -36,7 +36,7 @@ msocketio.subscribe_on_type('clear-all-registrations', clear_all_registrations)
 def get_filters():
     locations = mlocation.get_locations()
     if locations:
-        location_choices = [[l["key"], l["locatie"]] for l in locations]
+        location_choices = [[k, l["locatie"]] for k, l in locations.items()]
         return [
             {
                 'type': 'select',

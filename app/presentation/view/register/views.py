@@ -12,8 +12,9 @@ def show(location_key):
 
 
 @register.route('/registration/new/<string:location_key>/<string:badge_code>', methods=['GET'])
-def registration_new(location_key, badge_code):
-    ret = mregistration.registration_add(badge_code, location_key)
+@register.route('/registration/new/<string:location_key>/<string:badge_code>/<string:timestamp>', methods=['GET'])
+def registration_new(location_key, badge_code, timestamp=None):
+    ret = mregistration.registration_add(badge_code, location_key, timestamp)
     if ret["status"]:
         actual_status_data = {
             "status": True,

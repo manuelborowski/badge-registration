@@ -124,7 +124,8 @@ def delete_multiple(model, ids=[], objs=[]):
     return None
 
 
-def get_multiple(model, data={}, fields=[], order_by=None, first=False, count=False, active=True):
+# filters is list of tupples: [(key, operator, value), ...]
+def get_multiple(model, filters=[], fields=[], order_by=None, first=False, count=False, active=True, start=None, stop=None):
     try:
         tablename = model.__tablename__
         entities = [text(f'{tablename}.{f}') for f in fields]
@@ -132,13 +133,22 @@ def get_multiple(model, data={}, fields=[], order_by=None, first=False, count=Fa
             q = model.query.with_entities(*entities)
         else:
             q = model.query
-        for k, v in data.items():
-            if k[0] == '-':
-                if hasattr(model, k[1::]):
-                    q = q.filter(getattr(model, k[1::]) != v)
-            elif k[0] == '>':
-                if hasattr(model, k[1::]):
-                    q = q.filter(getattr(model, k[1::]) > v)
+        for k, o, v in filters:
+            if o == '!':
+                if hasattr(model, k):
+                    q = q.filter(getattr(model, k) != v)
+            elif o == '>':
+                if hasattr(model, k):
+                    q = q.filter(getattr(model, k) > v)
+            elif o == '<':
+                if hasattr(model, k):
+                    q = q.filter(getattr(model, k) < v)
+            elif o == '>=':
+                if hasattr(model, k):
+                    q = q.filter(getattr(model, k) >= v)
+            elif o == '=<':
+                if hasattr(model, k):
+                    q = q.filter(getattr(model, k) <= v)
             else:
                 if hasattr(model, k):
                     q = q.filter(getattr(model, k) == v)
@@ -147,7 +157,11 @@ def get_multiple(model, data={}, fields=[], order_by=None, first=False, count=Fa
                 q = q.order_by(desc(getattr(model, order_by[1::])))
             else:
                 q = q.order_by(getattr(model, order_by))
+        else:
+            q = q.order_by(getattr(model, "id"))
         q = q.filter(model.active == active)
+        if start is not None and stop is not None:
+            q = q.slice(start, stop)
         if first:
             obj = q.first()
             return obj
@@ -160,13 +174,10 @@ def get_multiple(model, data={}, fields=[], order_by=None, first=False, count=Fa
     return None
 
 
-def get_first_single(model, data={}, order_by=None):
+def get_first_single(model, filters=[], order_by=None):
     try:
-        obj = get_multiple(model, data, order_by=order_by, first=True)
+        obj = get_multiple(model, filters, order_by=order_by, first=True)
         return obj
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
     return None
-
-
-
