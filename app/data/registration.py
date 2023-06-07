@@ -18,12 +18,9 @@ class Registration(db.Model, SerializerMixin):
     location = db.Column(db.String(256), default='')
     time_in = db.Column(db.DateTime, default=None)
     time_out = db.Column(db.DateTime, default=None)
-
-    # new = db.Column(db.Boolean, default=True)
-    # delete = db.Column(db.Boolean, default=False)
     active = db.Column(db.Boolean, default=True)
-    # enable = db.Column(db.Boolean, default=True)
-    # changed = db.Column(db.Boolean, default=False)
+    aantal_items = db.Column(db.Integer, default=1)
+    prijs_per_item = db.Column(db.Integer, default=100) # eurocents
 
 
 def get_columns():

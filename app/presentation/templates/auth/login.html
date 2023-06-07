@@ -10,11 +10,11 @@
     <br>
     <div class="center">
         <div class="container">
-            <div class="thick-green-border" style="width: 450px">
+            <div class="thick-green-border" style="width: 600px">
                 <div class="row">
                     <h1>Selecteer uw locatie </h1>
-                    {% for location in locations %}
-                        <a href="{{ url_for('register.show', location_key=location.key) }}">Klik hier om te registreren op volgende locatie: {{ location.locatie }}</a>
+                    {% for k,v  in locations.items() %}
+                        <a href="{{ url_for('register.show', location_key=k) }}">Klik hier om te registreren op volgende locatie: {{ v.locatie }}</a>
                     {% endfor %}
                 </div>
                 <div class="row">

@@ -9,7 +9,7 @@ log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
 
-def registration_add(rfid, location):
+def registration_add(rfid, location_key):
     try:
         now = datetime.datetime.now()
         today = now.replace(hour=0, minute=0, second=0)
@@ -17,19 +17,35 @@ def registration_add(rfid, location):
         if student:
             photo = mphoto.photo_get({"id": student.foto_id})
             popup_delay = msettings.get_configuration_setting("generic-register-popup-delay")
-            registrations = mregistration.registration_get_m({"leerlingnummer": student.leerlingnummer, "location": location, ">time_in": today}, order_by="id")
-            if registrations:
-                last_registration = registrations[-1]
-                if last_registration.time_out is None:
-                    mregistration.registration_update(last_registration, {"time_out": now})
-                    log.info(f'{sys._getframe().f_code.co_name}: Badge out, {student.leerlingnummer} at {now}')
-                    return {"status": True, "data": {"direction": "uit", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
-                                                     "time":  mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
-            registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location, "time_in": now})
-            if registration:
-                log.info(f'{sys._getframe().f_code.co_name}: Badge in, {student.leerlingnummer} at {now}')
-                return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
-                                                 "time": mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
+            location_settings = msettings.get_configuration_setting("location-profiles")
+            if location_key not in location_settings:
+                log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
+                return {"status": False, "data": f"Locatie {location_key} is niet geldig"}
+            location = location_settings[location_key]
+
+            if location["type"] == "registreren":
+                registrations = mregistration.registration_get_m({"leerlingnummer": student.leerlingnummer, "location": location_key, ">time_in": today}, order_by="id")
+                if registrations:
+                    last_registration = registrations[-1]
+                    if last_registration.time_out is None:
+                        mregistration.registration_update(last_registration, {"time_out": now})
+                        log.info(f'{sys._getframe().f_code.co_name}: Badge out, {student.leerlingnummer} at {now}')
+                        return {"status": True, "data": {"direction": "uit", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
+                                                         "time":  mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
+                registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now})
+                if registration:
+                    log.info(f'{sys._getframe().f_code.co_name}: Badge in, {student.leerlingnummer} at {now}')
+                    return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
+                                                     "time": mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
+            if location["type"] == "verkoop":
+                nbr_items = 1
+                registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now,
+                                                               "prijs_per_item": location["prijs-per-item"], "aantal_items": nbr_items})
+                if registration:
+                    log.info(f'{sys._getframe().f_code.co_name}: Verkoop, {student.leerlingnummer} at {now}, price-per-item {location["prijs-per-item"]}, nbr items {nbr_items}')
+                    return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
+                                                     "time": mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
+
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}
         log.info(f'{sys._getframe().f_code.co_name}:  {rfid} not found in database')
@@ -71,3 +87,15 @@ def clear_all_registrations(location):
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return False
+
+
+def api_schoolrekening_get():
+    try:
+        now = datetime.datetime.now()
+        today = now.replace(hour=0, minute=0, second=0)
+        return True
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return False
+
+
