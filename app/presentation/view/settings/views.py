@@ -557,6 +557,15 @@ settings_formio = \
                     "key": "api-keys",
                     "type": "textarea",
                     "input": true
+                  },
+                  {
+                    "label": "Schoolrekening info pagina (HTML)",
+                    "applyMaskOn": "change",
+                    "autoExpand": false,
+                    "tableView": true,
+                    "key": "api-schoolrekening-info",
+                    "type": "textarea",
+                    "input": true
                   }
                 ]
               }

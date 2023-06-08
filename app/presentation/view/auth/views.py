@@ -8,7 +8,7 @@ from .forms import LoginForm
 from app.data import user as muser
 from app.presentation.layout import utils
 from app.application import settings as msettings, location as mlocation
-import datetime, json
+import datetime, json, sys
 
 @auth.route('/', methods=['POST', 'GET'])
 def login():
@@ -28,7 +28,11 @@ def login():
         else:
             utils.flash_plus(u'Ongeldige gebruikersnaam of paswoord')
             log.error(u'Invalid username/password')
-    return render_template('auth/login.html', form=form, title='Login', locations=locations)
+    try:
+        return render_template('auth/login.html', form=form, title='Login', locations=locations)
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return render_template('auth/login.html', form=form, title='Login', locations={})
 
 
 @auth.route('/logout')

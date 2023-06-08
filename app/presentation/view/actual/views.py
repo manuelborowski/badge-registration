@@ -34,16 +34,20 @@ msocketio.subscribe_on_type('clear-all-registrations', clear_all_registrations)
 
 
 def get_filters():
-    locations = mlocation.get_locations()
-    if locations:
-        location_choices = [[k, l["locatie"]] for k, l in locations.items()]
-        return [
-            {
-                'type': 'select',
-                'name': 'filter-location',
-                'label': 'Locaties',
-                'choices': location_choices,
-                'default': location_choices[0][0],
-            },
-        ]
-    return []
+    try:
+        locations = mlocation.get_locations()
+        if locations:
+            location_choices = [[k, l["locatie"]] for k, l in locations.items()]
+            return [
+                {
+                    'type': 'select',
+                    'name': 'filter-location',
+                    'label': 'Locaties',
+                    'choices': location_choices,
+                    'default': location_choices[0][0],
+                },
+            ]
+        return []
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return []

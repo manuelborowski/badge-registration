@@ -89,3 +89,9 @@ def schoolrekening_get():
     options = request.args
     ret = mregistration.api_schoolrekening_get(options)
     return(json.dumps(ret))
+
+
+@api.route('/api/schoolrekening/info', methods=['GET'])
+def schoolrekening_info():
+    ret = mregistration.api_schoolrekening_info()
+    return ret

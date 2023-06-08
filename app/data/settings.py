@@ -114,6 +114,7 @@ default_configuration_settings = {
     'cron-enable-modules': ({}, Settings.SETTING_TYPE.E_JSON),
 
     'api-keys': ([], Settings.SETTING_TYPE.E_JSON),
+    'api-schoolrekening-info': ('', Settings.SETTING_TYPE.E_STRING),
 
     'email-task-interval': (10, Settings.SETTING_TYPE.E_INT),
     'emails-per-minute': (30, Settings.SETTING_TYPE.E_INT),

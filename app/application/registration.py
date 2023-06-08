@@ -125,3 +125,6 @@ def api_schoolrekening_get(options):
         return {"status": False, "data": str(e)}
 
 
+def api_schoolrekening_info():
+    info_page = msettings.get_configuration_setting("api-schoolrekening-info")
+    return info_page
