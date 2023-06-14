@@ -109,6 +109,7 @@ default_configuration_settings = {
     'history-datatables-template': ({}, Settings.SETTING_TYPE.E_JSON),
 
     'location-profiles': ({}, Settings.SETTING_TYPE.E_JSON),
+    'artikel-profiles': ({}, Settings.SETTING_TYPE.E_JSON),
 
     'cron-scheduler-template': ('', Settings.SETTING_TYPE.E_STRING),
     'cron-enable-modules': ({}, Settings.SETTING_TYPE.E_JSON),

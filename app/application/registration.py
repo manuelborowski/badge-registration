@@ -97,11 +97,14 @@ def clear_all_registrations(location):
 def api_schoolrekening_get(options):
     try:
         _, filters, _, _ = app.application.api.api_process_options(options)
+        artikel = [v for k, o, v in filters if k == "artikel"][0]
+        filters = [(k, o, v) for k, o, v in filters if k != "artikel"]
         locations = msettings.get_configuration_setting("location-profiles")
-        location_keys = [k for k,v in locations.items() if v["type"] == "verkoop"]
-        data_out = {}
+        artikel_profiel = msettings.get_configuration_setting("artikel-profiles")[artikel]
+        location_keys = [k for k,v in locations.items() if v["type"] == "verkoop" and v["artikel"] == artikel]
+        data_out = []
+        leerlingnummers = {}
         for key in location_keys:
-            leerlingnummers = {}
             filters.append(("location", "=", key))
             registrations = mregistration.registration_get_m(filters)
             for item in registrations:
@@ -109,17 +112,21 @@ def api_schoolrekening_get(options):
                     leerlingnummers[item.leerlingnummer] += 1
                 else:
                     leerlingnummers[item.leerlingnummer] = 1
-            for leerlingnummer, nbr in leerlingnummers.items():
-                info = locations[key]["info"]
-                info = info.replace("$aantal$", str(nbr))
-                amount = locations[key]["prijs-per-item"] * nbr / 100
-                if leerlingnummer in data_out:
-                    data_out[leerlingnummer].append({"info": info, "bedrag": amount})
-                else:
-                    data_out[leerlingnummer] = [{"info": info, "bedrag": amount}]
             filters = filters[:-1]
-        data_list = [{"leerlingnummer": k, "items": v} for k,v in data_out.items()]
-        return {"status": True, "data": data_list}
+        info = artikel_profiel["info"]
+        prijs_per_item = artikel_profiel["prijs-per-item"]
+        for leerlingnummer, nbr in leerlingnummers.items():
+            data_out.append({"leerlingnummer": leerlingnummer, "info": info.replace("$aantal$", str(nbr)), "bedrag": prijs_per_item * nbr / 100})
+        return {"status": True, "data": data_out}
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"status": False, "data": str(e)}
+
+
+def api_schoolrekening_artikels_get():
+    try:
+        artikels = msettings.get_configuration_setting("artikel-profiles")
+        return {"status": True, "data": [k for k, _ in artikels.items()]}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}

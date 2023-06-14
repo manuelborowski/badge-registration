@@ -7,13 +7,13 @@ from . import auth
 from .forms import LoginForm
 from app.data import user as muser
 from app.presentation.layout import utils
-from app.application import settings as msettings, location as mlocation
+from app.application import settings as msettings
 import datetime, json, sys
 
 @auth.route('/', methods=['POST', 'GET'])
 def login():
     form = LoginForm(request.form)
-    locations = mlocation.get_locations()
+    locations = msettings.get_configuration_setting("location-profiles")
     if form.validate() and request.method == 'POST':
         user = muser.get_first_user ({'username': func.binary(form.username.data)})
         if user is not None and user.verify_password(form.password.data):

@@ -410,6 +410,16 @@ settings_formio = \
                     "key": "location-profiles",
                     "type": "textarea",
                     "input": true
+                  },
+                  {
+                    "label": "Artikels",
+                    "tooltip": "Een JSON lijst van artikels",
+                    "applyMaskOn": "change",
+                    "autoExpand": false,
+                    "tableView": true,
+                    "key": "artikel-profiles",
+                    "type": "textarea",
+                    "input": true
                   }
                 ]
               }

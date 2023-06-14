@@ -91,6 +91,13 @@ def schoolrekening_get():
     return(json.dumps(ret))
 
 
+@api.route('/api/schoolrekening/artikels', methods=['GET'])
+@user_key_required
+def schoolrekening_artikels_get():
+    ret = mregistration.api_schoolrekening_artikels_get()
+    return(json.dumps(ret))
+
+
 @api.route('/api/schoolrekening/info', methods=['GET'])
 def schoolrekening_info():
     ret = mregistration.api_schoolrekening_info()

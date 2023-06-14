@@ -4,7 +4,7 @@ from flask import render_template
 from flask_login import login_required
 
 from app import log
-from app.application import socketio as msocketio, location as mlocation, registration as mregistration
+from app.application import socketio as msocketio, registration as mregistration, settings as msettings
 from . import actual
 
 
@@ -35,7 +35,7 @@ msocketio.subscribe_on_type('clear-all-registrations', clear_all_registrations)
 
 def get_filters():
     try:
-        locations = mlocation.get_locations()
+        locations = msettings.get_configuration_setting("location-profiles")
         if locations:
             location_choices = [[k, l["locatie"]] for k, l in locations.items()]
             return [
