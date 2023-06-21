@@ -27,6 +27,7 @@ def registration_add(rfid, location_key, timestamp=None):
                 log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
                 return {"status": False, "data": f"Locatie {location_key} is niet geldig"}
             location = location_settings[location_key]
+            artikel = msettings.get_configuration_setting("artikel-profiles")[location["artikel"]]
 
             if location["type"] == "registreren":
                 registrations = mregistration.registration_get_m([("leerlingnummer", "=", student.leerlingnummer), ("location", "=", location_key), ("time_in", ">", today)], order_by="id")
@@ -45,9 +46,9 @@ def registration_add(rfid, location_key, timestamp=None):
             if location["type"] == "verkoop":
                 nbr_items = 1
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now,
-                                                               "prijs_per_item": location["prijs-per-item"], "aantal_items": nbr_items})
+                                                               "prijs_per_item": artikel["prijs-per-item"], "aantal_items": nbr_items})
                 if registration:
-                    log.info(f'{sys._getframe().f_code.co_name}: Verkoop({location["locatie"]}), {student.leerlingnummer} at {now}, price-per-item {location["prijs-per-item"]}, nbr items {nbr_items}')
+                    log.info(f'{sys._getframe().f_code.co_name}: Verkoop({location["locatie"]}), {student.leerlingnummer} at {now}, price-per-item {artikel["prijs-per-item"]}, nbr items {nbr_items}')
                     return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
                                                      "time": mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
 

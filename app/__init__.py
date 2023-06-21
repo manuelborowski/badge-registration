@@ -33,11 +33,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.12: update model filtering and api
 # 0.13 bugfix location-profiles, add info page for api
 # 0.14: clean up.  Added "articles"
+# 0.15: bugfix registration, take artikel into account
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.14', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.15', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()
