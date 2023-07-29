@@ -30,7 +30,7 @@ export const badge_raw2hex = code => {
 
     let is_rfid_code = true
     let is_valid_code = true
-    code = code.toUpperCase();
+    code = code.toUpperCase().trim();
 
     if (code.length === 8) {
         // Asume a hex code of 8 chars

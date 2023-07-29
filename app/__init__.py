@@ -34,11 +34,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.13 bugfix location-profiles, add info page for api
 # 0.14: clean up.  Added "articles"
 # 0.15: bugfix registration, take artikel into account
+# 0.16: renamed files to split up into different functions (verkoop, registratie).  Small bugfixes.
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.15', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.16', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()
@@ -173,9 +174,9 @@ else:
             return func(*args, **kwargs)
         return decorated_view
 
-    from app.presentation.view import auth, user, settings,  api, warning, register, actual
+    from app.presentation.view import auth, user, settings,  api, warning, register, overview
     flask_app.register_blueprint(api.api)
-    flask_app.register_blueprint(actual.actual)
+    flask_app.register_blueprint(overview.overview)
     flask_app.register_blueprint(register.register)
     flask_app.register_blueprint(auth.auth)
     flask_app.register_blueprint(user.user)

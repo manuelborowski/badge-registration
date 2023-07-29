@@ -8,6 +8,7 @@
 {% block body %}
     {{ super() }}
     <div class="flex-container">
+    <h1 style=" margin-right: 30px;" class="title-element">{{ title }}</h1>
         {% for f in filters %}
             {% if f.type == "select" %}
                 <div class="form-group "><label class="control-label" for="{{ f.name }}"
@@ -43,10 +44,8 @@
 {% block scripts %}
     {{ super() }}
     <script type="module">
-        import {remove_all_photos} from "/static/js/project/actual.js";
-
+        import {remove_all_photos} from "/static/js/project/overview.js";
         window.remove_all_photos = remove_all_photos;
     </script>
-
-    <script type="module" src="/static/js/project/actual.js"></script>
+    <script type="module" src="/static/js/project/overview.js"></script>
 {% endblock %}

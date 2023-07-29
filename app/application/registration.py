@@ -17,7 +17,7 @@ def registration_add(rfid, location_key, timestamp=None):
             now = datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
         else:
             now = datetime.datetime.now()
-        today = now.replace(hour=0, minute=0, second=0)
+        today = now.date()
         student = mstudent.student_get([("rfid", "=", rfid)])
         if student:
             photo = mphoto.photo_get({"id": student.foto_id})
@@ -27,9 +27,8 @@ def registration_add(rfid, location_key, timestamp=None):
                 log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
                 return {"status": False, "data": f"Locatie {location_key} is niet geldig"}
             location = location_settings[location_key]
-            artikel = msettings.get_configuration_setting("artikel-profiles")[location["artikel"]]
 
-            if location["type"] == "registreren":
+            if location["type"] == "nietverplicht":
                 registrations = mregistration.registration_get_m([("leerlingnummer", "=", student.leerlingnummer), ("location", "=", location_key), ("time_in", ">", today)], order_by="id")
                 if registrations:
                     last_registration = registrations[-1]
@@ -44,6 +43,7 @@ def registration_add(rfid, location_key, timestamp=None):
                     return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
                                                      "time": mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
             if location["type"] == "verkoop":
+                artikel = msettings.get_configuration_setting("artikel-profiles")[location["artikel"]]
                 nbr_items = 1
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now,
                                                                "prijs_per_item": artikel["prijs-per-item"], "aantal_items": nbr_items})
@@ -61,10 +61,10 @@ def registration_add(rfid, location_key, timestamp=None):
         return {"status": False, "data": f"Fout, {str(e)}"}
 
 
-def get_all_actual_registrations(location):
+def get_current_registrations(location):
     try:
         now = datetime.datetime.now()
-        today = now.replace(hour=0, minute=0, second=0)
+        today = now.date()
         registrations = mregistration.registration_get_m([("location", "=", location), ("time_in", ">", today), ("time_out", "=", None)], order_by="id")
         data = []
         for registration in registrations:

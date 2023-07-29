@@ -24,7 +24,7 @@ def login():
                 log.error('Could not save timestamp')
                 return redirect(url_for('auth.login'))
             # Ok, continue
-            return redirect(url_for('actual.show'))
+            return redirect(url_for('overview.show_nietverplicht'))
         else:
             utils.flash_plus(u'Ongeldige gebruikersnaam of paswoord')
             log.error(u'Invalid username/password')
