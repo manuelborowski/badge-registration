@@ -31,10 +31,18 @@
                 <option value="150">150%</option>
             </select>
         </div>
+        <div class="form-group "><label class="control-label" for="sort-on-select" title="Sorteer op">Sorteer op</label>
+            <select class="form-control table-filter" name="Sorteer" id="sort-on-select">
+                <option value="name-firstname">Naam, voornaam</option>
+                <option value="klas-name-firstname">Klas, naam, voornaam</option>
+            </select>
+        </div>
         <div class="form-group "><label class="control-label" for="nbr-registered" title="Aantal">Aantal</label>
             <input class="form-control" id="nbr-registered" value="0">
         </div>
-        <button class="btn btn-danger" type="button" onclick="remove_all_photos()">Alles verwijderen?</button>
+        {% if "remove-all" in buttons %}
+            <button class="btn btn-danger" type="button" onclick="remove_all_photos()">Alles verwijderen?</button>
+        {% endif %}
     </div>
     <hr class="nice-green-line">
     <div id="canvas"></div>

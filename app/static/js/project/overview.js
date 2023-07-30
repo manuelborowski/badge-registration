@@ -3,6 +3,7 @@ import {socketio} from "../base/socketio.js";
 let location_element = document.querySelector("#filter-location");
 let canvas_element = document.querySelector("#canvas");
 let photo_size_element = document.querySelector("#photo-size-select");
+let sort_on_element = document.querySelector("#sort-on-select");
 let title_element = document.querySelector(".title-element");
 let nbr_registered_element = document.querySelector("#nbr-registered");
 let photo_size_factor = 100;
@@ -12,6 +13,7 @@ $(document).ready(function () {
     socketio.start(null, null);
     socketio.subscribe_on_receive("update-actual-status", socketio_update_status);
     location_element.addEventListener("change", get_current_registrations);
+    sort_on_element.addEventListener("change", get_current_registrations);
     photo_size_element.addEventListener("change", resize_photos);
     get_current_registrations();
 });
@@ -24,7 +26,11 @@ const socketio_update_status = (type, data) => {
                 let figures = document.querySelectorAll(".fig-group");
                 let figure = document.createElement("figure");
                 figure.classList.add("S" + item.leerlingnummer);
-                figure.dataset.sort_on = item.klascode + item.naam + item.voornaam;
+                if (sort_on_element.value === "name-firstname") {
+                    figure.dataset.sort_on = item.naam + item.voornaam;
+                } else {
+                    figure.dataset.sort_on = item.klascode + item.naam + item.voornaam;
+                }
                 figure.classList.add("fig-group");
                 figure.style.display = "inline-block";
                 figure.style.marginRight = "10px";

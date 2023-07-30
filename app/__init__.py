@@ -35,11 +35,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.14: clean up.  Added "articles"
 # 0.15: bugfix registration, take artikel into account
 # 0.16: renamed files to split up into different functions (verkoop, registratie).  Small bugfixes.
+# 0.17: added a sorting-select
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.16', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.17', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()
