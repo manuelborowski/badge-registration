@@ -6,12 +6,15 @@ let photo_size_element = document.querySelector("#photo-size-select");
 let sort_on_element = document.querySelector("#sort-on-select");
 let title_element = document.querySelector(".title-element");
 let nbr_registered_element = document.querySelector("#nbr-registered");
-let photo_size_factor = 100;
+let photo_size_factor = 50;
 let nbr_registered = 0;
+let current_room = "";
 
 $(document).ready(function () {
     socketio.start(null, null);
-    socketio.subscribe_on_receive("update-actual-status", socketio_update_status);
+    current_room = location_element.value;
+    socketio.subscribe_to_room(current_room);
+    socketio.subscribe_on_receive("update-current-status", socketio_update_status);
     location_element.addEventListener("change", get_current_registrations);
     sort_on_element.addEventListener("change", get_current_registrations);
     photo_size_element.addEventListener("change", resize_photos);
@@ -67,6 +70,9 @@ const socketio_update_status = (type, data) => {
 }
 
 const get_current_registrations = () => {
+    socketio.unsubscribe_from_room(current_room);
+    current_room = location_element.value;
+    socketio.subscribe_to_room(current_room);
     let location_label = location_element.options[location_element.selectedIndex].innerHTML;
     let title = title_element.innerHTML.split(": ")[0];
     title_element.innerHTML = title + ": " + location_label;

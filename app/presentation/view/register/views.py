@@ -30,7 +30,7 @@ def registration_new(location_key, badge_code, timestamp=None):
         }
     else:
         actual_status_data = {"status": False, "data": ret["data"]}
-    msocketio.broadcast_message({'type': 'update-actual-status', 'data': actual_status_data})
+    msocketio.send_to_room({'type': 'update-current-status', 'data': actual_status_data}, location_key)
     return(json.dumps(ret))
 
 

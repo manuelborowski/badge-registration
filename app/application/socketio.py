@@ -4,16 +4,13 @@ from app import socketio
 
 socketio_cbs = {}
 
-# clients can subscribe to a room.  The server can broadcast an event into that room only.
-
-
 @socketio.event
 def subscribe_to_room(message):
     join_room(message['room'])
 
 
 @socketio.event
-def leave_room(message):
+def unsubscribe_from_room(message):
     leave_room(message['room'])
 
 
@@ -56,7 +53,7 @@ def subscribe_on_type(type, cb):
 
 
 def send_to_room(msg, room):
-    emit('send_to_client', msg, room=room)
+    emit('send_to_client', msg, room=room, namespace="/")
 
 
 def broadcast_message(msg):

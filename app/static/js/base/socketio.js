@@ -38,6 +38,10 @@ class Socketio {
     subscribe_to_room(room_code) {
         this.socket.emit('subscribe_to_room', {room: room_code});
     }
+
+    unsubscribe_from_room(room_code) {
+        this.socket.emit('unsubscribe_from_room', {room: room_code});
+    }
 }
 
 export const socketio = new Socketio();
