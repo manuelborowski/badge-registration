@@ -20,18 +20,20 @@ def registration_new(location_key, badge_code, timestamp=None):
             "status": True,
             "action": "add" if ret["data"]["direction"] == "in" else "delete",
             "data": [{
-                "leerlingnummer": ret["data"]["leerlingnummer"],
-                "naam": ret["data"]["naam"],
-                "voornaam": ret["data"]["voornaam"],
+                "leerlingnummer": ret["data"]["student"].leerlingnummer,
+                "naam": ret["data"]["student"].naam,
+                "voornaam": ret["data"]["student"].voornaam,
                 "photo": ret["data"]["photo"],
-                "klascode": ret["data"]["klascode"],
+                "klascode": ret["data"]["student"].klascode,
                 "popup_delay": ret["data"]["popup_delay"],
+                "timestamp": str(ret["data"]["registration"].time_in),
+                "id": ret["data"]["registration"].id,
             }]
         }
     else:
         actual_status_data = {"status": False, "data": ret["data"]}
     msocketio.send_to_room({'type': 'update-current-status', 'data': actual_status_data}, location_key)
-    return(json.dumps(ret))
+    return(json.dumps(actual_status_data))
 
 
 

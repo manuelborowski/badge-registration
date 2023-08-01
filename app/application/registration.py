@@ -20,7 +20,8 @@ def registration_add(rfid, location_key, timestamp=None):
         today = now.date()
         student = mstudent.student_get([("rfid", "=", rfid)])
         if student:
-            photo = mphoto.photo_get({"id": student.foto_id})
+            photo_obj = mphoto.photo_get({"id": student.foto_id})
+            photo = base64.b64encode(photo_obj.photo).decode('utf-8') if photo_obj else ''
             popup_delay = msettings.get_configuration_setting("generic-register-popup-delay")
             location_settings = msettings.get_configuration_setting("location-profiles")
             if location_key not in location_settings:
@@ -35,13 +36,11 @@ def registration_add(rfid, location_key, timestamp=None):
                     if last_registration.time_out is None:
                         mregistration.registration_update(last_registration, {"time_out": now})
                         log.info(f'{sys._getframe().f_code.co_name}: Badge out, {student.leerlingnummer} at {now}')
-                        return {"status": True, "data": {"direction": "uit", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
-                                                         "time":  mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
+                        return {"status": True, "data": {"direction": "uit", "popup_delay": popup_delay, "photo": photo, "student": student, "registration": last_registration}}
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now})
                 if registration:
                     log.info(f'{sys._getframe().f_code.co_name}: Badge in, {student.leerlingnummer} at {now}')
-                    return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
-                                                     "time": mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
+                    return {"status": True, "data": {"direction": "in", "popup_delay": popup_delay, "photo": photo, "student": student, "registration": registration}}
             if location["type"] == "verkoop":
                 artikel = msettings.get_configuration_setting("artikel-profiles")[location["artikel"]]
                 nbr_items = 1
@@ -49,8 +48,7 @@ def registration_add(rfid, location_key, timestamp=None):
                                                                "prijs_per_item": artikel["prijs-per-item"], "aantal_items": nbr_items})
                 if registration:
                     log.info(f'{sys._getframe().f_code.co_name}: Verkoop({location["locatie"]}), {student.leerlingnummer} at {now}, price-per-item {artikel["prijs-per-item"]}, nbr items {nbr_items}')
-                    return {"status": True, "data": {"direction": "in", "naam": student.naam, "voornaam": student.voornaam, "leerlingnummer": student.leerlingnummer, "popup_delay": popup_delay, "klascode": student.klascode,
-                                                     "time": mutils.datetime_to_dutch_datetime_string(now), "photo": base64.b64encode(photo.photo).decode('utf-8') if photo else ''}}
+                    return {"status": True, "data": {"direction": "in", "popup_delay": popup_delay, "photo": photo, "student": student, "registration": registration}}
 
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}
@@ -75,7 +73,9 @@ def get_current_registrations(location):
                 "naam": student.naam,
                 "voornaam": student.voornaam,
                 "klascode": student.klascode,
-                "photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else ''
+                "photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else '',
+                "timestamp": str(registration.time_in),
+                "id": registration.id
             })
         return data
     except Exception as e:

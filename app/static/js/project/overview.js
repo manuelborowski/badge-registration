@@ -31,8 +31,10 @@ const socketio_update_status = (type, data) => {
                 figure.classList.add("S" + item.leerlingnummer);
                 if (sort_on_element.value === "name-firstname") {
                     figure.dataset.sort_on = item.naam + item.voornaam;
-                } else {
+                } else if (sort_on_element.value === "klas-name-firstname") {
                     figure.dataset.sort_on = item.klascode + item.naam + item.voornaam;
+                } else {
+                    figure.dataset.sort_on = item.id;
                 }
                 figure.classList.add("fig-group");
                 figure.style.display = "inline-block";
