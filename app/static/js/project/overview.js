@@ -1,4 +1,5 @@
 import {socketio} from "../base/socketio.js";
+import { subscribe_right_click } from "../base/right_click.js";
 
 let location_element = document.querySelector("#filter-location");
 let canvas_element = document.querySelector("#canvas");
@@ -39,13 +40,14 @@ const socketio_update_status = (type, data) => {
                 figure.classList.add("fig-group");
                 figure.style.display = "inline-block";
                 figure.style.marginRight = "10px";
+                figure.dataset.id = item.id;
                 let src = "data:image/jpeg;base64," + item.photo;
                 let image = document.createElement('img');
                 image.src = src;
                 let image_width = 2 * photo_size_factor;
                 image.width = (2 * photo_size_factor).toString();
                 let figcaption = document.createElement("figcaption");
-                figcaption.innerHTML = item.klascode + "<br>" + item.naam + " " + item.voornaam;
+                figcaption.innerHTML = "(" + item.timestamp.split(" ")[1] + ") " + item.klascode  + "<br>" + item.naam + " " + item.voornaam;
                 figcaption.style.fontSize = (1.5 * photo_size_factor / 100).toString() + "rem";
                 figcaption.style.fontWeight = "bold";
                 figcaption.style.textAlign = "center";
@@ -110,3 +112,21 @@ const reset_nbr_registered = () => {
     nbr_registered = 0;
     nbr_registered_element.value = nbr_registered;
 }
+
+const delete_registration = async (item, ids) => {
+    bootbox.confirm("Wilt u deze registratie verwijderen?", async result => {
+        if (result) {
+            const ret = await fetch(Flask.url_for('api.registration_delete'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify(ids),});
+            const status = await ret.json();
+            if (status.status) {
+                // bootbox.alert(`Registratie is verwijderd.`)
+                get_current_registrations()
+            } else {
+                bootbox.alert(status.data)
+            }
+        }
+    });
+}
+
+
+subscribe_right_click('delete', (item, ids) => delete_registration(item, ids));

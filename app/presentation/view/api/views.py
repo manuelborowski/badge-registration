@@ -102,3 +102,9 @@ def schoolrekening_artikels_get():
 def schoolrekening_info():
     ret = mregistration.api_schoolrekening_info()
     return ret
+
+@api.route('/api/registration/delete', methods=['POST'])
+def registration_delete():
+    ids = json.loads(request.data)
+    ret = mregistration.api_registration_delete(ids)
+    return ret

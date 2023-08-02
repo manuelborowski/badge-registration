@@ -113,7 +113,7 @@ def update_multiple(model, data = [], timestamp=False):
 def delete_multiple(model, ids=[], objs=[]):
     try:
         for id in ids:
-            obj = get_first_single(model, {"id": id})
+            obj = get_first_single(model, [("id", "=", id)])
             db.session.delete(obj)
         for obj in objs:
             db.session.delete(obj)

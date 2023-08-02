@@ -124,6 +124,15 @@ def api_schoolrekening_get(options):
         return {"status": False, "data": str(e)}
 
 
+def api_registration_delete(ids):
+    try:
+        mregistration.registration_delete_m(ids)
+        return {"status": True, "data": ""}
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"status": False, "data": str(e)}
+
+
 def api_schoolrekening_artikels_get():
     try:
         artikels = msettings.get_configuration_setting("artikel-profiles")

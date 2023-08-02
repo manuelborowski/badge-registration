@@ -38,11 +38,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.17: added a sorting-select
 # 0.18: use socketio-rooms to make sure registrations are visible on the appropriate pages only.
 # 0.19: overview: filter on timestamp
+# 0.20: small bugfixes.  Registrations can be deleted.
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.19', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.20', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()

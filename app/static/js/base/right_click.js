@@ -1,9 +1,6 @@
-import { get_id_of_checked_boxes, clear_checked_boxes } from "../datatables/datatables.js";
-import {busy_indication_off, busy_indication_on } from "./base.js";
-
 const context_menu = document.querySelector(".right-click-wrapper");
 const share_menu = context_menu.querySelector(".right-click-wrapper .share-menu");
-const datatable = document.querySelector("#datatable");
+const datatable = document.querySelector("#canvas");
 let item_ids = 0;
 
 datatable.addEventListener("contextmenu", e => {
@@ -23,26 +20,18 @@ datatable.addEventListener("contextmenu", e => {
         }
     }
     x = x > win_width - menu_width ? win_width - menu_width - 5 : x;
-    // y = y > win_height - menu_height ? win_height - menu_height - 5 : e.pageY;
     y = y > win_height - menu_height ? e.pageY - menu_height - 5 : e.pageY;
-    // console.log(`e.y ${e.y}, y ${y}, win_height ${win_height}, menu_height ${menu_height}, pageY ${e.pageY}`)
-    item_ids = get_id_of_checked_boxes();
-    if (item_ids.length === 0) {
-        item_ids = [e.target.parentElement.id];
-    }
+    item_ids = [e.target.parentElement.dataset.id];
     context_menu.style.left = `${x}px`;
     context_menu.style.top = `${y}px`;
     context_menu.style.visibility = "visible";
 });
 
 export function item_clicked(item) {
-    busy_indication_on();
-    clear_checked_boxes();
     if (item in right_click_cbs) {
         right_click_cbs[item](item, item_ids);
-        busy_indication_off();
     } else {
-        $.getJSON(Flask.url_for(table_config.right_click.endpoint, {'jds': JSON.stringify({item, item_ids})}),
+        $.getJSON(Flask.url_for(right_click.endpoint, {'jds': JSON.stringify({item, item_ids})}),
             function (data) {
                 if ("message" in data) {
                     bootbox.alert(data.message);
@@ -64,7 +53,6 @@ export function item_clicked(item) {
                 } else {
                     bootbox.alert('Sorry, er is iets fout gegaan');
                 }
-                busy_indication_off();
             }
         );
     }
