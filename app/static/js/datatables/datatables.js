@@ -2,6 +2,7 @@ import {return_render_ellipsis} from "./dataTables.ellipsis.js";
 import {MakeCellsToggleable} from "./dataTables.cellToggle.js";
 import {busy_indication_on, busy_indication_off} from "../base/base.js";
 import { socketio } from "../base/socketio.js";
+import { subscribe_get_ids, set_endpoint } from "../base/right_click.js";
 
 let filter_settings = [];
 let column_name_to_index = {};
@@ -147,6 +148,15 @@ function reload_table() {
 }
 
 
+const get_ids_of_selected_items = mouse_event => {
+    var ids = get_id_of_checked_boxes();
+    if (ids.length === 0) {
+        ids = [mouse_event.target.parentElement.id];
+    }
+    return ids;
+}
+
+
 $(document).ready(function () {
     ctx = {
         table_config,
@@ -158,6 +168,10 @@ $(document).ready(function () {
     }
     ctx.cell_to_color = "color_keys" in table_config ? table_config.cell_color.color_keys : null;
     ctx.suppress_cell_content = "color_keys" in table_config ? table_config.cell_color.supress_cell_content : null;
+
+    //configure right_click
+    set_endpoint(table_config.right_click.endpoint);
+    subscribe_get_ids(get_ids_of_selected_items);
 
     //if a filter is changed, then the filter is applied by simulating a click on the filter button
     $(".table-filter").change(function () {

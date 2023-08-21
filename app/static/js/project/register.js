@@ -12,7 +12,7 @@ export const badge_process_badge = async event => {
         badge_input.value = '';
 
         if (res.valid) {
-            const ret = await fetch(Flask.url_for('register.registration_new', {location_key: location_key, badge_code: res.code}) );
+            const ret = await fetch(Flask.url_for('api.registration_add'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({location_key, badge_code: res.code})});
             const status = await ret.json();
             if (status.status) {
                 badge_box_element.style.background = status.data.direction === "in" ? "green" : "blue";

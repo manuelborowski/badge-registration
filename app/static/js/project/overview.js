@@ -1,5 +1,5 @@
 import {socketio} from "../base/socketio.js";
-import { subscribe_right_click } from "../base/right_click.js";
+import {subscribe_get_ids, subscribe_right_click} from "../base/right_click.js";
 
 let location_element = document.querySelector("#filter-location");
 let canvas_element = document.querySelector("#canvas");
@@ -19,6 +19,7 @@ $(document).ready(function () {
     location_element.addEventListener("change", get_current_registrations);
     sort_on_element.addEventListener("change", get_current_registrations);
     photo_size_element.addEventListener("change", resize_photos);
+    subscribe_get_ids(get_ids_of_selected_items);
     get_current_registrations();
 });
 
@@ -128,5 +129,10 @@ const delete_registration = async (item, ids) => {
     });
 }
 
+
+const get_ids_of_selected_items = mouse_event => {
+    const ids = [mouse_event.target.parentElement.dataset.id];
+    return ids;
+}
 
 subscribe_right_click('delete', (item, ids) => delete_registration(item, ids));

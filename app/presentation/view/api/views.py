@@ -1,8 +1,8 @@
 from flask import request
 from . import api
-from app.application import user as muser, settings as msettings, registration as mregistration
+from app.application import user as muser, settings as msettings, registration as mregistration, socketio as msocketio
 from app import log
-import json, sys, html, itertools
+import json, sys, html
 from functools import wraps
 
 
@@ -103,8 +103,19 @@ def schoolrekening_info():
     ret = mregistration.api_schoolrekening_info()
     return ret
 
+
+@api.route('/api/registration/add', methods=['POST'])
+def registration_add():
+    data = json.loads(request.data)
+    code = data["badge_code"]
+    location = data["location_key"]
+    ret = mregistration.api_registration_add(code, location)
+    msocketio.send_to_room({'type': 'update-current-status', 'data': ret}, location)
+    return json.dumps(ret)
+
+
 @api.route('/api/registration/delete', methods=['POST'])
 def registration_delete():
     ids = json.loads(request.data)
     ret = mregistration.api_registration_delete(ids)
-    return ret
+    return json.dumps(ret)

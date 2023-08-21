@@ -11,8 +11,9 @@
 }
 .right-click-wrapper .menu{
   padding: 10px 12px;
+  margin-bottom: 0px;
 }
-.right-click-wrapper .content .item{
+.right-click-wrapper .item{
   list-style: none;
   display: flex;
   width: 100%;
@@ -22,37 +23,6 @@
   margin-bottom: 2px;
   padding: 0 5px 0 10px;
 }
-.right-click-wrapper .content .item:hover{
+.right-click-wrapper .menu .item:hover{
   background: #f2f2f2;
-}
-.right-click-wrapper .content .item span{
-  margin-left: 8px;
-  font-size: 16px;
-}
-.right-click-wrapper .content .setting{
-  display: flex;
-  margin-top: -5px;
-  padding: 5px 12px;
-  border-top: 1px solid #ccc;
-}
-.right-click-wrapper .content .share{
-  position: relative;
-  justify-content: space-between;
-}
-.right-click-wrapper .share .share-menu{
-  position: absolute;
-  background: #fff;
-  width: 200px;
-  right: -200px;
-  top: -35px;
-  padding: 13px;
-  opacity: 0;
-  pointer-events: none;
-  border-radius: 10px;
-  box-shadow: 0 5px 10px rgba(0,0,0,0.08);
-  transition: 0.2s ease;
-}
-.right-click-wrapper .share:hover .share-menu{
-  opacity: 1;
-  pointer-events: auto;
 }

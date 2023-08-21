@@ -118,5 +118,28 @@ def student_load_from_sdh(opaque=None, **kwargs):
         log.info(f"{sys._getframe().f_code.co_name}, STOP")
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-
     return True
+
+
+def klassen_get_unique():
+    klassen = mstudent.student_get_m(fields=['klascode'])
+    klassen = list(set([k[0] for k in klassen]))
+    klassen.sort()
+    return klassen
+
+
+
+
+############ datatables: student overview list #########
+def format_data(db_list, total_count=None, filtered_count=None):
+    out = []
+    for student in db_list:
+        em = student.to_dict()
+        em.update({
+            'row_action': student.id,
+            'DT_RowId': student.id
+        })
+        out.append(em)
+    return total_count, filtered_count, out
+
+

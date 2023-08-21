@@ -39,11 +39,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.18: use socketio-rooms to make sure registrations are visible on the appropriate pages only.
 # 0.19: overview: filter on timestamp
 # 0.20: small bugfixes.  Registrations can be deleted.
+# 0.21: clean up right-click.  Added table with students and added possibility to add a registration via this table.
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.20', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.21', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()
@@ -178,12 +179,13 @@ else:
             return func(*args, **kwargs)
         return decorated_view
 
-    from app.presentation.view import auth, user, settings,  api, warning, register, overview
+    from app.presentation.view import auth, user, settings,  api, warning, register, overview, student
     flask_app.register_blueprint(api.api)
     flask_app.register_blueprint(overview.overview)
     flask_app.register_blueprint(register.register)
     flask_app.register_blueprint(auth.auth)
     flask_app.register_blueprint(user.user)
+    flask_app.register_blueprint(student.student)
     flask_app.register_blueprint(settings.settings)
     flask_app.register_blueprint(warning.warning)
 

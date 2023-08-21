@@ -106,6 +106,8 @@ default_configuration_settings = {
 
     'user-datatables-template': ({}, Settings.SETTING_TYPE.E_JSON),
 
+    'student-datatables-template': ({}, Settings.SETTING_TYPE.E_JSON),
+
     'history-datatables-template': ({}, Settings.SETTING_TYPE.E_JSON),
 
     'location-profiles': ({}, Settings.SETTING_TYPE.E_JSON),

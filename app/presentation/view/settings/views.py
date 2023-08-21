@@ -94,6 +94,47 @@ settings_formio = \
             ]
           },
           {
+            "label": "Studenten",
+            "tableView": false,
+            "key": "users1",
+            "type": "container",
+            "input": true,
+            "components": [
+              {
+                "title": "Studenten",
+                "theme": "primary",
+                "collapsible": true,
+                "key": "gebruikers",
+                "type": "panel",
+                "label": "Algemeen",
+                "collapsed": true,
+                "input": false,
+                "tableView": false,
+                "components": [
+                  {
+                    "label": "Opslaan",
+                    "showValidations": false,
+                    "theme": "warning",
+                    "tableView": false,
+                    "key": "submit",
+                    "type": "button",
+                    "input": true,
+                    "saveOnEnter": false
+                  },
+                  {
+                    "label": "Lijst template (JSON)",
+                    "applyMaskOn": "change",
+                    "autoExpand": false,
+                    "tableView": true,
+                    "key": "student-datatables-template",
+                    "type": "textarea",
+                    "input": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "label": "History",
             "tableView": false,
             "key": "history",
