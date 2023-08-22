@@ -111,7 +111,7 @@ def registration_add():
     location = data["location_key"]
     ret = mregistration.api_registration_add(code, location)
     msocketio.send_to_room({'type': 'update-current-status', 'data': ret}, location)
-    return json.dumps(ret)
+    return json.dumps({"status": ret["status"]})
 
 
 @api.route('/api/registration/delete', methods=['POST'])

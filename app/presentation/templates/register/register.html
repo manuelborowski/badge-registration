@@ -11,7 +11,7 @@
     {{ JSGlue.include() }}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
-        let location_key = {{ location_key | tojson }};
+        let location_key = {{ location.key | tojson }};
         let api_key = {{ api_key | tojson }};
     </script>
 </head>
@@ -21,9 +21,8 @@
     <div class="center">
         <div class="container">
             <div class="thick-green-border" id="badge-box" style="position: fixed;top: 30%;">
-                <div class="row">
-                    <h1>Hou je badge tegen de lezer aub </h1>
-                </div>
+                    <h1>Locatie: {{ location.locatie }}<br></h1>
+                    <h2>Hou je badge tegen de lezer aub </h2>
                 <div class="thick-green-border">
                     <label style="margin-right:20px;margin-left: 30px;" for="badge_input">Badge code :</label>
                     <input autofocus="true" id="badge-input">

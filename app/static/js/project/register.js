@@ -8,25 +8,19 @@ export const badge_process_badge = async event => {
     if (event.key === 'Enter') {
         let msg = '';
         let popup_delay = 2000;
+        let notification_color = "red";
         const res = badge_raw2hex(badge_input.value);
         badge_input.value = '';
-
         if (res.valid) {
-            const ret = await fetch(Flask.url_for('api.registration_add'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({location_key, badge_code: res.code})});
-            const status = await ret.json();
-            if (status.status) {
-                badge_box_element.style.background = status.data.direction === "in" ? "green" : "blue";
-                msg = `Dag ${status.data.voornaam}, je ${ status.data.direction === "in" ? "komt binnen"  : "gaat buiten" } om ${status.data.time}`;
-                popup_delay = ("popup_delay" in status.data) ? status.data.popup_delay : popup_delay;
-            } else {
-                badge_box_element.style.background = "red";
-                msg = status.data;
+            const fret = await fetch(Flask.url_for('api.registration_add'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({location_key, badge_code: res.code})});
+            const jret = await fret.json();
+            if (jret.status) {
+                notification_color = "green";
+                popup_delay = 200;
             }
-        } else {
-            badge_box_element.style.background = "red";
-            msg = `${res.code} is geen geldige code`;
         }
-        setTimeout(() => {badge_box_element.style.background = badge_box_current_background}, popup_delay);
+        badge_box_element.style.background = notification_color;
+        setTimeout(() => badge_box_element.style.background = badge_box_current_background, popup_delay);
     }
 }
 

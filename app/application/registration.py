@@ -25,7 +25,6 @@ def registration_add(rfid, location_key, timestamp=None):
         if student:
             photo_obj = mphoto.photo_get({"id": student.foto_id})
             photo = base64.b64encode(photo_obj.photo).decode('utf-8') if photo_obj else ''
-            popup_delay = msettings.get_configuration_setting("generic-register-popup-delay")
             location_settings = msettings.get_configuration_setting("location-profiles")
             if location_key not in location_settings:
                 log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
@@ -40,7 +39,6 @@ def registration_add(rfid, location_key, timestamp=None):
                     "voornaam": student.voornaam,
                     "photo": photo,
                     "klascode": student.klascode,
-                    "popup_delay": popup_delay,
                 }]
             }
             if location["type"] == "nietverplicht":
@@ -52,14 +50,12 @@ def registration_add(rfid, location_key, timestamp=None):
                         log.info(f'{sys._getframe().f_code.co_name}: Badge out, {student.leerlingnummer} at {now}')
                         ret["data"][0].update({"timestamp": str(last_registration.time_in), "id": last_registration.id,})
                         return ret
-                        # return {"status": True, "data": {"direction": "uit", "popup_delay": popup_delay, "photo": photo, "student": student, "registration": last_registration}}
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now})
                 if registration:
                     log.info(f'{sys._getframe().f_code.co_name}: Badge in, {student.leerlingnummer} at {now}')
                     ret.update({"action": "add"})
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})
                     return ret
-                    # return {"status": True, "data": {"direction": "in", "popup_delay": popup_delay, "photo": photo, "student": student, "registration": registration}}
             if location["type"] == "verkoop":
                 artikel = msettings.get_configuration_setting("artikel-profiles")[location["artikel"]]
                 nbr_items = 1
@@ -70,7 +66,6 @@ def registration_add(rfid, location_key, timestamp=None):
                     ret.update({"action": "add"})
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})
                     return ret
-                    # return {"status": True, "data": {"direction": "in", "popup_delay": popup_delay, "photo": photo, "student": student, "registration": registration}}
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}
         log.info(f'{sys._getframe().f_code.co_name}:  {rfid} not found in database')

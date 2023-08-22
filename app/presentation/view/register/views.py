@@ -9,7 +9,9 @@ import json
 def show(location_key):
     api_keys = msettings.get_configuration_setting('api-keys')[0]
     api_key = [k for k, v in api_keys.items() if v == "local"][0]
-    return render_template('register/register.html', location_key=location_key, api_key=api_key)
+    location = msettings.get_configuration_setting("location-profiles")[location_key]
+    location.update({"key": location_key})
+    return render_template('register/register.html', location=location, api_key=api_key)
 
 
 
