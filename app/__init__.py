@@ -41,11 +41,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.20: small bugfixes.  Registrations can be deleted.
 # 0.21: clean up right-click.  Added table with students and added possibility to add a registration via this table.
 # 0.22: added location to badge-screen.  Bugfixed and simplified badge-screen.
+# 0.23: overview, add day-filter
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.22', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.23', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()

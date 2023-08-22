@@ -32,6 +32,7 @@ def registration_add(rfid, location_key, timestamp=None):
             location = location_settings[location_key]
             ret = {
                 "status": True,
+                "selected_day": str(today),
                 "action": "delete",
                 "data": [{
                     "leerlingnummer": student.leerlingnummer,
@@ -75,12 +76,15 @@ def registration_add(rfid, location_key, timestamp=None):
         return {"status": False, "data": f"Fout, {str(e)}"}
 
 
-def get_current_registrations(location):
+def get_current_registrations(location, selected_day=None):
     try:
-        now = datetime.datetime.now()
-        today = now.date()
-        registrations = mregistration.registration_get_m([("location", "=", location), ("time_in", ">", today), ("time_out", "=", None)], order_by="id")
+        if not selected_day:
+            selected_day = str(datetime.datetime.now())
+        time_in_low = datetime.datetime.strptime(selected_day, "%Y-%m-%d").date()
+        time_in_high = time_in_low + datetime.timedelta(days=1)
+        registrations = mregistration.registration_get_m([("location", "=", location), ("time_in", ">", time_in_low), ("time_in", "<", time_in_high), ("time_out", "=", None)], order_by="id")
         data = []
+        ret = {'status': True, "action": "add", "data": data, "selected_day": selected_day}
         for registration in registrations:
             student = mstudent.student_get([("leerlingnummer", "=", registration.leerlingnummer)])
             photo = mphoto.photo_get({"id": student.foto_id})
@@ -93,9 +97,10 @@ def get_current_registrations(location):
                 "timestamp": str(registration.time_in),
                 "id": registration.id
             })
-        return data
+        return ret
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {'status': False, 'message': str(e)}
 
 
 def clear_all_registrations(location):

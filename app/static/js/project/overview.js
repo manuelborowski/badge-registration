@@ -2,6 +2,7 @@ import {socketio} from "../base/socketio.js";
 import {subscribe_get_ids, subscribe_right_click} from "../base/right_click.js";
 
 let location_element = document.querySelector("#filter-location");
+let date_element = document.querySelector("#filter-date");
 let canvas_element = document.querySelector("#canvas");
 let photo_size_element = document.querySelector("#photo-size-select");
 let sort_on_element = document.querySelector("#sort-on-select");
@@ -16,7 +17,10 @@ $(document).ready(function () {
     current_room = location_element.value;
     socketio.subscribe_to_room(current_room);
     socketio.subscribe_on_receive("update-current-status", socketio_update_status);
+    let now = new Date();
+    date_element.value = now.toISOString().split("T")[0];
     location_element.addEventListener("change", get_current_registrations);
+    date_element.addEventListener("change", get_current_registrations);
     sort_on_element.addEventListener("change", get_current_registrations);
     photo_size_element.addEventListener("change", resize_photos);
     subscribe_get_ids(get_ids_of_selected_items);
@@ -26,48 +30,50 @@ $(document).ready(function () {
 
 const socketio_update_status = (type, data) => {
     if (data.status) {
-        if (data.action === "add") {
-            data.data.forEach(item => {
-                let figures = document.querySelectorAll(".fig-group");
-                let figure = document.createElement("figure");
-                figure.classList.add("S" + item.leerlingnummer);
-                if (sort_on_element.value === "name-firstname") {
-                    figure.dataset.sort_on = item.naam + item.voornaam;
-                } else if (sort_on_element.value === "klas-name-firstname") {
-                    figure.dataset.sort_on = item.klascode + item.naam + item.voornaam;
-                } else {
-                    figure.dataset.sort_on = item.id;
-                }
-                figure.classList.add("fig-group");
-                figure.style.display = "inline-block";
-                figure.style.marginRight = "10px";
-                figure.dataset.id = item.id;
-                let src = "data:image/jpeg;base64," + item.photo;
-                let image = document.createElement('img');
-                image.src = src;
-                let image_width = 2 * photo_size_factor;
-                image.width = (2 * photo_size_factor).toString();
-                let figcaption = document.createElement("figcaption");
-                figcaption.innerHTML = "(" + item.timestamp.split(" ")[1] + ") " + item.klascode  + "<br>" + item.naam + " " + item.voornaam;
-                figcaption.style.fontSize = (1.5 * photo_size_factor / 100).toString() + "rem";
-                figcaption.style.fontWeight = "bold";
-                figcaption.style.textAlign = "center";
-                figure.appendChild(image);
-                figure.appendChild(figcaption);
-                for (let i=0; i < figures.length; i++ ) {
-                    if (figure.dataset.sort_on < figures[i].dataset.sort_on) {
-                        figures[i].before(figure);
-                        break;
+        if (data.selected_day === date_element.value) {
+            if (data.action === "add") {
+                data.data.forEach(item => {
+                    let figures = document.querySelectorAll(".fig-group");
+                    let figure = document.createElement("figure");
+                    figure.classList.add("S" + item.leerlingnummer);
+                    if (sort_on_element.value === "name-firstname") {
+                        figure.dataset.sort_on = item.naam + item.voornaam;
+                    } else if (sort_on_element.value === "klas-name-firstname") {
+                        figure.dataset.sort_on = item.klascode + item.naam + item.voornaam;
+                    } else {
+                        figure.dataset.sort_on = item.id;
                     }
-                }
-                update_nbr_registered();
-            });
-        } else if (data.action === "delete") {
-            data.data.forEach(item => {
-                let figure = document.querySelector(".S" + item.leerlingnummer);
-                figure.remove();
-                update_nbr_registered(true);
-            });
+                    figure.classList.add("fig-group");
+                    figure.style.display = "inline-block";
+                    figure.style.marginRight = "10px";
+                    figure.dataset.id = item.id;
+                    let src = "data:image/jpeg;base64," + item.photo;
+                    let image = document.createElement('img');
+                    image.src = src;
+                    let image_width = 2 * photo_size_factor;
+                    image.width = (2 * photo_size_factor).toString();
+                    let figcaption = document.createElement("figcaption");
+                    figcaption.innerHTML = "(" + item.timestamp.split(" ")[1] + ") " + item.klascode + "<br>" + item.naam + " " + item.voornaam;
+                    figcaption.style.fontSize = (1.5 * photo_size_factor / 100).toString() + "rem";
+                    figcaption.style.fontWeight = "bold";
+                    figcaption.style.textAlign = "center";
+                    figure.appendChild(image);
+                    figure.appendChild(figcaption);
+                    for (let i = 0; i < figures.length; i++) {
+                        if (figure.dataset.sort_on < figures[i].dataset.sort_on) {
+                            figures[i].before(figure);
+                            break;
+                        }
+                    }
+                    update_nbr_registered();
+                });
+            } else if (data.action === "delete") {
+                data.data.forEach(item => {
+                    let figure = document.querySelector(".S" + item.leerlingnummer);
+                    figure.remove();
+                    update_nbr_registered(true);
+                });
+            }
         }
     } else {
         bootbox.alert("Warning, following error appeared:<br>" + data.data);
@@ -87,7 +93,7 @@ const get_current_registrations = () => {
     figure.dataset.sort_on = "zz";
     figure.classList.add("fig-group");
     canvas_element.appendChild(figure);
-    socketio.send_to_server("get-current-registrations", {location: location_element.value});
+    socketio.send_to_server("get-current-registrations", {location: location_element.value, date: date_element.value});
     reset_nbr_registered();
 }
 
