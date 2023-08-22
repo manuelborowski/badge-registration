@@ -43,11 +43,11 @@ flask_app.config.from_pyfile('config.py')
 # 0.22: added location to badge-screen.  Bugfixed and simplified badge-screen.
 # 0.23: overview, add day-filter
 # 0.24: bufix, add file to git
-
+# 0.25: bufix, add file to git
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.24', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.25', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()
