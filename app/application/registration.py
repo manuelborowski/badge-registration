@@ -145,10 +145,9 @@ def api_schoolrekening_get(options):
         return {"status": False, "data": str(e)}
 
 
-def api_registration_add(code, location_key):
+def api_registration_add(code, location_key, timestamp):
     try:
-        student = mstudent.student_get([("rfid", "=", code)])
-        ret = app.application.registration.registration_add(student.rfid, location_key)
+        ret = app.application.registration.registration_add(code, location_key, timestamp)
         return ret
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')

@@ -105,16 +105,19 @@ def schoolrekening_info():
 
 
 @api.route('/api/registration/add', methods=['POST'])
+@user_key_required
 def registration_add():
     data = json.loads(request.data)
     code = data["badge_code"]
     location = data["location_key"]
-    ret = mregistration.api_registration_add(code, location)
+    timestamp = data["timestamp"] if "timestamp" in data else None
+    ret = mregistration.api_registration_add(code, location, timestamp)
     msocketio.send_to_room({'type': 'update-current-status', 'data': ret}, location)
     return json.dumps({"status": ret["status"]})
 
 
 @api.route('/api/registration/delete', methods=['POST'])
+@user_key_required
 def registration_delete():
     ids = json.loads(request.data)
     ret = mregistration.api_registration_delete(ids)
