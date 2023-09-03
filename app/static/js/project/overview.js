@@ -85,8 +85,8 @@ const get_current_registrations = () => {
     current_room = location_element.value;
     socketio.subscribe_to_room(current_room);
     let location_label = location_element.options[location_element.selectedIndex].innerHTML;
-    let title = title_element.innerHTML.split(": ")[0];
-    title_element.innerHTML = title + ": " + location_label;
+    // let title = title_element.innerHTML.split(": ")[0];
+    // title_element.innerHTML = title;
     canvas_element.innerHTML = "";
     // Add dummy figure to indicate end of list
     let figure = document.createElement("div");

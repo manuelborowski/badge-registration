@@ -45,10 +45,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.24: bufix, add file to git
 # 0.25: bufix, add file to git
 # 0.26: added timestamp to registration
+# 0.27: small bugfixes
+
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.26', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.27', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()
