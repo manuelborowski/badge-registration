@@ -1,5 +1,6 @@
 import {socketio} from "../base/socketio.js";
 import {subscribe_get_ids, subscribe_right_click} from "../base/right_click.js";
+import { person_image } from "../../img/base64-person.js";
 
 let location_element = document.querySelector("#filter-location");
 let date_element = document.querySelector("#filter-date");
@@ -24,6 +25,7 @@ $(document).ready(function () {
     sort_on_element.addEventListener("change", get_current_registrations);
     photo_size_element.addEventListener("change", resize_photos);
     subscribe_get_ids(get_ids_of_selected_items);
+
     get_current_registrations();
 });
 
@@ -47,7 +49,7 @@ const socketio_update_status = (type, data) => {
                     figure.style.display = "inline-block";
                     figure.style.marginRight = "10px";
                     figure.dataset.id = item.id;
-                    let src = "data:image/jpeg;base64," + item.photo;
+                    let src = "data:image/jpeg;base64," + (item.photo !== "" ? item.photo : person_image);
                     let image = document.createElement('img');
                     image.src = src;
                     let image_width = 2 * photo_size_factor;
