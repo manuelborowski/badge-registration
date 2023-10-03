@@ -1,6 +1,7 @@
 import {socketio} from "../base/socketio.js";
 import {subscribe_get_ids, subscribe_right_click} from "../base/right_click.js";
 import { person_image } from "../../img/base64-person.js";
+import { busy_indication_on, busy_indication_off } from "../base/base.js";
 
 let location_element = document.querySelector("#filter-location");
 let date_element = document.querySelector("#filter-date");
@@ -77,12 +78,14 @@ const socketio_update_status = (type, data) => {
                 });
             }
         }
+        busy_indication_off();
     } else {
         bootbox.alert("Warning, following error appeared:<br>" + data.data);
     }
 }
 
 const get_current_registrations = () => {
+    busy_indication_on();
     socketio.unsubscribe_from_room(current_room);
     current_room = location_element.value;
     socketio.subscribe_to_room(current_room);
