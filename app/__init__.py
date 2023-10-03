@@ -47,11 +47,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.26: added timestamp to registration
 # 0.27: small bugfixes
 # 0.28: show dummy photo if required
+# 0.29: when sorting on timestamp, reverse order (oldest first)
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.28', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.29', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()
