@@ -49,6 +49,7 @@ flask_app.config.from_pyfile('config.py')
 # 0.28: show dummy photo if required
 # 0.29: when sorting on timestamp, reverse order (oldest first)
 # 0.30: add busy indication
+# 0.31: add api to get locations
 
 
 @flask_app.context_processor

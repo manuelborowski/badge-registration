@@ -1,6 +1,6 @@
 from flask import request
 from . import api
-from app.application import user as muser, settings as msettings, registration as mregistration, socketio as msocketio
+from app.application import user as muser, settings as msettings, registration as mregistration, socketio as msocketio, location as mlocation
 from app import log
 import json, sys, html
 from functools import wraps
@@ -122,3 +122,12 @@ def registration_delete():
     ids = json.loads(request.data)
     ret = mregistration.api_registration_delete(ids)
     return json.dumps(ret)
+
+
+@api.route('/api/location/get', methods=['GET'])
+@user_key_required
+def locations_get():
+    ret = mlocation.get_locations()
+    return(json.dumps(ret))
+
+
