@@ -50,11 +50,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.29: when sorting on timestamp, reverse order (oldest first)
 # 0.30: add busy indication
 # 0.31: add api to get locations
+# 0.32: bugfix
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.30', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.32', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
 
 
 db = SQLAlchemy()
