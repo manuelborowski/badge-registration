@@ -52,11 +52,11 @@ flask_app.config.from_pyfile('config.py')
 # 0.31: add api to get locations
 # 0.32: bugfix
 # 0.33: gevent/greenlet update.  Implemented auto-login
-
+# 0.34: change navbar color when local server
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.33', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'])
+    return dict(version='@ 2022 MB. V0.34', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone)
 
 
 db = SQLAlchemy()
@@ -123,7 +123,7 @@ buf_handler.setLevel("ERROR")
 log.addHandler(buf_handler)
 buf_handler.setFormatter(log_formatter)
 
-
+flask_app.stand_alone = flask_app.config["STAND_ALONE_SERVER"] if "STAND_ALONE_SERVER" in flask_app.config else False
 
 log.info(f"start {flask_app.config['SITE_NAME']}")
 
