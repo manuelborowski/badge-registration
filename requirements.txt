@@ -26,9 +26,9 @@ Flask-Migrate==2.7.0
 Flask-SocketIO==5.0.1
 Flask-SQLAlchemy==2.5.1
 Flask-Table==0.5.0
-gevent==21.1.2
+gevent==21.12.0
 gevent-websocket==0.10.1
-greenlet==1.0.0
+greenlet==1.1.0
 idna==3.3
 isodate==0.6.1
 itsdangerous==1.1.0
@@ -69,7 +69,6 @@ SQLAlchemy-serializer==1.4.1
 typing-extensions==4.2.0
 tzlocal==2.1
 urllib3==1.26.8
-uWSGI==2.0.20
 webencodings==0.5.1
 Werkzeug==1.0.1
 WTForms==2.3.3

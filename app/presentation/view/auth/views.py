@@ -12,6 +12,16 @@ import datetime, json, sys
 
 @auth.route('/', methods=['POST', 'GET'])
 def login():
+    if "AUTO_LOGIN" in flask_app.config and flask_app.config["AUTO_LOGIN"]:
+        if "AUTO_USER" in flask_app.config:
+            user = muser.get_first_user({'username': flask_app.config["AUTO_USER"]})
+            login_user(user)
+            log.info(u'user {} logged in'.format(user.username))
+            user = muser.update_user(user, {"last_login": datetime.datetime.now()})
+            if not user:
+                log.error('Could not save timestamp')
+            return redirect(url_for('overview.show_nietverplicht'))
+
     form = LoginForm(request.form)
     locations = msettings.get_configuration_setting("location-profiles")
     if form.validate() and request.method == 'POST':
