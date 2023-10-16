@@ -205,7 +205,6 @@ def sync_registrations(data):
                     nbr_doubles += 1
                     continue
                 new_registrations.append({"leerlingnummer": registration[2], "location": registration[3], "time_in": registration[0], "time_out": registration[1]})
-                log.info(f"New registration, {registration}")
             mregistration.registration_add_m(new_registrations)
         return len(new_registrations), nbr_doubles
     except Exception as e:
