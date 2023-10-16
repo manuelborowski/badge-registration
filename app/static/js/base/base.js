@@ -31,15 +31,15 @@ export const start_sync = async () => {
     const ret = await fetch(Flask.url_for('api.sync_students_start'), {headers: {'x-api-key': api_key,}, method: 'POST'});
     const status = await ret.json();
     if (status.status) {
-        message += `\nNieuwe studenten: ${status.data.nbr_new}, Aangepaste studenten: ${status.data.nbr_updated}, Verwijderde studenten: ${status.data.nbr_deleted}`
-        message += `\nStart met synchroniseren van registraties...`
+        message += `\n-> Nieuwe studenten: ${status.data.nbr_new}, Aangepaste studenten: ${status.data.nbr_updated}, Verwijderde studenten: ${status.data.nbr_deleted}`
+        message += `\n\nStart met synchroniseren van registraties...`
         document.querySelector("#sync-message").innerText = message;
     }
     const ret2 = await fetch(Flask.url_for('api.sync_registrations_start'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify(test)});
     const status2 = await ret2.json();
     if (status2.status) {
-        message += `\nNieuwe registraties: ${status2.data.nbr_new}, Dubble registraties: ${status2.data.nbr_doubles}`
-        message += `\nSynchroniseren is gedaan`
+        message += `\n->Nieuwe registraties: ${status2.data.nbr_new}, Dubbele registraties: ${status2.data.nbr_doubles}, Ongekede rfid: ${status2.data.nbr_bad_rfid}`
+        message += `\n\nSynchroniseren is gedaan`
         document.querySelector("#sync-message").innerText = message;
     }
     busy_indication_off();

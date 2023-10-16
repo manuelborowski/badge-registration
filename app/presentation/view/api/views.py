@@ -144,8 +144,8 @@ def sync_students_start():
 @api.route('/api/sync/registrations/start', methods=['POST'])
 @supervisor_key_required
 def sync_registrations_start():
-    nbr_doubles, nbr_new = mregistration.sync_registrations_start()
-    ret = {"status": True, "data": {"nbr_doubles": nbr_doubles, "nbr_new": nbr_new}}
+    nbr_new, nbr_doubles, nbr_bad_rfid = mregistration.sync_registrations_start()
+    ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_doubles": nbr_doubles, "nbr_bad_rfid": nbr_bad_rfid}}
     return json.dumps(ret)
 
 
@@ -158,8 +158,8 @@ def sync_registrations_start():
 def sync_registrations_data():
     data = json.loads(request.data)
     log.info(data)
-    nbr_doubles, nbr_new = mregistration.sync_registrations(data["data"])
-    ret = {"status": True, "data": {"nbr_doubles": nbr_doubles, "nbr_new": nbr_new}}
+    nbr_new, nbr_doubles, nbr_bad_rfid = mregistration.sync_registrations(data["data"])
+    ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_doubles": nbr_doubles, "nbr_bad_rfid": nbr_bad_rfid}}
     return json.dumps(ret)
 
 

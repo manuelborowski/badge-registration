@@ -187,6 +187,7 @@ def api_schoolrekening_info():
 def sync_registrations(data):
     try:
         nbr_doubles = 0
+        nbr_bad_rfid = 0
         new_registrations = []
         if data:
             registrations = sorted([[datetime.datetime.strptime(r[0], "%Y-%m-%dT%H:%M:%S"), r[1], r[2]] for r in data], key=lambda x: x[0])
@@ -207,11 +208,12 @@ def sync_registrations(data):
                     log.info({"New registration, leerlingnummer": leerlingnummer, "location": registration[2], "time_in": registration[0]})
                 else:
                     log.info(f'{sys._getframe().f_code.co_name}: invalid rfid, {registration[1]}')
+                    nbr_bad_rfid += 1
             # mregistration.registration_add_m(new_registrations)
-        return nbr_doubles, len(new_registrations)
+        return len(new_registrations), nbr_doubles, nbr_bad_rfid
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-        return 0, 0
+        return 0, 0, 0
 
 
 #get registrations from database and send to remote server
@@ -228,8 +230,8 @@ def sync_registrations_start():
         if ret.status_code == 200:
             res = ret.json()
             if res["status"]:
-                return res["data"]["nbr_doubles"], res["data"]["nbr_new"]
-        return 0, 0
+                return res["data"]["nbr_new"], res["data"]["nbr_doubles"], res["data"]["nbr_bad_rfid"]
+        return 0, 0, 0
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-        return 0, 0
+        return 0, 0, 0
