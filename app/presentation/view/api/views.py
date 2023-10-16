@@ -157,8 +157,8 @@ def sync_registrations_start():
 @supervisor_key_required
 def sync_registrations_data():
     data = json.loads(request.data)
-    print(data)
-    nbr_doubles, nbr_new = mregistration.sync_registrations(data)
+    log.info(data)
+    nbr_doubles, nbr_new = mregistration.sync_registrations(data["data"])
     ret = {"status": True, "data": {"nbr_doubles": nbr_doubles, "nbr_new": nbr_new}}
     return json.dumps(ret)
 
