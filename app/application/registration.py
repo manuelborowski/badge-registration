@@ -182,8 +182,21 @@ def sync_registrations(data):
         nbr_doubles = 0
         new_registrations = []
         if data:
-            registrations = sorted([[datetime.datetime.strptime(r[0], "%Y-%m-%dT%H:%M:%S"), datetime.datetime.strptime(r[1], "%Y-%m-%dT%H:%M:%S"), r[2], r[3]] for r in data], key=lambda x: x[0])
+            registrations = []
+            for d in data:
+                try:
+                    r0 = datetime.datetime.strptime(d[0], "%Y-%m-%d %H:%M:%S")
+                except:
+                    r0 = None
+                try:
+                    r1 = datetime.datetime.strptime(d[1], "%Y-%m-%d %H:%M:%S")
+                except:
+                    r1 = None
+                registrations.append([r0, r1, d[2], d[3]])
+            registrations = sorted(registrations, key=lambda x: x[0])
+            # registrations = sorted([[datetime.datetime.strptime(r[0], "%Y-%m-%d %H:%M:%S"), datetime.datetime.strptime(r[1], "%Y-%m-%dT%H:%M:%S"), r[2], r[3]] for r in data], key=lambda x: x[0])
             oldest = registrations[0]
+            log.info(f"Oldest, {oldest}")
             # db_id_rfid = mstudent.student_get_m(fields=["leerlingnummer", "rfid"])
             # rfid2id_cache = {d[1]: d[0] for d in db_id_rfid}
             db_registrations = mregistration.registration_get_m([("time_in", ">=", oldest[0])])
