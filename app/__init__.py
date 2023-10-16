@@ -55,11 +55,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.34: change navbar color when local server
 # 0.35: backup.  Implemented sync, but not ready yet
 # 0.36: local badgereader, sync with remote server
+# 0.37: after syncing, remove registrations
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.36', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone)
+    return dict(version='@ 2022 MB. V0.37', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone)
 
 
 db = SQLAlchemy()
