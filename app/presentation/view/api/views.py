@@ -135,7 +135,7 @@ def locations_get():
 @api.route('/api/sync/students/start', methods=['POST'])
 @supervisor_key_required
 def sync_students_start():
-    return json.dumps({"status": True, "data": {"nbr_new": 0, "nbr_updated": 0, "nbr_deleted": 0}})
+    # return json.dumps({"status": True, "data": {"nbr_new": 0, "nbr_updated": 0, "nbr_deleted": 0}})
     nbr_new, nbr_updated, nbr_deleted = student_load_from_sdh()
     ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_updated": nbr_updated, "nbr_deleted": nbr_deleted }}
     return json.dumps(ret)

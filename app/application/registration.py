@@ -194,11 +194,8 @@ def sync_registrations(data):
                     r1 = None
                 registrations.append([r0, r1, d[2], d[3]])
             registrations = sorted(registrations, key=lambda x: x[0])
-            # registrations = sorted([[datetime.datetime.strptime(r[0], "%Y-%m-%d %H:%M:%S"), datetime.datetime.strptime(r[1], "%Y-%m-%dT%H:%M:%S"), r[2], r[3]] for r in data], key=lambda x: x[0])
             oldest = registrations[0]
             log.info(f"Oldest, {oldest}")
-            # db_id_rfid = mstudent.student_get_m(fields=["leerlingnummer", "rfid"])
-            # rfid2id_cache = {d[1]: d[0] for d in db_id_rfid}
             db_registrations = mregistration.registration_get_m([("time_in", ">=", oldest[0])])
             db_cache = {str(d.time_in) + d.leerlingnummer + d.location: d for d in db_registrations}
             for registration in registrations:
@@ -209,7 +206,7 @@ def sync_registrations(data):
                     continue
                 new_registrations.append({"leerlingnummer": registration[2], "location": registration[3], "time_in": registration[0], "time_out": registration[1]})
                 log.info(f"New registration, {registration}")
-            # mregistration.registration_add_m(new_registrations)
+            mregistration.registration_add_m(new_registrations)
         return len(new_registrations), nbr_doubles
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
@@ -219,12 +216,6 @@ def sync_registrations(data):
 #get registrations from database and send to remote server
 def sync_registrations_start():
     try:
-        test = [
-            ["2023-10-15T15:51:23", "37DC30EE", "test"],
-            ["2023-10-15T15:51:25", "1234", "verdiep"],
-            ["2023-08-25T12:00:45", "97281C08", "f005drank"],
-            ["2023-08-25T12:03:04", "771A2EEE", "f005drank"],
-        ]
         registrations = mregistration.registration_get_m()
         data = [[str(r.time_in), str(r.time_out), r.leerlingnummer, r.location] for r in registrations]
         api_key = get_api_key(current_user.level)
