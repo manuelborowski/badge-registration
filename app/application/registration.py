@@ -177,43 +177,30 @@ def api_schoolrekening_info():
     return info_page
 
 
-# data is in the form:
-#[
-#     ["2023-10-15T15:51:23", "37DC30EE", "test"],
-#     ["2023-10-15T15:51:25", "1234", "verdiep"],
-#     ["2023-08-25T12:00:45", "97281C08", "f005drank"],
-#     ["2023-08-25T12:03:04", "771A2EEE", "f005drank"],
-# ]
 def sync_registrations(data):
     try:
         nbr_doubles = 0
-        nbr_bad_rfid = 0
         new_registrations = []
         if data:
-            registrations = sorted([[datetime.datetime.strptime(r[0], "%Y-%m-%dT%H:%M:%S"), r[1], r[2]] for r in data], key=lambda x: x[0])
+            registrations = sorted([[datetime.datetime.strptime(r[0], "%Y-%m-%dT%H:%M:%S"), datetime.datetime.strptime(r[1], "%Y-%m-%dT%H:%M:%S"), r[2], r[3]] for r in data], key=lambda x: x[0])
             oldest = registrations[0]
-            db_id_rfid = mstudent.student_get_m(fields=["leerlingnummer", "rfid"])
-            rfid2id_cache = {d[1]: d[0] for d in db_id_rfid}
+            # db_id_rfid = mstudent.student_get_m(fields=["leerlingnummer", "rfid"])
+            # rfid2id_cache = {d[1]: d[0] for d in db_id_rfid}
             db_registrations = mregistration.registration_get_m([("time_in", ">=", oldest[0])])
-            db_cache = {str(d.time_in) + str(d.leerlingnummer) +  d.location: d for d in db_registrations}
+            db_cache = {str(d.time_in) + d.leerlingnummer + d.location: d for d in db_registrations}
             for registration in registrations:
-                if registration[1] in rfid2id_cache:
-                    leerlingnummer = rfid2id_cache[registration[1]]
-                    key = str(registration[0]) +  str(leerlingnummer) + registration[2]
-                    if key in db_cache:
-                        log.info(f'{sys._getframe().f_code.co_name}: registration already present, {registration}')
-                        nbr_doubles += 1
-                        continue
-                    new_registrations.append({"leerlingnummer": leerlingnummer, "location": registration[2], "time_in": registration[0]})
-                    log.info({"New registration, leerlingnummer": leerlingnummer, "location": registration[2], "time_in": registration[0]})
-                else:
-                    log.info(f'{sys._getframe().f_code.co_name}: invalid rfid, {registration[1]}')
-                    nbr_bad_rfid += 1
+                key = str(registration[0]) + registration[2] + registration[3]
+                if key in db_cache:
+                    log.info(f'{sys._getframe().f_code.co_name}: registration already present, {registration}')
+                    nbr_doubles += 1
+                    continue
+                new_registrations.append({"leerlingnummer": registration[2], "location": registration[3], "time_in": registration[0], "time_out": registration[1]})
+                log.info(f"New registration, {registration}")
             # mregistration.registration_add_m(new_registrations)
-        return len(new_registrations), nbr_doubles, nbr_bad_rfid
+        return len(new_registrations), nbr_doubles
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-        return 0, 0, 0
+        return 0, 0
 
 
 #get registrations from database and send to remote server
@@ -225,13 +212,15 @@ def sync_registrations_start():
             ["2023-08-25T12:00:45", "97281C08", "f005drank"],
             ["2023-08-25T12:03:04", "771A2EEE", "f005drank"],
         ]
+        registrations = mregistration.registration_get_m()
+        data = [[str(r.time_in), str(r.time_out), r.leerlingnummer, r.location] for r in registrations]
         api_key = get_api_key(current_user.level)
-        ret = requests.post(f"{flask_app.config['SYNC_REGISTRATIONS_URL']}/api/sync/registrations/data", headers={'x-api-key': api_key}, json={"data": test})
+        ret = requests.post(f"{flask_app.config['SYNC_REGISTRATIONS_URL']}/api/sync/registrations/data", headers={'x-api-key': api_key}, json={"data": data})
         if ret.status_code == 200:
             res = ret.json()
             if res["status"]:
-                return res["data"]["nbr_new"], res["data"]["nbr_doubles"], res["data"]["nbr_bad_rfid"]
-        return 0, 0, 0
+                return res["data"]["nbr_new"], res["data"]["nbr_doubles"]
+        return 0, 0
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-        return 0, 0, 0
+        return 0, 0

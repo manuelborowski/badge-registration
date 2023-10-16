@@ -38,7 +38,7 @@ export const start_sync = async () => {
     const ret2 = await fetch(Flask.url_for('api.sync_registrations_start'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify(test)});
     const status2 = await ret2.json();
     if (status2.status) {
-        message += `\n->Nieuwe registraties: ${status2.data.nbr_new}, Dubbele registraties: ${status2.data.nbr_doubles}, Ongekede rfid: ${status2.data.nbr_bad_rfid}`
+        message += `\n->Nieuwe registraties: ${status2.data.nbr_new}, Dubbele registraties: ${status2.data.nbr_doubles}`
         message += `\n\nSynchroniseren is gedaan`
         document.querySelector("#sync-message").innerText = message;
     }
