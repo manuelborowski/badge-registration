@@ -4,20 +4,22 @@ from flask import render_template
 from flask_login import login_required, current_user
 
 from app import log, flask_app
-from app.application import socketio as msocketio, registration as mregistration, settings as msettings
+from app.application import socketio as msocketio, registration as mregistration, settings as msettings, util as mutil
 from . import overview
 
 
 @overview.route('/overview/show_nietverplicht', methods=['POST', 'GET'])
 @login_required
 def show_nietverplicht():
-    return render_template('overview/overview.html', title="Registratie, niet verplicht", buttons=["remove-all"], filters=get_filters("nietverplicht"), right_click=get_right_click_settings(), api_key=flask_app.config['API_KEY'])
+    api_key = mutil.get_api_key(current_user.level)
+    return render_template('overview/overview.html', title="Registratie, niet verplicht", buttons=["remove-all"], filters=get_filters("nietverplicht"), right_click=get_right_click_settings(), api_key=api_key)
 
 
 @overview.route('/overview/show_verkoop', methods=['POST', 'GET'])
 @login_required
 def show_verkoop():
-    return render_template('overview/overview.html', title="Verkoop", buttons=[], filters=get_filters("verkoop"), right_click=get_right_click_settings(), api_key=flask_app.config['API_KEY'])
+    api_key = mutil.get_api_key(current_user.level)
+    return render_template('overview/overview.html', title="Verkoop", buttons=[], filters=get_filters("verkoop"), right_click=get_right_click_settings(), api_key=api_key)
 
 
 def get_current_registrations(msg, client_sid=None):

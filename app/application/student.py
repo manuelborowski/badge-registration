@@ -10,12 +10,13 @@ log.addFilter(MyLogFilter())
 
 def student_load_from_sdh(opaque=None, **kwargs):
     log.info(f"{sys._getframe().f_code.co_name}, START")
+    updated_students = []
+    new_students = []
+    deleted_students = []
     try:
         # check for new, updated or deleted students
         sdh_student_url = msettings.get_configuration_setting('sdh-student-url')
         sdh_key = msettings.get_configuration_setting('sdh-api-key')
-        updated_students = []
-        new_students = []
         res = requests.get(sdh_student_url, headers={'x-api-key': sdh_key})
         if res.status_code == 200:
             sdh_students = res.json()
@@ -118,7 +119,8 @@ def student_load_from_sdh(opaque=None, **kwargs):
         log.info(f"{sys._getframe().f_code.co_name}, STOP")
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-    return True
+        return 0, 0, 0
+    return len(new_students), len(updated_students), len(deleted_students)
 
 
 def klassen_get_unique():

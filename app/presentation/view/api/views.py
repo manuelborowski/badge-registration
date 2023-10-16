@@ -1,6 +1,7 @@
 from flask import request
 from . import api
 from app.application import user as muser, settings as msettings, registration as mregistration, socketio as msocketio, location as mlocation
+from app.application.student import student_load_from_sdh
 from app import log
 import json, sys, html
 from functools import wraps
@@ -117,7 +118,7 @@ def registration_add():
 
 
 @api.route('/api/registration/delete', methods=['POST'])
-@user_key_required
+@supervisor_key_required
 def registration_delete():
     ids = json.loads(request.data)
     ret = mregistration.api_registration_delete(ids)
@@ -129,5 +130,36 @@ def registration_delete():
 def locations_get():
     ret = mlocation.get_locations()
     return(json.dumps(ret))
+
+
+@api.route('/api/sync/students/start', methods=['POST'])
+@supervisor_key_required
+def sync_students_start():
+    return json.dumps({"status": True, "data": {"nbr_new": 0, "nbr_updated": 0, "nbr_deleted": 0}})
+    nbr_new, nbr_updated, nbr_deleted = student_load_from_sdh()
+    ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_updated": nbr_updated, "nbr_deleted": nbr_deleted }}
+    return json.dumps(ret)
+
+
+@api.route('/api/sync/registrations/start', methods=['POST'])
+@supervisor_key_required
+def sync_registrations_start():
+    nbr_doubles, nbr_new = mregistration.sync_registrations_start()
+    ret = {"status": True, "data": {"nbr_doubles": nbr_doubles, "nbr_new": nbr_new}}
+    return json.dumps(ret)
+
+
+# to prevent syncing twice the same registrations:
+# find oldest registration in list
+# from database, get all registrations, later than oldest
+# matching registrations are skipped
+@api.route('/api/sync/registrations/data', methods=['POST'])
+@supervisor_key_required
+def sync_registrations_data():
+    data = json.loads(request.data)
+    print(data)
+    nbr_doubles, nbr_new = mregistration.sync_registrations(data)
+    ret = {"status": True, "data": {"nbr_doubles": nbr_doubles, "nbr_new": nbr_new}}
+    return json.dumps(ret)
 
 

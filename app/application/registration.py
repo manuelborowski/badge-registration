@@ -1,11 +1,11 @@
-import datetime, sys, base64
-
+import datetime, sys, base64, requests
 import app.application
 import app.application.api
 import app
-from app.application.student import log
+from app import log, flask_app
 from app.data import student as mstudent, registration as mregistration, utils as mutils, photo as mphoto, settings as msettings
-
+from app.application.util import get_api_key
+from flask_login import current_user
 
 #logging on file level
 import logging
@@ -177,3 +177,59 @@ def api_schoolrekening_info():
     return info_page
 
 
+# data is in the form:
+#[
+#     ["2023-10-15T15:51:23", "37DC30EE", "test"],
+#     ["2023-10-15T15:51:25", "1234", "verdiep"],
+#     ["2023-08-25T12:00:45", "97281C08", "f005drank"],
+#     ["2023-08-25T12:03:04", "771A2EEE", "f005drank"],
+# ]
+def sync_registrations(data):
+    try:
+        nbr_doubles = 0
+        new_registrations = []
+        if data:
+            registrations = sorted([[datetime.datetime.strptime(r[0], "%Y-%m-%dT%H:%M:%S"), r[1], r[2]] for r in data], key=lambda x: x[0])
+            oldest = registrations[0]
+            db_id_rfid = mstudent.student_get_m(fields=["leerlingnummer", "rfid"])
+            rfid2id_cache = {d[1]: d[0] for d in db_id_rfid}
+            db_registrations = mregistration.registration_get_m([("time_in", ">=", oldest[0])])
+            db_cache = {str(d.time_in) + str(d.leerlingnummer) +  d.location: d for d in db_registrations}
+            for registration in registrations:
+                if registration[1] in rfid2id_cache:
+                    leerlingnummer = rfid2id_cache[registration[1]]
+                    key = str(registration[0]) +  str(leerlingnummer) + registration[2]
+                    if key in db_cache:
+                        log.info(f'{sys._getframe().f_code.co_name}: registration already present, {registration}')
+                        nbr_doubles += 1
+                        continue
+                    new_registrations.append({"leerlingnummer": leerlingnummer, "location": registration[2], "time_in": registration[0]})
+                    log.info({"New registration, leerlingnummer": leerlingnummer, "location": registration[2], "time_in": registration[0]})
+                else:
+                    log.info(f'{sys._getframe().f_code.co_name}: invalid rfid, {registration[1]}')
+            # mregistration.registration_add_m(new_registrations)
+        return nbr_doubles, len(new_registrations)
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return 0, 0
+
+
+#get registrations from database and send to remote server
+def sync_registrations_start():
+    try:
+        test = [
+            ["2023-10-15T15:51:23", "37DC30EE", "test"],
+            ["2023-10-15T15:51:25", "1234", "verdiep"],
+            ["2023-08-25T12:00:45", "97281C08", "f005drank"],
+            ["2023-08-25T12:03:04", "771A2EEE", "f005drank"],
+        ]
+        api_key = get_api_key(current_user.level)
+        ret = requests.post(f"{flask_app.config['SYNC_REGISTRATIONS_URL']}/api/sync/registrations/data", headers={'x-api-key': api_key}, json={"data": test})
+        if ret.status_code == 200:
+            res = ret.json()
+            if res["status"]:
+                return res["data"]["nbr_doubles"], res["data"]["nbr_new"]
+        return 0, 0
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return 0, 0

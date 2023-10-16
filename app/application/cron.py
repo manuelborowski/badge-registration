@@ -60,4 +60,6 @@ start_job()
 def emulate_cron_start(topic=None, opaque=None):
     with flask_app.app_context():
         cron_task()
+
+
 subscribe_handle_button_clicked('button-start-cron-cycle', emulate_cron_start, None)

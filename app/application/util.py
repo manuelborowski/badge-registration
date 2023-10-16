@@ -1,5 +1,5 @@
 import random, string
-from app.data import utils as mutils
+from app.data import utils as mutils, settings as msettings
 
 
 def datetime_to_dutch_datetime_string(date):
@@ -43,3 +43,12 @@ def find_and_replace(text, data):
     for tag, value in data.items():
         text = text.replace(tag, value)
     return text
+
+# level:
+# 1: user
+# 3; supervisor
+# 5: administrator
+def get_api_key(level):
+    api_keys = msettings.get_configuration_setting('api-keys')[level - 1]
+    api_key = [k for k, v in api_keys.items() if v == "local"][0]
+    return api_key
