@@ -223,6 +223,8 @@ def sync_registrations_start():
         if ret.status_code == 200:
             res = ret.json()
             if res["status"]:
+                # TODO: remove synced registrations
+                # mregistration.registration_delete_m(registrations=registrations)
                 return res["data"]["nbr_new"], res["data"]["nbr_doubles"]
         return 0, 0
     except Exception as e:
