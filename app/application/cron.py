@@ -15,11 +15,12 @@ CRON_TASK = 'datacollector-task'
 
 
 def cron_task():
-    settings = get_configuration_setting('cron-enable-modules')
-    for task in cron_table:
-        if task[0] in settings and settings[task[0]]:
-            task[1]()
-    log.error("FLUSH-TO-EMAIL") # this will trigger an email with ERROR-logs (if present)
+    with flask_app.app_context():
+        settings = get_configuration_setting('cron-enable-modules')
+        for task in cron_table:
+            if task[0] in settings and settings[task[0]]:
+                task[1]()
+        log.error("FLUSH-TO-EMAIL") # this will trigger an email with ERROR-logs (if present)
 
 
 def init_job(cron_template):
@@ -58,8 +59,7 @@ start_job()
 
 
 def emulate_cron_start(topic=None, opaque=None):
-    with flask_app.app_context():
-        cron_task()
+    cron_task()
 
 
 subscribe_handle_button_clicked('button-start-cron-cycle', emulate_cron_start, None)
