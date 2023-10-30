@@ -9,7 +9,7 @@
 {% block body %}
     {{ super() }}
     <div class="flex-container">
-    <h1 style=" margin-right: 30px;" class="title-element">{{ title }}</h1>
+    <h1 style=" margin-right: 30px;" class="title-element"></h1>
         {% for f in filters %}
             {% if f.type == "select" %}
                 <div class="form-group "><label class="control-label" for="{{ f.name }}"

@@ -28,7 +28,6 @@
     {% if table_config %}
         <div class="container-fluid">
             <div class="center">
-                <h2>{{ table_config.title }}</h2>
                 <form method="post" id="action_form" enctype=multipart/form-data
                       action="{{ url_for(table_config.table_action) }}">
                     {% if table_config.filters %}
