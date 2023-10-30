@@ -60,6 +60,20 @@ def registration_add(rfid, location_key, timestamp=None):
             if location["type"] == "verkoop":
                 artikel = msettings.get_configuration_setting("artikel-profiles")[location["artikel"]]
                 nbr_items = 1
+                if "dagmasker" in location:
+                    mask = getattr(student, location["dagmasker"])
+                    if mask == "":
+                        log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer}, cannot have this articel')
+                        return {"status": False, "data": f"Student {student.naam} {student.voornaam} is niet ingeschreven voor dit artikel"}
+                    day_index = datetime.datetime.now().weekday()
+                    max_qty = int(mask[day_index])
+                    current_qty = int(mask[day_index+6])
+                    if current_qty >= max_qty:
+                        log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer}, dagmasker, exceeded quantity {current_qty}/{max_qty} ')
+                        return {"status": False, "data": f"Student {student.naam} {student.voornaam} heeft het maximum aantal van {max_qty} artikel(s) bereikt"}
+                    current_qty += 1
+                    mask = mask[:day_index+6] + str(current_qty) + mask[day_index+7:]
+                    mstudent.student_update(student, {location["dagmasker"]: mask})
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now,
                                                                "prijs_per_item": artikel["prijs-per-item"], "aantal_items": nbr_items})
                 if registration:
@@ -147,7 +161,7 @@ def api_schoolrekening_get(options):
 
 def api_registration_add(code, location_key, timestamp):
     try:
-        ret = app.application.registration.registration_add(code, location_key, timestamp)
+        ret = registration_add(code, location_key, timestamp)
         return ret
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')

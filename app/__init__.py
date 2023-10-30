@@ -58,11 +58,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.37: after syncing, remove registrations
 # 0.38: clean up
 # 0.39: cron_task, execute in flask-app-context
+# 0.40: small bugfix in pagination.  Added support for articles, allowed only on certain days of the week (daymask).
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.39', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone)
+    return dict(version='@ 2022 MB. V0.40', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone)
 
 
 db = SQLAlchemy()

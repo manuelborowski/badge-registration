@@ -11,6 +11,7 @@ log.addFilter(MyLogFilter())
 def student_load_from_sdh(opaque=None, **kwargs):
     log.info(f"{sys._getframe().f_code.co_name}, START")
     updated_students = []
+    nbr_updated = 0
     new_students = []
     deleted_students = []
     try:
@@ -35,12 +36,23 @@ def student_load_from_sdh(opaque=None, **kwargs):
                             update["klascode"] = sdh_student["klascode"]
                         if db_student.middag != sdh_student["middag"]:
                             update["middag"] = sdh_student["middag"]
+                        if sdh_student["soep"] != "":
+                            soep = sdh_student["soep"][:2] + "0" + sdh_student["soep"][2:]
+                            if db_student.soep[:5] != soep:
+                                update["soep"] = soep
+                        if db_student.lpv1_gsm != sdh_student["lpv1_gsm"]:
+                            update["lpv1_gsm"] = sdh_student["lpv1_gsm"]
+                        if db_student.lpv2_gsm != sdh_student["lpv2_gsm"]:
+                            update["lpv2_gsm"] = sdh_student["lpv2_gsm"]
                         if db_student.foto_id != sdh_student["foto_id"]:
                             update["foto_id"] = sdh_student["foto_id"]
                         if update:
                             update.update({"item": db_student})
                             updated_students.append(update)
                             log.info(f'{sys._getframe().f_code.co_name}, Update student {db_student.leerlingnummer}, update {update}')
+                            nbr_updated += 1
+                        if db_student.soep != "": #reset soep quantity counters
+                            updated_students.append({"item": db_student, "soep": db_student.soep[:5] + "/00000"})
                         del(db_leerlingnummer_to_student[sdh_student["leerlingnummer"]])
                     else:
                         new_students.append({"leerlingnummer": sdh_student["leerlingnummer"], "klascode": sdh_student["klascode"], "naam": sdh_student["naam"],
@@ -54,7 +66,7 @@ def student_load_from_sdh(opaque=None, **kwargs):
                 mstudent.student_update_m(updated_students)
                 mstudent.student_delete_m(students=deleted_students)
                 mphoto.photo_delete_m(deleted_photos)
-                log.info(f'{sys._getframe().f_code.co_name}, students add {len(new_students)}, update {len(updated_students)}, delete {len(deleted_students)}')
+                log.info(f'{sys._getframe().f_code.co_name}, students add {len(new_students)}, update {nbr_updated}, delete {len(deleted_students)}')
             else:
                 log.info(f'{sys._getframe().f_code.co_name}, error retrieving students from SDH, {sdh_students["data"]}')
         else:
@@ -120,7 +132,7 @@ def student_load_from_sdh(opaque=None, **kwargs):
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return 0, 0, 0
-    return len(new_students), len(updated_students), len(deleted_students)
+    return len(new_students), nbr_updated, len(deleted_students)
 
 
 def klassen_get_unique():

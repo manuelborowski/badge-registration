@@ -80,7 +80,7 @@ const socketio_update_status = (type, data) => {
         }
         busy_indication_off();
     } else {
-        bootbox.alert("Warning, following error appeared:<br>" + data.data);
+        bootbox.alert("Volgende fout is opgetreden:<br>" + data.data);
     }
 }
 
