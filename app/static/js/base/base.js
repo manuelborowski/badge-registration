@@ -17,11 +17,12 @@ export const start_sync = async () => {
     busy_indication_on();
     var message = "Start met synchroniseren van leerlingen..."
     bootbox.dialog({
-       message: `<span id='sync-message'>${message}</span>`,
-       title: "Synchroniseer leerlingen en registraties",
-       buttons: {main: {label: "OK", className: "btn-primary",}
-      }
+        message: `<span id='sync-message'>${message}</span>`,
+        title: "Synchroniseer leerlingen, registraties, locaties...",
+        buttons: {main: {label: "OK", className: "btn-primary", callback: result => window.location.reload()}},
+
     });
+    // sync students
     const ret = await fetch(Flask.url_for('student.sync_students'), {method: 'POST'});
     const status = await ret.json();
     if (status.status) {
@@ -29,10 +30,20 @@ export const start_sync = async () => {
         message += `\n\nStart met synchroniseren van registraties...`
         document.querySelector("#sync-message").innerText = message;
     }
+    // sync registrations
     const ret2 = await fetch(Flask.url_for('register.sync_registrations'), {method: 'POST'});
     const status2 = await ret2.json();
     if (status2.status) {
         message += `\n->Nieuwe registraties: ${status2.data.nbr_new}, Dubbele registraties: ${status2.data.nbr_doubles}`
+        message += `\n\nStart met synchroniseren van locaties en artikels...`
+        document.querySelector("#sync-message").innerText = message;
+    }
+
+    // sync locations
+    const ret3 = await fetch(Flask.url_for('register.sync_locations_articles'));
+    const status3 = await ret3.json();
+    if (status3.status) {
+        message += `\n->Aantal locaties: ${status3.data.nbr_locations}, aantal artikels: ${status3.data.nbr_articles}`
         message += `\n\nSynchroniseren is gedaan`
         document.querySelector("#sync-message").innerText = message;
     }

@@ -191,7 +191,8 @@ def api_schoolrekening_info():
     return info_page
 
 
-def sync_registrations(data):
+# sync registrations from remote (client) into local (server-database).
+def sync_registrations_server(data):
     try:
         nbr_doubles = 0
         new_registrations = []
@@ -226,8 +227,8 @@ def sync_registrations(data):
         return 0, 0
 
 
-#get registrations from database and send to remote server
-def sync_registrations_start():
+#get registrations from local client database and send to remote server
+def sync_registrations_client():
     try:
         registrations = mregistration.registration_get_m()
         data = [[str(r.time_in), str(r.time_out), r.leerlingnummer, r.location] for r in registrations]
@@ -242,3 +243,5 @@ def sync_registrations_start():
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return 0, 0
+
+

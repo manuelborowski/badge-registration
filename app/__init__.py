@@ -61,11 +61,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.40: small bugfix in pagination.  Added support for articles, allowed only on certain days of the week (daymask).
 # 0.41: update navbar
 # 0.42: bugfix when adding new data in column soep.  Reworked registration and student syncing
+# 0.43: sync locations and articles
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.42', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone)
+    return dict(version='@ 2022 MB. V0.43', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone)
 
 
 db = SQLAlchemy()

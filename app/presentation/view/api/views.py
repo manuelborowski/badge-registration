@@ -132,6 +132,13 @@ def locations_get():
     return(json.dumps(ret))
 
 
+@api.route('/api/location_article/get', methods=['GET'])
+@user_key_required
+def locations_articles_get():
+    ret = mlocation.get_locations_articles()
+    return(json.dumps(ret))
+
+
 # to prevent syncing twice the same registrations:
 # find oldest registration in list
 # from database, get all registrations, later than oldest
@@ -140,7 +147,7 @@ def locations_get():
 @supervisor_key_required
 def sync_registrations_data():
     data = json.loads(request.data)
-    nbr_new, nbr_doubles = mregistration.sync_registrations(data["data"])
+    nbr_new, nbr_doubles = mregistration.sync_registrations_server(data["data"])
     ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_doubles": nbr_doubles}}
     return json.dumps(ret)
 
