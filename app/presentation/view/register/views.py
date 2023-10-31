@@ -1,6 +1,6 @@
 from flask import render_template, request
 from . import register
-from app import flask_app
+from flask_login import login_required
 from app.application import registration as mregistration, socketio as msocketio, settings as msettings
 import json
 
@@ -12,6 +12,14 @@ def show(location_key):
     location = msettings.get_configuration_setting("location-profiles")[location_key]
     location.update({"key": location_key})
     return render_template('register/register.html', location=location, api_key=api_key)
+
+
+@register.route('/register/sync', methods=['POST'])
+@login_required
+def sync_registrations():
+    nbr_new, nbr_doubles = mregistration.sync_registrations_start()
+    ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_doubles": nbr_doubles}}
+    return json.dumps(ret)
 
 
 

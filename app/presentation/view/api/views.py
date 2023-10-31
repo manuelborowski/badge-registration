@@ -132,23 +132,6 @@ def locations_get():
     return(json.dumps(ret))
 
 
-@api.route('/api/sync/students/start', methods=['POST'])
-@supervisor_key_required
-def sync_students_start():
-    # return json.dumps({"status": True, "data": {"nbr_new": 0, "nbr_updated": 0, "nbr_deleted": 0}})
-    nbr_new, nbr_updated, nbr_deleted = student_load_from_sdh()
-    ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_updated": nbr_updated, "nbr_deleted": nbr_deleted }}
-    return json.dumps(ret)
-
-
-@api.route('/api/sync/registrations/start', methods=['POST'])
-@supervisor_key_required
-def sync_registrations_start():
-    nbr_new, nbr_doubles = mregistration.sync_registrations_start()
-    ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_doubles": nbr_doubles}}
-    return json.dumps(ret)
-
-
 # to prevent syncing twice the same registrations:
 # find oldest registration in list
 # from database, get all registrations, later than oldest

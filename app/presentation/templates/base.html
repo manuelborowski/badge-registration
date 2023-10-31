@@ -39,6 +39,15 @@
                     max-width: 700px; /* New width for default modal */
                 }
             }
+            .blink {
+                animation: blinker 3s linear infinite;
+            }
+
+            @keyframes blinker {
+                50% {
+                    opacity: 0;
+                }
+            }
         </style>
     {% endblock %}
 </head>

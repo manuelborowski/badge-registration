@@ -5,11 +5,10 @@ from flask import redirect, url_for, request, render_template
 from flask_login import login_required, current_user
 from app.data.datatables import DatatableConfig
 from app.presentation.view import datatables
-from app.application import socketio as msocketio, settings as msettings
+from app.application import settings as msettings
 import json
 import app.data
 import app.application.student
-from app.application.settings import get_configuration_setting
 
 
 @student.route('/student/student', methods=['POST', 'GET'])
@@ -103,3 +102,13 @@ class Config(DatatableConfig):
 
 
 table_config = Config("student", "Overzicht Studenten")
+
+
+@student.route('/student/sync', methods=['POST'])
+@login_required
+def sync_students():
+    nbr_new, nbr_updated, nbr_deleted = app.application.student.student_load_from_sdh()
+    ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_updated": nbr_updated, "nbr_deleted": nbr_deleted }}
+    return json.dumps(ret)
+
+

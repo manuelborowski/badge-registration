@@ -14,12 +14,6 @@ export function busy_indication_off() {
 }
 
 export const start_sync = async () => {
-    var test = [
-        ["2023-10-15T15:51:23", "37DC30EE", "test"],
-        ["2023-10-15T15:51:25", "1234", "verdiep"],
-        ["2023-08-25T12:00:45", "97281C08", "f005drank"],
-        ["2023-08-25T12:03:04", "771A2EEE", "f005drank"],
-    ]
     busy_indication_on();
     var message = "Start met synchroniseren van leerlingen..."
     bootbox.dialog({
@@ -28,14 +22,14 @@ export const start_sync = async () => {
        buttons: {main: {label: "OK", className: "btn-primary",}
       }
     });
-    const ret = await fetch(Flask.url_for('api.sync_students_start'), {headers: {'x-api-key': api_key,}, method: 'POST'});
+    const ret = await fetch(Flask.url_for('student.sync_students'), {method: 'POST'});
     const status = await ret.json();
     if (status.status) {
         message += `\n-> Nieuwe studenten: ${status.data.nbr_new}, Aangepaste studenten: ${status.data.nbr_updated}, Verwijderde studenten: ${status.data.nbr_deleted}`
         message += `\n\nStart met synchroniseren van registraties...`
         document.querySelector("#sync-message").innerText = message;
     }
-    const ret2 = await fetch(Flask.url_for('api.sync_registrations_start'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify(test)});
+    const ret2 = await fetch(Flask.url_for('register.sync_registrations'), {method: 'POST'});
     const status2 = await ret2.json();
     if (status2.status) {
         message += `\n->Nieuwe registraties: ${status2.data.nbr_new}, Dubbele registraties: ${status2.data.nbr_doubles}`
@@ -53,6 +47,11 @@ var menu = [
     ["settings.show", "Instellingen", 5],
 ]
 
+var locations = [
+    ["default", "Kies locatie"],
+    ["een", "Een"],
+    ["twee", "Twee"],
+]
 
 export const inject_menu = new_menu => {
     menu = new_menu;
@@ -118,6 +117,19 @@ $(document).ready(() => {
             navbar_element.appendChild(li);
         }
     }
+
+    // const select_div = document.createElement("div");
+    // select_div.classList.add("blink");
+    // const location_select = document.createElement("select");
+    // location_select.classList.add("form-select", "form-select-sm");
+    // for (const location of locations) {
+    //     const option = document.createElement("option");
+    //     option.innerHTML = location[1];
+    //     option.value = location[0];
+    //     location_select.appendChild(option);
+    // }
+    // select_div.appendChild(location_select);
+    // navbar_element.appendChild(select_div);
 
     if (stand_alone) {
         const btn_div = document.createElement("div");
