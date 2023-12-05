@@ -2,7 +2,7 @@ from flask import request
 from . import api
 from app.application import user as muser, settings as msettings, registration as mregistration, socketio as msocketio, location as mlocation
 from app.application.student import student_load_from_sdh
-from app import log
+from app import log, version
 import json, sys, html
 from functools import wraps
 
@@ -139,6 +139,14 @@ def locations_articles_get():
     return(json.dumps(ret))
 
 
+#get the software version
+@api.route('/api/version/get', methods=['GET'])
+@user_key_required
+def version_get_server():
+    ret = {"version": version}
+    return(json.dumps(ret))
+
+
 # to prevent syncing twice the same registrations:
 # find oldest registration in list
 # from database, get all registrations, later than oldest
@@ -150,5 +158,19 @@ def sync_registrations_data():
     nbr_new, nbr_doubles = mregistration.sync_registrations_server(data["data"])
     ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_doubles": nbr_doubles}}
     return json.dumps(ret)
+
+
+# get software version from server and compare with own version
+# get, from server, all missing sql-scripts and update script
+# run, in sequence, all sql scripts and run update script.
+@api.route('/api/upgrade/software', methods=['POST'])
+@supervisor_key_required
+def upgrade_software_client():
+    data = json.loads(request.data)
+    nbr_new, nbr_doubles = mregistration.sync_registrations_server(data["data"])
+    ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_doubles": nbr_doubles}}
+    return json.dumps(ret)
+
+
 
 

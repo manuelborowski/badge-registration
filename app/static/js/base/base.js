@@ -1,3 +1,5 @@
+import { create_select_locations} from "../project/locations.js";
+
 export function flash_messages(list) {
     for (var i = 0; i < list.length; i++) {
         var message = list[i];
@@ -58,11 +60,6 @@ var menu = [
     ["settings.show", "Instellingen", 5],
 ]
 
-var locations = [
-    ["default", "Kies locatie"],
-    ["een", "Een"],
-    ["twee", "Twee"],
-]
 
 export const inject_menu = new_menu => {
     menu = new_menu;
@@ -129,18 +126,7 @@ $(document).ready(() => {
         }
     }
 
-    // const select_div = document.createElement("div");
-    // select_div.classList.add("blink");
-    // const location_select = document.createElement("select");
-    // location_select.classList.add("form-select", "form-select-sm");
-    // for (const location of locations) {
-    //     const option = document.createElement("option");
-    //     option.innerHTML = location[1];
-    //     option.value = location[0];
-    //     location_select.appendChild(option);
-    // }
-    // select_div.appendChild(location_select);
-    // navbar_element.appendChild(select_div);
+    navbar_element.appendChild(create_select_locations(locations));
 
     if (stand_alone) {
         const btn_div = document.createElement("div");

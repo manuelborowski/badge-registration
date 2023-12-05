@@ -129,6 +129,8 @@ default_configuration_settings = {
     'popup-new-update-user': ({}, Settings.SETTING_TYPE.E_JSON),
 
     'logging-inform-emails': ('', Settings.SETTING_TYPE.E_STRING),
+
+    'sms-student-too-late': ('', Settings.SETTING_TYPE.E_STRING),
 }
 
 

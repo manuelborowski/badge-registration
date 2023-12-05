@@ -213,6 +213,47 @@ settings_formio = \
                 ]
               }
             ]
+          },
+          {
+            "label": "Sms Locatie",
+            "tableView": false,
+            "key": "sms-location",
+            "type": "container",
+            "input": true,
+            "components": [
+              {
+                "title": "SMS locaties",
+                "theme": "primary",
+                "collapsible": true,
+                "key": "RegistratieTemplate1",
+                "type": "panel",
+                "label": "Studenten",
+                "collapsed": true,
+                "input": false,
+                "tableView": false,
+                "components": [
+                  {
+                    "label": "Opslaan",
+                    "showValidations": false,
+                    "theme": "warning",
+                    "tableView": false,
+                    "key": "submit",
+                    "type": "button",
+                    "input": true,
+                    "saveOnEnter": false
+                  },
+                  {
+                    "label": "Leerling te laat: SMS naar ouders (tekst)",
+                    "applyMaskOn": "change",
+                    "autoExpand": false,
+                    "tableView": true,
+                    "key": "sms-student-too-late",
+                    "type": "textarea",
+                    "input": true
+                  }
+                ]
+              }
+            ]
           }
         ]
       },

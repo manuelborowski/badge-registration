@@ -4,7 +4,7 @@ from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from flask_jsglue import JSGlue
 from werkzeug.routing import IntegerConverter as OrigIntegerConvertor
-import logging, logging.handlers, os, sys
+import logging.handlers, os, sys
 from functools import wraps
 from flask_socketio import SocketIO
 from flask_apscheduler import APScheduler
@@ -62,12 +62,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.41: update navbar
 # 0.42: bugfix when adding new data in column soep.  Reworked registration and student syncing
 # 0.43: sync locations and articles
+# 0.44: added location-select in navbar
 
 
-@flask_app.context_processor
-def inject_defaults():
-    return dict(version='@ 2022 MB. V0.43', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone)
-
+version = "0.44"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
