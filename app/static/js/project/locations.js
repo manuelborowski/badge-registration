@@ -113,11 +113,23 @@ const check_rfidusb_state = async () => {
         var timeout = 2;
         const ret = await fetch(`${rfidusb_url}/serial_port`);
         const status = await ret.json();
-        if (status.port !== "") {
-            location_select.style.backgroundColor = "lightgreen";
-        } else {
-            location_select.style.backgroundColor = "orange";
+        var state = status.port !== "";
+        if (state) {
+            if (location_select.style.backgroundColor !== "lightgreen") {
+                if (rfidusb_br_url !== "") {
+                    const encoded_url = encodeURIComponent(encodeURIComponent(rfidusb_br_url));
+                    const ret = await fetch(`${rfidusb_url}/url/${encoded_url}`, {method: 'POST'});
+                    const status = await ret.json();
+                    state = (status === "ok") && state;
+                }
+                if (rfidusb_br_key !== "") {
+                    const ret = await fetch(`${rfidusb_url}/api_key/${rfidusb_br_key}`, {method: 'POST'});
+                    const status = await ret.json();
+                    state = (status === "ok") && state;
+                }
+            }
         }
+        location_select.style.backgroundColor = state ? "lightgreen" : "orange";
         location_select.style.removeProperty("visibility");
     } catch (e) {
         location_select.style.backgroundColor = "orange";

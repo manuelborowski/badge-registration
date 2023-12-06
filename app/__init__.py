@@ -64,9 +64,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.43: sync locations and articles
 # 0.44: added location-select in navbar
 # 0.45: implement rfidusb heartbeat, remove location-select if rfidusb-server is not running, color orange if no badgereader is connect to usb.
+# 0.46: badgreader can update br-url and br-key
 
 
-version = "0.45"
+version = "0.46"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

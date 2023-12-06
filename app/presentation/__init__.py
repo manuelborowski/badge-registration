@@ -5,7 +5,9 @@ from app.data.settings import get_configuration_setting
 def inject_defaults():
     locations = get_configuration_setting("location-profiles")
     return dict(version=f'@ 2022 MB. {version}', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone, locations=locations,
-                rfidusb_url=flask_app.config["RFIDUSB_URL"])
+                rfidusb_url=flask_app.config["RFIDUSB_API_URL"],
+                rfidusb_br_url=flask_app.config["RFIDUSB_BR_URL"] if "RFIDUSB_BR_URL" in flask_app.config else "",
+                rfidusb_br_key=flask_app.config["RFIDUSB_BR_KEY"] if "RFIDUSB_BR_KEY" in flask_app.config else "")
 
 
 
