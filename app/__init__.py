@@ -63,9 +63,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.42: bugfix when adding new data in column soep.  Reworked registration and student syncing
 # 0.43: sync locations and articles
 # 0.44: added location-select in navbar
+# 0.45: implement rfidusb heartbeat, remove location-select if rfidusb-server is not running, color orange if no badgereader is connect to usb.
 
 
-version = "0.44"
+version = "0.45"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

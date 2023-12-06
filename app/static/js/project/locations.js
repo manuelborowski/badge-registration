@@ -26,6 +26,7 @@ export const create_select_locations = locations => {
         location_select.value = saved_location;
         handle_location_select(true);
     }
+    check_rfidusb_state()
     return select_div
 }
 
@@ -90,9 +91,7 @@ const rfidusb_set_location = async location => {
         if (status !== "ok") {
             bootbox.alert(`Fout, kan deze locatie niet instellen!`)
         }
-        location_select.style.backgroundColor = "lightgreen";
     } catch (e) {
-        // alert("Connectiefout, rfidusb-server is niet actief")
         location_select.style.backgroundColor = "orange";
     }
 }
@@ -104,13 +103,26 @@ const rfidusb_set_active_state = async state => {
         if (status !== "ok") {
             bootbox.alert(`Fout, kan de toestand niet aanpassen!`)
         }
-        location_select.style.backgroundColor = "lightgreen";
     } catch (e) {
-        // alert("Connectiefout, rfidusb-server is niet actief")
         location_select.style.backgroundColor = "orange";
     }
 }
 
-const handle_reset_location = (time = null) => {
-
+const check_rfidusb_state = async () => {
+    try {
+        var timeout = 2;
+        const ret = await fetch(`${rfidusb_url}/serial_port`);
+        const status = await ret.json();
+        if (status.port !== "") {
+            location_select.style.backgroundColor = "lightgreen";
+        } else {
+            location_select.style.backgroundColor = "orange";
+        }
+        location_select.style.removeProperty("visibility");
+    } catch (e) {
+        location_select.style.backgroundColor = "orange";
+        location_select.style.visibility = "hidden";
+        timeout = 10;
+    }
+    setTimeout(check_rfidusb_state, timeout * 1000);
 }
