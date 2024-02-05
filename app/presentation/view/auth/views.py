@@ -20,7 +20,7 @@ def login():
             user = muser.update_user(user, {"last_login": datetime.datetime.now()})
             if not user:
                 log.error('Could not save timestamp')
-            return redirect(url_for('overview.show_nietverplicht'))
+            return render_template('base.html', default_view=True)
 
     form = LoginForm(request.form)
     locations = msettings.get_configuration_setting("location-profiles")
@@ -34,7 +34,7 @@ def login():
                 log.error('Could not save timestamp')
                 return redirect(url_for('auth.login'))
             # Ok, continue
-            return redirect(url_for('overview.show_nietverplicht'))
+            return render_template('base.html', default_view=True)
         else:
             utils.flash_plus(u'Ongeldige gebruikersnaam of paswoord')
             log.error(u'Invalid username/password')
@@ -94,7 +94,7 @@ def login_ss():
                 log.error('Could not save user')
                 return redirect(url_for('auth.login'))
             # Ok, continue
-            return redirect(url_for('overview.show_nietverplicht'))
+            return render_template('base.html', default_view=True)
     else:
         redirect_uri = f'{flask_app.config["SMARTSCHOOL_OUATH_REDIRECT_URI"]}/ss'
         return redirect(f'{flask_app.config["SMARTSCHOOL_OAUTH_SERVER"]}?app_uri={redirect_uri}')

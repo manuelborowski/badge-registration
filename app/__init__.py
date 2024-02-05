@@ -65,9 +65,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.44: added location-select in navbar
 # 0.45: implement rfidusb heartbeat, remove location-select if rfidusb-server is not running, color orange if no badgereader is connect to usb.
 # 0.46: badgreader can update br-url and br-key
+# 0.47: default page after login.  Added sms-registration.  Bugfix import new students.
 
 
-version = "0.46"
+version = "0.47"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

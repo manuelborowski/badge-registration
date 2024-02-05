@@ -53,8 +53,9 @@ export const start_sync = async () => {
 }
 
 var menu = [
-    ["overview.show_nietverplicht", "Niet-verplicht", 1],
     ["overview.show_verkoop", "Verkoop", 1],
+    ["overview.show_verplicht", "Verplicht", 1],
+    ["overview.show_nietverplicht", "Niet-verplicht", 1],
     ["student.show", "Studenten", 1],
     ["user.show", "Gebruikers", 5],
     ["settings.show", "Instellingen", 5],
@@ -66,6 +67,9 @@ export const inject_menu = new_menu => {
 }
 
 $(document).ready(() => {
+    if (default_view) { // after login, go to default (= first) page
+        document.location.href = Flask.url_for(menu[0][0])
+    }
     const navbar_element = document.querySelector("#navbar");
     let dd_ctr = 0;
     for (const item of menu) {

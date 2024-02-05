@@ -55,8 +55,12 @@ def student_load_from_sdh(opaque=None, **kwargs):
                             updated_students.append({"item": db_student, "soep": db_student.soep[:5] + "/00000"})
                         del(db_leerlingnummer_to_student[sdh_student["leerlingnummer"]])
                     else:
-                        new_students.append({"leerlingnummer": sdh_student["leerlingnummer"], "klascode": sdh_student["klascode"], "naam": sdh_student["naam"],
-                                             "voornaam": sdh_student["voornaam"], "middag": sdh_student["middag"], "rfid": sdh_student["rfid"], "foto_id": sdh_student["foto_id"]})
+                        new_student = {"leerlingnummer": sdh_student["leerlingnummer"], "klascode": sdh_student["klascode"], "naam": sdh_student["naam"],
+                                             "voornaam": sdh_student["voornaam"], "middag": sdh_student["middag"], "rfid": sdh_student["rfid"], "foto_id": sdh_student["foto_id"],
+                                             "lpv1_gsm": sdh_student["lpv1_gsm"], "lpv2_gsm": sdh_student["lpv2_gsm"]}
+                        if sdh_student["soep"] != "":
+                            new_student["soep"] = sdh_student["soep"][:2] + "0" + sdh_student["soep"][2:] + "/00000"
+                        new_students.append(new_student)
                         log.info(f'{sys._getframe().f_code.co_name}, New student {sdh_student["leerlingnummer"]}')
                 deleted_students = [v for (k, v) in db_leerlingnummer_to_student.items()]
                 for student in deleted_students:

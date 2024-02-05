@@ -15,6 +15,13 @@ def show_nietverplicht():
     return render_template('overview/overview.html', title="Registratie, niet verplicht", buttons=["remove-all"], filters=get_filters("nietverplicht"), right_click=get_right_click_settings(), api_key=api_key)
 
 
+@overview.route('/overview/show_verplicht', methods=['POST', 'GET'])
+@login_required
+def show_verplicht():
+    api_key = mutil.get_api_key(current_user.level)
+    return render_template('overview/overview.html', title="Registratie, verplicht", filters=get_filters("sms"), right_click=get_right_click_settings(), api_key=api_key)
+
+
 @overview.route('/overview/show_verkoop', methods=['POST', 'GET'])
 @login_required
 def show_verkoop():
@@ -43,11 +50,13 @@ msocketio.subscribe_on_type('get-current-registrations', get_current_registratio
 msocketio.subscribe_on_type('clear-all-registrations', clear_all_registrations)
 
 
-def get_filters(location_type):
+def get_filters(location_types):
     try:
         locations = msettings.get_configuration_setting("location-profiles")
         if locations:
-            location_choices = [[k, l["locatie"]] for k, l in locations.items() if l["type"] == location_type]
+            if location_types is not type(list):
+                location_types = [location_types]
+            location_choices = [[k, l["locatie"]] for k, l in locations.items() if l["type"] in location_types]
             return [
                 {
                     'type': 'select',

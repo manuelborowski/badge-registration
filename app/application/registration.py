@@ -63,7 +63,7 @@ def registration_add(rfid, location_key, timestamp=None):
                 if "dagmasker" in location:
                     mask = getattr(student, location["dagmasker"])
                     if mask == "":
-                        log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer}, cannot have this articel')
+                        log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer}, cannot have this artikel')
                         return {"status": False, "data": f"Student {student.naam} {student.voornaam} is niet ingeschreven voor dit artikel"}
                     day_index = datetime.datetime.now().weekday()
                     max_qty = int(mask[day_index])
@@ -81,6 +81,16 @@ def registration_add(rfid, location_key, timestamp=None):
                     ret.update({"action": "add"})
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})
                     return ret
+
+
+            if location["type"] == "sms":
+                registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now})
+                if registration:
+                    log.info(f'{sys._getframe().f_code.co_name}: SMS ({location["locatie"]}), {student.leerlingnummer} at {now}')
+                    ret.update({"action": "add"})
+                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})
+                    return ret
+
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}
         log.info(f'{sys._getframe().f_code.co_name}:  {rfid} not found in database')

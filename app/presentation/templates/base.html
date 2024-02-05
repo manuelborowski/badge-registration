@@ -102,6 +102,7 @@
         const rfidusb_br_url = "{{ rfidusb_br_url }}";
         const rfidusb_br_key = "{{ rfidusb_br_key }}";
         const locations = {{ locations|tojson }};
+        const default_view = {{ (default_view or False)|tojson }}
     </script>
     <script type="module">
         import {start_sync} from "/static/js/base/base.js";

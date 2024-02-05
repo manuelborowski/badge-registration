@@ -250,6 +250,21 @@ settings_formio = \
                     "key": "sms-student-too-late",
                     "type": "textarea",
                     "input": true
+                  },
+                  {
+                    "label": "HTML",
+                    "attrs": [
+                      {
+                        "attr": "",
+                        "value": ""
+                      }
+                    ],
+                    "content": "Variabelen<br>\n%%NAAM%%<br>\n%%VOORNAAM%%<br>\n%%TIJD%% (tijdstip van registratie)",
+                    "refreshOnChange": false,
+                    "key": "html",
+                    "type": "htmlelement",
+                    "input": false,
+                    "tableView": false
                   }
                 ]
               }
