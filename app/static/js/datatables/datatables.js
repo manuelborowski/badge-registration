@@ -162,7 +162,6 @@ $(document).ready(function () {
         table_config,
         filters,
         popups,
-        api_key,
         current_user_is_at_least_admin,
         reload_table
     }

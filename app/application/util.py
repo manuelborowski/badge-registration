@@ -48,7 +48,7 @@ def find_and_replace(text, data):
 # 1: user
 # 3; supervisor
 # 5: administrator
-def get_api_key(level):
+def get_api_key(level, tag="local"):
     api_keys = msettings.get_configuration_setting('api-keys')[level - 1]
-    api_key = [k for k, v in api_keys.items() if v == "local"][0]
+    api_key = [k for k, v in api_keys.items() if v == tag][0]
     return api_key

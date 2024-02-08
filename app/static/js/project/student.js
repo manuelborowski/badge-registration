@@ -8,7 +8,7 @@ const registration_add = async (item, ids) => {
     bootbox.confirm(`${menu_item2label[item]}<br>Voor: ${person.naam} ${person.voornaam}`, async result => {
         if (result) {
             const ret = await fetch(Flask.url_for('api.registration_add'),
-                {headers: {'x-api-key': ctx.api_key,}, method: 'POST', body: JSON.stringify({location_key: item, badge_code: person.rfid})});
+                {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({location_key: item, badge_code: person.rfid})});
             const status = await ret.json();
             if (status.status) {
             } else {

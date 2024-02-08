@@ -52,6 +52,14 @@ export const start_sync = async () => {
     busy_indication_off();
 }
 
+export const start_upgrade = async () => {
+    busy_indication_on();
+    bootbox.confirm("Start met software upgrade...",
+        async result => {const ret = await fetch(Flask.url_for('api.upgrade_software_client'), {method: 'POST', headers: {'x-api-key': api_key,}})});
+    busy_indication_off();
+}
+
+
 var menu = [
     ["overview.show_verkoop", "Verkoop", 1],
     ["overview.show_verplicht", "Verplicht", 1],
@@ -142,6 +150,16 @@ $(document).ready(() => {
         sync_btn.innerHTML = "Sync";
         btn_div.appendChild(sync_btn);
         navbar_element.appendChild(btn_div);
+
+        const upgrade_div = document.createElement("div");
+        upgrade_div.classList.add("nav-buttons");
+        const upgade_btn = document.createElement("button");
+        upgade_btn.classList.add("btn", "btn-warning");
+        upgade_btn.type = "button";
+        upgade_btn.onclick = start_upgrade;
+        upgade_btn.innerHTML = "Upgrade";
+        upgrade_div.appendChild(upgade_btn);
+        navbar_element.appendChild(upgrade_div);
     }
 });
 
