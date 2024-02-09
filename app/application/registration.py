@@ -6,6 +6,7 @@ from app import log, flask_app
 from app.data import student as mstudent, registration as mregistration, utils as mutils, photo as mphoto, settings as msettings
 from app.application.util import get_api_key
 from flask_login import current_user
+from app.application.sms import send_sms
 
 #logging on file level
 import logging
@@ -82,11 +83,19 @@ def registration_add(rfid, location_key, timestamp=None):
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})
                     return ret
 
-
             if location["type"] == "sms":
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now})
                 if registration:
                     log.info(f'{sys._getframe().f_code.co_name}: SMS ({location["locatie"]}), {student.leerlingnummer} at {now}')
+                    text_body = msettings.get_configuration_setting("sms-student-too-late")
+                    text_body = text_body.replace("%%VOORNAAM%%", student.voornaam)
+                    text_body = text_body.replace("%%NAAM%%", student.naam)
+                    text_body = text_body.replace("%%TIJD%%", str(now))
+                    if student.lpv1_gsm != "":
+                        send_sms(student.lpv1_gsm, text_body)
+                    if student.lpv2_gsm != "":
+                        send_sms(student.lpv2_gsm, text_body)
+
                     ret.update({"action": "add"})
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})
                     return ret

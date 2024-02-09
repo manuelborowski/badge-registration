@@ -67,9 +67,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.46: badgreader can update br-url and br-key
 # 0.47: default page after login.  Added sms-registration.  Bugfix import new students.
 # 0.48: reworked api-key.  Added upgrade button (not implemented yet)
+# 0.49: added support for smsAPI
 
 
-version = "0.48"
+version = "0.49"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
