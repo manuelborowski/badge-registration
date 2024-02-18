@@ -68,9 +68,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.47: default page after login.  Added sms-registration.  Bugfix import new students.
 # 0.48: reworked api-key.  Added upgrade button (not implemented yet)
 # 0.49: added support for smsAPI
+# 0.50: updated location selector
 
 
-version = "0.49"
+version = "0.50"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

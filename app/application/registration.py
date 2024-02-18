@@ -93,8 +93,8 @@ def registration_add(rfid, location_key, timestamp=None):
                     text_body = text_body.replace("%%TIJD%%", str(now))
                     if student.lpv1_gsm != "":
                         send_sms(student.lpv1_gsm, text_body)
-                    if student.lpv2_gsm != "":
-                        send_sms(student.lpv2_gsm, text_body)
+                    # if student.lpv2_gsm != "":
+                    #     send_sms(student.lpv2_gsm, text_body)
 
                     ret.update({"action": "add"})
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})

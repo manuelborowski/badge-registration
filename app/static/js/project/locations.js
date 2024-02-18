@@ -2,7 +2,7 @@ const location_select = document.createElement("select");
 const select_div = document.createElement("div");
 
 export const create_select_locations = locations => {
-    select_div.classList.add("blink");
+    select_div.style.display = "none";
     location_select.classList.add("form-select", "form-select-sm");
     location_select.style.marginTop = "8px";
     location_select.style.marginLeft = "8px";
@@ -34,20 +34,18 @@ export const create_select_locations = locations => {
 const handle_location_select = (at_reload = false) => {
     localStorage.setItem("badge-location", location_select.value)
     if (location_select.value === "default") {
-        select_div.classList.add("blink")
-        location_select.style.backgroundColor = "white";
-        rfidusb_set_active_state(false);
+        location_select.style.backgroundColor = "orange";
+        rfidusb_set_state(false);
     } else {
-        select_div.classList.remove("blink");
+        location_select.style.backgroundColor = "lightgreen";
         if (location_select.value === "null") {
-            location_select.style.backgroundColor = "white";
-            rfidusb_set_active_state(false)
+            rfidusb_set_state(false)
         } else {
             const location = locations[location_select.value];
             if ("bevestig_met_pin" in location && location.bevestig_met_pin && !at_reload) {
                 generate_and_confirm_pin(location_select.value);
             } else {
-                rfidusb_set_active_state(true)
+                rfidusb_set_state(true)
                 rfidusb_set_location(location_select.value)
             }
             if ("locatie_reset_om" in location) {
@@ -74,7 +72,7 @@ const generate_and_confirm_pin = (location_key) => {
         title: `Om deze locatie (${locations[location_key].locatie}) te kunnen gebruiken moet je eerst onderstaande pincode ingeven aub.<br>Pin: ${pin}`,
         callback: result => {
             if (result === pin.toString()) {
-                rfidusb_set_active_state(true)
+                rfidusb_set_state(true)
                 rfidusb_set_location(location_key);
             } else {
                 location_select.value = "default";
@@ -88,7 +86,20 @@ const rfidusb_set_location = async location => {
     try {
         const ret = await fetch(`${rfidusb_url}/location/${location}`, {method: 'POST'});
         const status = await ret.json();
-        if (status !== "ok") {
+        var state = status === "ok";
+        if (rfidusb_br_url !== "" && state) {
+            const encoded_url = encodeURIComponent(encodeURIComponent(rfidusb_br_url));
+            const ret = await fetch(`${rfidusb_url}/url/${encoded_url}`, {method: 'POST'});
+            const status = await ret.json();
+            state = (status === "ok") && state;
+        }
+        if (rfidusb_br_key !== "" && state) {
+            const ret = await fetch(`${rfidusb_url}/api_key/${rfidusb_br_key}`, {method: 'POST'});
+            const status = await ret.json();
+            state = (status === "ok") && state;
+        }
+
+        if (!state) {
             bootbox.alert(`Fout, kan deze locatie niet instellen!`)
         }
     } catch (e) {
@@ -96,7 +107,7 @@ const rfidusb_set_location = async location => {
     }
 }
 
-const rfidusb_set_active_state = async state => {
+const rfidusb_set_state = async state => {
     try {
         const ret = await fetch(`${rfidusb_url}/active/${state ? 1 : 0}`, {method: 'POST'});
         const status = await ret.json();
@@ -108,32 +119,22 @@ const rfidusb_set_active_state = async state => {
     }
 }
 
+var old_rfidusb_state = false;
+
+// if an RFID reader is attached to a USB port (status.port is e.g. COM4), activate the rfidusb server and show the select-location-button
 const check_rfidusb_state = async () => {
     try {
         var timeout = 2;
         const ret = await fetch(`${rfidusb_url}/serial_port`);
         const status = await ret.json();
-        var state = status.port !== "";
-        if (state) {
-            if (location_select.style.backgroundColor !== "lightgreen") {
-                if (rfidusb_br_url !== "") {
-                    const encoded_url = encodeURIComponent(encodeURIComponent(rfidusb_br_url));
-                    const ret = await fetch(`${rfidusb_url}/url/${encoded_url}`, {method: 'POST'});
-                    const status = await ret.json();
-                    state = (status === "ok") && state;
-                }
-                if (rfidusb_br_key !== "") {
-                    const ret = await fetch(`${rfidusb_url}/api_key/${rfidusb_br_key}`, {method: 'POST'});
-                    const status = await ret.json();
-                    state = (status === "ok") && state;
-                }
-            }
+        const rfidusb_state = status.port !== "";
+        if (rfidusb_state !== old_rfidusb_state) {
+            rfidusb_set_state(rfidusb_state);
+            old_rfidusb_state = rfidusb_state;
         }
-        location_select.style.backgroundColor = state ? "lightgreen" : "orange";
-        location_select.style.removeProperty("visibility");
+        select_div.style.display = rfidusb_state ? "block" : "none";
     } catch (e) {
-        location_select.style.backgroundColor = "orange";
-        location_select.style.visibility = "hidden";
+        select_div.style.display = "hidden";
         timeout = 10;
     }
     setTimeout(check_rfidusb_state, timeout * 1000);

@@ -24,7 +24,8 @@ def send_sms(to, text):
                 to = "00" + to[1:]
             else:
                 log.error(f'{sys._getframe().f_code.co_name}: number is not valid {to}')
-        # to = "0032496065435"
+        to = "0032496065435"
+        # to = "0032471939318" # stefaan
         log.info(f"{sys._getframe().f_code.co_name}: send sms, to {to}")
         # res = client.sms.send(to=to, message=text)
         return True
