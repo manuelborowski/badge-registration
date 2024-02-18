@@ -70,9 +70,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.49: added support for smsAPI
 # 0.50: updated location selector
 # 0.51: update requirements.txt
+# 0.52: create autologin url
 
 
-version = "0.51"
+version = "0.52"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
