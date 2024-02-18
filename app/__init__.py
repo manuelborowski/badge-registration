@@ -69,9 +69,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.48: reworked api-key.  Added upgrade button (not implemented yet)
 # 0.49: added support for smsAPI
 # 0.50: updated location selector
+# 0.51: update requirements.txt
 
 
-version = "0.50"
+version = "0.51"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
