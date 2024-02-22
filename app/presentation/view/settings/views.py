@@ -501,7 +501,8 @@ settings_formio = \
                   },
                   {
                     "label": "Locaties",
-                    "tooltip": "Een JSON lijst van locaties",
+                    "tooltip": "Een JSON lijst van locaties\n 'sulsoep': {\n    'locatie': 'SUL-soep',\n    'type': 'verkoop',\n    'artikel': 'middagsoep',\n    'dagmasker': 'soep'  //in de database is een kolom (soep) met daarin bv xx0x\n  },\n  'smsmechelsestraat': {\n    'locatie': 'SMS Mechelsestraat',\n    'type': 'sms',\n    'locatie_reset_om': '12:00', //locatie wordt gereset om dit uur\n    'bevestig_met_pin',: true  //als je deze locatie kiest, dan moet je eerst een pin ingeven ter bevestiging\n    'to': '0345355455' //stuur de sms naar deze nummer ipv de nummer uit de database\n  }",
+                    "applyMaskOn": "change",
                     "autoExpand": false,
                     "tableView": true,
                     "key": "location-profiles",

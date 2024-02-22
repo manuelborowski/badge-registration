@@ -71,9 +71,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.50: updated location selector
 # 0.51: update requirements.txt
 # 0.52: create autologin url
+# 0.53: added sms-to-field to test.
 
 
-version = "0.52"
+version = "0.53"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
