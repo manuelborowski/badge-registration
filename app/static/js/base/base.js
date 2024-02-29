@@ -61,9 +61,7 @@ export const start_upgrade = async () => {
 
 
 var menu = [
-    ["overview.show_verkoop", "Verkoop", 1],
-    ["overview.show_verplicht", "Verplicht", 1],
-    ["overview.show_nietverplicht", "Niet-verplicht", 1],
+    ["overview.show", "Overzicht", 1],
     ["student.show", "Studenten", 1],
     ["user.show", "Gebruikers", 5],
     ["settings.show", "Instellingen", 5],

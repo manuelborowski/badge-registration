@@ -1,5 +1,5 @@
 import {socketio} from "../base/socketio.js";
-import {subscribe_get_ids, subscribe_right_click} from "../base/right_click.js";
+import {subscribe_get_ids, subscribe_right_click, create_menu} from "../base/right_click.js";
 import { person_image } from "../../img/base64-person.js";
 import { busy_indication_on, busy_indication_off } from "../base/base.js";
 
@@ -13,6 +13,12 @@ let nbr_registered_element = document.querySelector("#nbr-registered");
 let photo_size_factor = 50;
 let nbr_registered = 0;
 let current_room = "";
+
+const right_click_menu = {
+    delete: {iconscout: "trash-alt", label: "Verwijder registratie", cb: delete_registration},
+    sms: {iconscout: "trash-alt", label: "Stuur sms", cb: delete_registration},
+    remark: {iconscout: "trash-alt", label: "Opmerking", cb: delete_registration},
+}
 
 $(document).ready(function () {
     socketio.start(null, null);
@@ -28,8 +34,8 @@ $(document).ready(function () {
     subscribe_get_ids(get_ids_of_selected_items);
 
     get_current_registrations();
-});
 
+});
 
 const socketio_update_status = (type, data) => {
     if (data.status) {
@@ -100,8 +106,8 @@ const get_current_registrations = () => {
     canvas_element.appendChild(figure);
     socketio.send_to_server("get-current-registrations", {location: location_element.value, date: date_element.value});
     reset_nbr_registered();
+    create_menu(current_room, right_click_menu);
 }
-
 
 export const remove_all_photos = () => {
     socketio.send_to_server("clear-all-registrations", {location: location_element.value});
@@ -125,13 +131,12 @@ const reset_nbr_registered = () => {
     nbr_registered_element.value = nbr_registered;
 }
 
-const delete_registration = async (item, ids) => {
+async function delete_registration (ids)  {
     bootbox.confirm("Wilt u deze registratie verwijderen?", async result => {
         if (result) {
             const ret = await fetch(Flask.url_for('api.registration_delete'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify(ids),});
             const status = await ret.json();
             if (status.status) {
-                // bootbox.alert(`Registratie is verwijderd.`)
                 get_current_registrations()
             } else {
                 bootbox.alert(status.data)
@@ -140,10 +145,7 @@ const delete_registration = async (item, ids) => {
     });
 }
 
-
 const get_ids_of_selected_items = mouse_event => {
     const ids = [mouse_event.target.parentElement.dataset.id];
     return ids;
 }
-
-subscribe_right_click('delete', (item, ids) => delete_registration(item, ids));

@@ -19,6 +19,9 @@ config_name = config_name if config_name else 'production'
 flask_app.config.from_object(app_config[config_name])
 flask_app.config.from_pyfile('config.py')
 
+# TODO : sms, per leerling een reden opgeven waarom te laat (1 lijn met busnummer)
+# TODO : overzicht, schakelen tussen lijst en foto's
+
 # V0.1: based on school-data-hub V1.3
 # 0.2: first working version
 # 0.3: clean-up settings.  Bugfixed empty locations
@@ -72,9 +75,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.51: update requirements.txt
 # 0.52: create autologin url
 # 0.53: added sms-to-field to test.
+# 0.54: reworked navbar.  Reworked context-menu
 
 
-version = "0.53"
+version = "0.54"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

@@ -34,9 +34,45 @@ context_active_area.addEventListener("contextmenu", e => {
     context_wrapper.style.visibility = "visible";
 });
 
+
+const default_menu_template = {
+    divider: {},
+    text_input: {}
+}
+
+export const create_menu = (location, menu_template) => {
+    context_menu.innerHTML = "";
+    const menu_items = "menu" in locations[location] ? locations[location].menu :  ["delete"];
+    menu_template = {...menu_template, ...default_menu_template};
+    for (const mi of menu_items) {
+        const item_template = menu_template[mi];
+        const li = document.createElement("li");
+        context_menu.appendChild(li);
+        li.classList.add("item");
+        const span = document.createElement("span");
+        if(mi === "divider") {
+            span.innerHTML = "--------------";
+        } else if(mi === "text_input") {
+            const input = document.createElement("input");
+            span.appendChild(input);
+        } else {
+            li.onclick = () => item_clicked_with_cb(item_template.cb);
+            if ("iconscout" in item_template) {
+                const i = document.createElement("i");
+                i.classList.add("uil", `uil-${item_template.iconscout}`);
+                li.appendChild(i);
+            }
+            span.innerHTML = item_template.label;
+        }
+        li.appendChild(span);
+    }
+}
+
 export const subscribe_get_ids = cb => get_ids_cb = cb;
 
 export const set_endpoint = ep => endpoint = ep;
+
+const item_clicked_with_cb = cb => cb(item_ids);
 
 export function item_clicked(item) {
     if (item in right_click_cbs) {

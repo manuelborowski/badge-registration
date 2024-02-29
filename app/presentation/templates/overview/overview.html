@@ -53,27 +53,6 @@
     <hr class="nice-green-line">
     <div class="right-click-canvas" id="canvas"></div>
 
-    {% if right_click %}
-    <div class="right-click-wrapper">
-        <ul class="menu">
-            {% for item in right_click.menu %}
-                {% if item.item == "horizontal-line" %}
-                    <li class="item">
-                        <span>---------------------</span>
-                    </li>
-                {% else %}
-                    <li class="item" onclick=item_clicked("{{ item.item }}")>
-                        {% if 'iconscout' in item %}
-                            <i class="uil uil-{{ item.iconscout }}"></i>
-                        {% endif %}
-                        <span>{{ item.label }}</span>
-                    </li>
-                {% endif %}
-            {% endfor %}
-        </ul>
-    </div>
-{% endif %}
-
 
 {% endblock %}
 
