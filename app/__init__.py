@@ -76,9 +76,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.52: create autologin url
 # 0.53: added sms-to-field to test.
 # 0.54: reworked navbar.  Reworked context-menu
+# 0.55: implemented context-remark and tooltip.
 
 
-version = "0.54"
+version = "0.55"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

@@ -3,17 +3,18 @@ td.details-control {
     background: url('../img/details_open.png') no-repeat center center;
     cursor: pointer;
 }
+
 tr.details td.details-control {
     background: url('../img/details_close.png') no-repeat center center;
 }
 
 body {
-    padding-top: 50px;  /*assuming the height of the navbar is 50px */
+    padding-top: 50px; /*assuming the height of the navbar is 50px */
     padding-left: 10px;
     padding-right: 10px;
 }
 
-.dropdown-menu>li>a {
+.dropdown-menu > li > a {
     color: #aec251;
 }
 
@@ -24,9 +25,9 @@ body {
 }
 
 .background-image {
-  background-image: url("../img/badge-registration.png");
-  background-position: left;
-  background-repeat: repeat;
+    background-image: url("../img/badge-registration.png");
+    background-position: left;
+    background-repeat: repeat;
 }
 
 .thick-green-border {
@@ -52,33 +53,41 @@ hr.nice-green-line {
 
 
 .busy-indicator {
-  border: 16px solid #f3f3f3;
-  border-radius: 50%;
-  border-top: 16px solid #3498db;
-  -webkit-animation: spin 2s linear infinite; /* Safari */
-  animation: spin 2s linear infinite;
-  position: fixed; /* Sit on top of the page content */
-  display: none; /* Hidden by default */
-  width: 500px;
-  height: 500px;
-  top: calc(50% - 250px);
-  left: calc(50% - 250px);
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0,0,0,0); /* Black background with opacity */
-  z-index: 20; /* Specify a stack order in case you're using a different order for other elements */
-  cursor: pointer; /* Add a pointer on hover */
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    -webkit-animation: spin 2s linear infinite; /* Safari */
+    animation: spin 2s linear infinite;
+    position: fixed; /* Sit on top of the page content */
+    display: none; /* Hidden by default */
+    width: 500px;
+    height: 500px;
+    top: calc(50% - 250px);
+    left: calc(50% - 250px);
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0); /* Black background with opacity */
+    z-index: 20; /* Specify a stack order in case you're using a different order for other elements */
+    cursor: pointer; /* Add a pointer on hover */
 }
 
 /* Safari */
 @-webkit-keyframes spin {
-  0% { -webkit-transform: rotate(0deg); }
-  100% { -webkit-transform: rotate(360deg); }
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 figure.imagecaption {
@@ -90,8 +99,8 @@ figure.imagecaption {
 }
 
 figure.selected {
-  background-color: yellow;
-  box-shadow: 0px 12px 22px 1px #333;
+    background-color: yellow;
+    box-shadow: 0px 12px 22px 1px #333;
 }
 
 .flex-container {
@@ -104,7 +113,7 @@ figure.selected {
     margin-right: 10px;
 }
 
-.bootbox-confirm div div div button.btn-primary{
+.bootbox-confirm div div div button.btn-primary {
     background-color: #aec251;
     font-weight: bold;
     font-size: 16px;
@@ -116,7 +125,7 @@ figure.selected {
     border: 1px solid transparent;
 }
 
-.bootbox-alert div div div button.btn-primary, .legend-badge{
+.bootbox-alert div div div button.btn-primary, .legend-badge {
     background-color: #aec251;
     font-weight: bold;
     font-size: 16px;
@@ -173,7 +182,7 @@ table.dataTable tfoot th {
 }
 
 .cell-selected {
-	background-color:#ccffcc;
+    background-color: #ccffcc;
 }
 
 input {
@@ -196,7 +205,7 @@ table, th, td {
 }
 
 .hidden-template {
-  display: none;
+    display: none;
 }
 
 table.dataTable tbody td {
@@ -212,12 +221,13 @@ table.dataTable tbody td {
     border: none;
 }
 
-@media (min-width: 1200px) {.container-form {
+@media (min-width: 1200px) {
+    .container-form {
         max-width: 100%;
     }
 }
 
-.navbar-dark .navbar-nav .active>.nav-link, .navbar-dark .navbar-nav .nav-link.active, .navbar-dark .navbar-nav .nav-link.show, .navbar-dark .navbar-nav .show>.nav-link {
+.navbar-dark .navbar-nav .active > .nav-link, .navbar-dark .navbar-nav .nav-link.active, .navbar-dark .navbar-nav .nav-link.show, .navbar-dark .navbar-nav .show > .nav-link {
     color: white;
     text-decoration: underline;
 }
@@ -225,4 +235,34 @@ table.dataTable tbody td {
 .dropdown-item:focus, .dropdown-item:hover {
     text-decoration: none;
     background-color: #bcdd8f;
+}
+
+/* Tooltip container */
+.mtooltip {
+    /*position: relative;*/
+    display: inline-block;
+    border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+
+/* Tooltip text */
+.mtooltip .tooltiptext {
+    visibility: hidden;
+    background-color: #555;
+    color: #fff;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 2;
+    bottom: 80%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    padding: 5px;
+    width: max-content;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.mtooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
 }

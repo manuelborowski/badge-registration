@@ -1,7 +1,7 @@
 import {socketio} from "../base/socketio.js";
 import {subscribe_get_ids, subscribe_right_click, create_menu} from "../base/right_click.js";
-import { person_image } from "../../img/base64-person.js";
-import { busy_indication_on, busy_indication_off } from "../base/base.js";
+import {person_image} from "../../img/base64-person.js";
+import {busy_indication_on, busy_indication_off} from "../base/base.js";
 
 let location_element = document.querySelector("#filter-location");
 let date_element = document.querySelector("#filter-date");
@@ -14,10 +14,12 @@ let photo_size_factor = 50;
 let nbr_registered = 0;
 let current_room = "";
 
+const tooltip_items = [{item: "name", label: "naam"}, {item: "remark", label: "opm"}, {item: "sms", label: "sms"}];
+
 const right_click_menu = {
     delete: {iconscout: "trash-alt", label: "Verwijder registratie", cb: delete_registration},
-    sms: {iconscout: "trash-alt", label: "Stuur sms", cb: delete_registration},
-    remark: {iconscout: "trash-alt", label: "Opmerking", cb: delete_registration},
+    sms: {iconscout: "envelope-send", label: "Stuur sms", cb: delete_registration},
+    remark: {iconscout: "text", label: "Opmerking", cb: enter_remark},
 }
 
 $(document).ready(function () {
@@ -32,9 +34,7 @@ $(document).ready(function () {
     sort_on_element.addEventListener("change", get_current_registrations);
     photo_size_element.addEventListener("change", resize_photos);
     subscribe_get_ids(get_ids_of_selected_items);
-
     get_current_registrations();
-
 });
 
 const socketio_update_status = (type, data) => {
@@ -44,7 +44,7 @@ const socketio_update_status = (type, data) => {
                 data.data.forEach(item => {
                     let figures = document.querySelectorAll(".fig-group");
                     let figure = document.createElement("figure");
-                    figure.classList.add("S" + item.leerlingnummer);
+                    figure.classList.add("S" + item.leerlingnummer, "mtooltip");
                     if (sort_on_element.value === "name-firstname") {
                         figure.dataset.sort_on = item.naam + item.voornaam;
                     } else if (sort_on_element.value === "klas-name-firstname") {
@@ -55,6 +55,7 @@ const socketio_update_status = (type, data) => {
                     figure.classList.add("fig-group");
                     figure.style.display = "inline-block";
                     figure.style.marginRight = "10px";
+                    figure.style.zIndex = "1";
                     figure.dataset.id = item.id;
                     let src = "data:image/jpeg;base64," + (item.photo !== "" ? item.photo : person_image);
                     let image = document.createElement('img');
@@ -68,6 +69,20 @@ const socketio_update_status = (type, data) => {
                     figcaption.style.textAlign = "center";
                     figure.appendChild(image);
                     figure.appendChild(figcaption);
+
+                    const tooltip_span = document.createElement("span");
+                    tooltip_span.classList.add("tooltiptext");
+                    tooltip_span.dataset.name = `${item.naam} ${item.voornaam}`
+                    tooltip_span.dataset.remark = item.text1;
+                    tooltip_span.dataset.sms = "nee";
+                    let html = "";
+                    for (const item of tooltip_items) {
+                        html += `${item.label}: ${tooltip_span.dataset[item.item]}<br>`
+                    }
+                    tooltip_span.innerHTML = html;
+                    // tooltip_span.innerHTML = `opm: ${item.text1}<br>sms: nee`;
+                    figure.appendChild(tooltip_span)
+
                     for (let i = 0; i < figures.length; i++) {
                         if (figure.dataset.sort_on < figures[i].dataset.sort_on) {
                             figures[i].before(figure);
@@ -131,7 +146,7 @@ const reset_nbr_registered = () => {
     nbr_registered_element.value = nbr_registered;
 }
 
-async function delete_registration (ids)  {
+async function delete_registration(ids) {
     bootbox.confirm("Wilt u deze registratie verwijderen?", async result => {
         if (result) {
             const ret = await fetch(Flask.url_for('api.registration_delete'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify(ids),});
@@ -143,6 +158,34 @@ async function delete_registration (ids)  {
             }
         }
     });
+}
+
+async function enter_remark(ids) {
+    bootbox.prompt({
+        title: "Opmerking",
+        value: "test standaard",
+        callback: async function (remark) {
+            if (remark !== null) {
+                const ret = await fetch(Flask.url_for('api.remark_update'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({id: ids[0], remark}),});
+                const status = await ret.json();
+                if (status.status)
+                    update_tooltip(ids[0], "remark", remark)
+                else
+                    bootbox.alert(status.data);
+            }
+        }
+    });
+}
+
+const update_tooltip = (id, item, text) => {
+    const tooltip = document.querySelector(`[data-id="${id}"] .tooltiptext`);
+    tooltip.dataset[item] = text;
+    let html = "";
+    for (const item of tooltip_items) {
+        html += `${item.label}: ${tooltip.dataset[item.item]}<br>`
+    }
+    tooltip.innerHTML = html;
+    tooltip.classList.add("tooltiptext");
 }
 
 const get_ids_of_selected_items = mouse_event => {

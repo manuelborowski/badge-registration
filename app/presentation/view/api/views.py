@@ -117,6 +117,16 @@ def registration_add():
     return json.dumps({"status": ret["status"]})
 
 
+@api.route('/api/registration/update_remark', methods=['POST'])
+@user_key_required
+def remark_update():
+    data = json.loads(request.data)
+    id = data["id"]
+    remark = data["remark"]
+    ret = mregistration.api_registration_update_remark(id, remark)
+    return json.dumps({"status": ret["status"]})
+
+
 @api.route('/api/registration/delete', methods=['POST'])
 @supervisor_key_required
 def registration_delete():

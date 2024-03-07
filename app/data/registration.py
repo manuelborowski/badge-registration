@@ -22,6 +22,15 @@ class Registration(db.Model, SerializerMixin):
     aantal_items = db.Column(db.Integer, default=1)
     prijs_per_item = db.Column(db.Integer, default=100) # eurocents
 
+    text1 = db.Column(db.String(256), default='')
+    text2 = db.Column(db.String(256), default='')
+
+    flag1 = db.Column(db.Boolean, default=True)
+    flag2 = db.Column(db.Boolean, default=True)
+    flag3 = db.Column(db.Boolean, default=True)
+    flag4 = db.Column(db.Boolean, default=True)
+    flag5 = db.Column(db.Boolean, default=True)
+
 
 def get_columns():
     return [p for p in dir(Registration) if not p.startswith('_')]

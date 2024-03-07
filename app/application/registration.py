@@ -131,7 +131,8 @@ def get_current_registrations(location, selected_day=None):
                 "klascode": student.klascode,
                 "photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else '',
                 "timestamp": str(registration.time_in),
-                "id": registration.id
+                "id": registration.id,
+                "text1": registration.text1
             })
         return ret
     except Exception as e:
@@ -185,6 +186,17 @@ def api_registration_add(code, location_key, timestamp):
     try:
         ret = registration_add(code, location_key, timestamp)
         return ret
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"status": False, "data": str(e)}
+
+
+# use field text1 to store the remark
+def api_registration_update_remark(id, remark):
+    try:
+        registration = mregistration.registration_get(("id", "=", id))
+        mregistration.registration_update(registration, {"text1": remark})
+        return {"status": True, "data": ""}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}
