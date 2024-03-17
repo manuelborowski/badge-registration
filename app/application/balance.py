@@ -26,7 +26,7 @@ def get_balance(balance_type, startdate, enddate):
         else:
             leerlingnummers = []
         if balance_type in type2location:
-            registrations = mregistration.registration_get_m([("time_in", ">=", startdate), ("time_in", "<=", enddate), ("location", "=", type2location[balance_type])])
+            registrations = mregistration.registration_get_m([("time_in", ">=", startdate), ("time_in", "<=", f"{enddate}T23:59"), ("location", "=", type2location[balance_type])])
             lln2data = {}
             for registation in registrations:
                 if registation.leerlingnummer in leerlingnummers:
