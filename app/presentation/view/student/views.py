@@ -1,21 +1,26 @@
+import io
+
 import app.application.registration
 from . import student
-from app import log
-from flask import redirect, url_for, request, render_template
+from app import log, supervisor_required
+from flask import redirect, url_for, request, render_template, send_file
 from flask_login import login_required, current_user
 from app.data.datatables import DatatableConfig
 from app.presentation.view import datatables
 from app.application import settings as msettings
-import json
+import json, sys
 import app.data
 import app.application.student
+from app.application.settings import get_configuration_setting
+from app.application.balance import get_balance
 
 
 @student.route('/student/student', methods=['POST', 'GET'])
 @login_required
 def show():
     # start = datetime.datetime.now()
-    ret = datatables.show(table_config, template="student/student.html")
+    popups = {'export-student-balance': get_configuration_setting("popup-export-student-balance")}
+    ret = datatables.show(table_config, template="student/student.html", popups=popups)
     # print('student.show', datetime.datetime.now() - start)
     return ret
 
@@ -37,6 +42,18 @@ def table_action(action, ids=None):
     if ids:
         ids = json.loads(ids)
     return redirect(url_for('student.show'))
+
+
+@student.route('/student/export/<string:type>/<string:startdate>/<string:enddate>', methods=['GET'])
+@login_required
+@supervisor_required
+def export_config_csv(type, startdate, enddate):
+    try:
+        [balance_data, filename] = get_balance(type, startdate,enddate)
+        return send_file(io.BytesIO(str.encode(balance_data)), as_attachment=True, attachment_filename=filename, cache_timeout=0)
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"status": False, "data": f'{sys._getframe().f_code.co_name}: {e}'}
 
 
 @student.route('/student/right_click/', methods=['POST', 'GET'])
@@ -70,7 +87,9 @@ def get_right_click_settings():
     locations = msettings.get_configuration_setting("location-profiles")
     [v.update({"key":k}) for k, v in locations.items()]
     locations = sorted(locations.values(), key=lambda x: x["locatie"])
-    menu = [{'label': "Nieuwe registratie: " + l["locatie"], 'item': l["key"], 'iconscout': 'plus-circle'} for l in locations]
+    menu = [{'label': "Nieuw: " + l["locatie"], 'item': l["key"], 'iconscout': 'plus-circle'} for l in locations]
+    menu.append( {'label': '', 'item': 'horizontal-line', 'iconscout': ''})
+    menu.append( {'label': 'Exporteer leerling rekeningen', 'item': 'export-student-balance', 'iconscout': ''})
     settings = {
         'endpoint': 'student.right_click',
         'menu': menu

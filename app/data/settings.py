@@ -127,6 +127,7 @@ default_configuration_settings = {
     'email-new-staff-html': ('', Settings.SETTING_TYPE.E_STRING),
 
     'popup-new-update-user': ({}, Settings.SETTING_TYPE.E_JSON),
+    'popup-export-student-balance': ({}, Settings.SETTING_TYPE.E_JSON),
 
     'logging-inform-emails': ('', Settings.SETTING_TYPE.E_STRING),
 

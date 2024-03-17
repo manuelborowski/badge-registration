@@ -34,6 +34,7 @@ def student_load_from_sdh(opaque=None, **kwargs):
                             update["rfid"] = sdh_student["rfid"]
                         if db_student.klascode != sdh_student["klascode"]:
                             update["klascode"] = sdh_student["klascode"]
+                            update["instellingsnummer"] = sdh_student["instellingsnummer"]
                         if db_student.middag != sdh_student["middag"]:
                             update["middag"] = sdh_student["middag"]
                         if sdh_student["soep"] != "":
@@ -57,7 +58,7 @@ def student_load_from_sdh(opaque=None, **kwargs):
                     else:
                         new_student = {"leerlingnummer": sdh_student["leerlingnummer"], "klascode": sdh_student["klascode"], "naam": sdh_student["naam"],
                                              "voornaam": sdh_student["voornaam"], "middag": sdh_student["middag"], "rfid": sdh_student["rfid"], "foto_id": sdh_student["foto_id"],
-                                             "lpv1_gsm": sdh_student["lpv1_gsm"], "lpv2_gsm": sdh_student["lpv2_gsm"]}
+                                             "lpv1_gsm": sdh_student["lpv1_gsm"], "lpv2_gsm": sdh_student["lpv2_gsm"], "instellingsnummer": sdh_student["instellingsnummer"]}
                         if sdh_student["soep"] != "":
                             new_student["soep"] = sdh_student["soep"][:2] + "0" + sdh_student["soep"][2:] + "/00000"
                         new_students.append(new_student)

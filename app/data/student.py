@@ -19,6 +19,7 @@ class Student(db.Model, SerializerMixin):
     rfid = db.Column(db.String(256))
     klascode = db.Column(db.String(256), default='')
     klasgroep = db.Column(db.String(256), default='')
+    instellingsnummer = db.Column(db.String(256), default='')
     leerlingnummer = db.Column(db.String(256), default='')
     foto_id = db.Column(db.Integer())
     soep = db.Column(db.String(256), default='')

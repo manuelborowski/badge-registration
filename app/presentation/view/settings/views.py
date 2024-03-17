@@ -209,6 +209,15 @@ settings_formio = \
                     "key": "popup-new-update-user",
                     "type": "textarea",
                     "input": true
+                  },
+                  {
+                    "label": "Exporteer leerling rekening",
+                    "applyMaskOn": "change",
+                    "autoExpand": false,
+                    "tableView": true,
+                    "key": "popup-export-student-balance",
+                    "type": "textarea",
+                    "input": true
                   }
                 ]
               }

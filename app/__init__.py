@@ -72,9 +72,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.51: update requirements.txt
 # 0.52: create autologin url
 # 0.53: added sms-to-field to test.
+# 0.53-export_leerling_rekening-0.1: bugfix standalone with server, take correct price-per-item into account.  Export student balances
 
-
-version = "0.53"
+version = "0.53-export_leerling_rekening-0.1"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
