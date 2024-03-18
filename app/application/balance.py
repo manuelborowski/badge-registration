@@ -1,5 +1,5 @@
 from app.data import settings as msettings, student as mstudent, photo as mphoto, utils as mutils, registration as mregistration
-import sys, requests, base64
+import sys, requests, base64, pandas as pd, re
 
 #logging on file level
 import logging
@@ -38,9 +38,68 @@ def get_balance(balance_type, startdate, enddate):
         data_text = "\n".join(data)
         filename = f"{balance_type}-{startdate}-{enddate}.txt"
         return data_text, filename
-
-
-        pass
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-        return 0, 0, 0
+        return f"error: {str(e)}", "error.txt"
+
+
+maand2index = ["jan", "feb", "mrt", "apr", "jun", "jul", "aug", "sept", "okt", "nov", "dec"]
+papercut_data = {}
+
+def papercut_upload(files):
+    try:
+        global papercut_data
+        papercut_data["data"] = []
+        for file in files:
+            lines = file.read().decode("ansi")
+            lines = lines.split("\n")
+
+            lines.pop(0) # comment
+            date = lines.pop(0)
+            #line 1 contains start and end date
+            [d, m, y] = re.search("Vanaf datum = (.*) 0:00:00", date).group(1).split("-")
+            m = maand2index.index(m) + 1
+            papercut_data["startdate"] = f"{y}{m}{d}"
+            [d, m, y] = re.search("Tot datum = (.*) 23:59", date).group(1).split("-")
+            m = maand2index.index(m) + 1
+            papercut_data["enddate"] = f"{y}{m}{d}"
+            header = lines.pop(0) # header
+            for total_pages_index, f in enumerate(header.split(";")):
+                if f == "Totaal aantal afgedrukte Pagina's":
+                    break
+
+            students = mstudent.student_get_m()
+            username2student = {s.username.lower(): s for s in students}
+            for line in lines:
+                fields = line.split(";")
+                if fields[0].lower() in username2student:
+                    student = username2student[fields[0].lower()]
+                    if student.klascode[0] in ["1", "2"]:
+                        deelschool = "sum"
+                    elif student.instellingsnummer == "30593":
+                        deelschool = "sul"
+                    else:
+                        deelschool = "sui"
+                    papercut_data["data"].append({"leerlingnummer": student.leerlingnummer, "deelschool": deelschool, "nbr_pages": fields[total_pages_index]})
+                else:
+                    log.info(f"Not found, {fields[0].lower()}")
+        return {"status": True, "data": "downloaded"}
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"status": False, "data": str(e)}
+
+
+def papercut_export(type):
+    try:
+        global papercut_data
+        data = []
+        for item in papercut_data["data"]:
+            if item["deelschool"] == type:
+                data.append(f"{item['leerlingnummer']};{item['nbr_pages']};0.05")
+        data_text = "\n".join(data)
+        filename = f"{type}-afdrukken-{papercut_data['startdate']}-{papercut_data['enddate']}.txt"
+        return data_text, filename
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return f"error: {str(e)}", "error.txt"
+

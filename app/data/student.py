@@ -21,6 +21,7 @@ class Student(db.Model, SerializerMixin):
     klasgroep = db.Column(db.String(256), default='')
     instellingsnummer = db.Column(db.String(256), default='')
     leerlingnummer = db.Column(db.String(256), default='')
+    username = db.Column(db.String(256), default='')
     foto_id = db.Column(db.Integer())
     soep = db.Column(db.String(256), default='')
     lpv1_gsm = db.Column(db.String(256), default='')

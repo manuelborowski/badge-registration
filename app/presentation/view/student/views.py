@@ -1,5 +1,3 @@
-import io
-
 import app.application.registration
 from . import student
 from app import log, supervisor_required
@@ -8,11 +6,11 @@ from flask_login import login_required, current_user
 from app.data.datatables import DatatableConfig
 from app.presentation.view import datatables
 from app.application import settings as msettings
-import json, sys
+import json, sys, io
 import app.data
 import app.application.student
 from app.application.settings import get_configuration_setting
-from app.application.balance import get_balance
+from app.application.balance import get_balance, papercut_export
 
 
 @student.route('/student/student', methods=['POST', 'GET'])
@@ -56,6 +54,15 @@ def export_config_csv(type, startdate, enddate):
         return {"status": False, "data": f'{sys._getframe().f_code.co_name}: {e}'}
 
 
+@student.route('/student/papercut/export/<string:type>', methods=['GET'])
+@login_required
+@supervisor_required
+def export_papercut(type):
+    [data, filename] = papercut_export(type)
+    return send_file(io.BytesIO(str.encode(data)), as_attachment=True, attachment_filename=filename, cache_timeout=0)
+
+
+
 @student.route('/student/right_click/', methods=['POST', 'GET'])
 @login_required
 def right_click():
@@ -90,6 +97,7 @@ def get_right_click_settings():
     menu = [{'label': "Nieuw: " + l["locatie"], 'item': l["key"], 'iconscout': 'plus-circle'} for l in locations]
     menu.append( {'label': '', 'item': 'horizontal-line', 'iconscout': ''})
     menu.append( {'label': 'Exporteer leerling rekeningen', 'item': 'export-student-balance', 'iconscout': ''})
+    menu.append( {'label': 'Exporteer leerling printer rekeningen', 'item': 'export-papercut-balance', 'iconscout': ''})
     settings = {
         'endpoint': 'student.right_click',
         'menu': menu
