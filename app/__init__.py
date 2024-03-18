@@ -75,9 +75,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.53-export_leerling_rekening-0.1: bugfix standalone with server, take correct price-per-item into account.  Export student balances
 # 0.53-export_leerling_rekening-0.2: Make enddate until-and-included iso until
 # 0.53-export_leerling_rekening-0.3: added export of papercut overview
+# 0.53-export_leerling_rekening-0.4: dateformat: add leading 0 if needed.
 
 
-version = "0.53-export_leerling_rekening-0.3"
+version = "0.53-export_leerling_rekening-0.4"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

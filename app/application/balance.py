@@ -59,10 +59,10 @@ def papercut_upload(files):
             #line 1 contains start and end date
             [d, m, y] = re.search("Vanaf datum = (.*) 0:00:00", date).group(1).split("-")
             m = maand2index.index(m) + 1
-            papercut_data["startdate"] = f"{y}{m}{d}"
+            papercut_data["startdate"] = f"{y}{m:02}{int(d):02}"
             [d, m, y] = re.search("Tot datum = (.*) 23:59", date).group(1).split("-")
             m = maand2index.index(m) + 1
-            papercut_data["enddate"] = f"{y}{m}{d}"
+            papercut_data["enddate"] = f"{y}{m:02}{int(d):02}"
             header = lines.pop(0) # header
             for total_pages_index, f in enumerate(header.split(";")):
                 if f == "Totaal aantal afgedrukte Pagina's":
