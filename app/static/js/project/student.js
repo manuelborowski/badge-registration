@@ -21,7 +21,7 @@ const registration_add = async (item, ids) => {
 }
 
 
-const export_student_balance_items = ["sui-drank", "sul-drank", "sum-kopies"]
+const export_student_balance_items = ["sui-drank", "sul-drank"]
 
 const export_student_balances_cb = (action, opaque, data=null) => {
     if (action === 'submit') {

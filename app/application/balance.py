@@ -51,7 +51,7 @@ def papercut_upload(files):
         global papercut_data
         papercut_data["data"] = []
         for file in files:
-            lines = file.read().decode("ansi")
+            lines = file.read().decode("iso_8859_1")
             lines = lines.split("\n")
 
             lines.pop(0) # comment
