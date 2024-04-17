@@ -64,11 +64,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.43: sync locations and articles
 # 0.43-bgfx_save_new_article-V0.1: small bugfix
 # 0.44: merge
+# 0.45: update version tag
 
 
 @flask_app.context_processor
 def inject_defaults():
-    return dict(version='@ 2022 MB. V0.43', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone)
+    return dict(version='@ 2022 MB. V0.45', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone)
 
 
 db = SQLAlchemy()
