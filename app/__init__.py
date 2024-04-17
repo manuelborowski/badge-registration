@@ -62,6 +62,7 @@ flask_app.config.from_pyfile('config.py')
 # 0.41: update navbar
 # 0.42: bugfix when adding new data in column soep.  Reworked registration and student syncing
 # 0.43: sync locations and articles
+# 0.43-bgfx_save_new_article-V0.1: small bugfix
 
 
 @flask_app.context_processor

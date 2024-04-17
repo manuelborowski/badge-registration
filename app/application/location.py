@@ -44,7 +44,7 @@ def sync_locations_articles_client():
                 locations = res["data"]["locations"]
                 articles = res["data"]["articles"]
                 set_configuration_setting("location-profiles", locations)
-                get_configuration_setting("artikel-profiles", articles)
+                set_configuration_setting("artikel-profiles", articles)
                 return len(locations), len(articles)
             log.error(f'{sys._getframe().f_code.co_name}: {res}')
         log.error(f'{sys._getframe().f_code.co_name}: {ret.status_code}')
