@@ -2,7 +2,7 @@ import datetime, sys, base64, requests
 import app.application
 import app.application.api
 import app
-from app import log, flask_app
+from app import flask_app
 from app.data import student as mstudent, registration as mregistration, utils as mutils, photo as mphoto, settings as msettings
 from app.application.util import get_api_key
 from flask_login import current_user
@@ -34,7 +34,7 @@ def registration_add(rfid, location_key, timestamp=None):
             ret = {
                 "status": True,
                 "selected_day": str(today),
-                "action": "delete",
+                "action": "add",
                 "data": [{
                     "leerlingnummer": student.leerlingnummer,
                     "naam": student.naam,
@@ -50,14 +50,13 @@ def registration_add(rfid, location_key, timestamp=None):
                     if last_registration.time_out is None:
                         mregistration.registration_update(last_registration, {"time_out": now})
                         log.info(f'{sys._getframe().f_code.co_name}: Badge out, {student.leerlingnummer} at {now}')
-                        ret["data"][0].update({"timestamp": str(last_registration.time_in), "id": last_registration.id,})
-                        return ret
+                        return {"status": True, "action": "delete", "data": [{"id": last_registration.id}]}
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now})
                 if registration:
                     log.info(f'{sys._getframe().f_code.co_name}: Badge in, {student.leerlingnummer} at {now}')
-                    ret.update({"action": "add"})
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})
                     return ret
+
             if location["type"] == "verkoop":
                 artikel = msettings.get_configuration_setting("artikel-profiles")[location["artikel"]]
                 nbr_items = 1
@@ -79,8 +78,7 @@ def registration_add(rfid, location_key, timestamp=None):
                                                                "prijs_per_item": artikel["prijs-per-item"], "aantal_items": nbr_items})
                 if registration:
                     log.info(f'{sys._getframe().f_code.co_name}: Verkoop({location["locatie"]}), {student.leerlingnummer} at {now}, price-per-item {artikel["prijs-per-item"]}, nbr items {nbr_items}')
-                    ret.update({"action": "add"})
-                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})
+                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id})
                     return ret
 
             if location["type"] == "sms":
@@ -98,15 +96,27 @@ def registration_add(rfid, location_key, timestamp=None):
                             send_sms(student.lpv1_gsm, text_body)
                         if student.lpv2_gsm != "":
                             send_sms(student.lpv2_gsm, text_body)
-
-                    ret.update({"action": "add"})
-                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})
+                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "text1": ""})
                     return ret
 
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}
         log.info(f'{sys._getframe().f_code.co_name}:  {rfid} not found in database')
         return {"status": False, "data": f"Kan student met rfid {rfid} niet vinden in database"}
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"status": False, "data": f"Fout, {str(e)}"}
+
+
+def registration_delete(ids):
+    try:
+        mregistration.registration_delete_m(ids)
+        ret = {
+                "status": True,
+                "action": "delete",
+                "data": [{"id": id} for id in ids]
+            }
+        return ret
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": f"Fout, {str(e)}"}
@@ -196,7 +206,7 @@ def api_registration_update_remark(id, remark):
     try:
         registration = mregistration.registration_get(("id", "=", id))
         mregistration.registration_update(registration, {"text1": remark})
-        return {"status": True, "data": ""}
+        return {"status": True, "data": {"id": id, "remark": remark}}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}
@@ -204,8 +214,8 @@ def api_registration_update_remark(id, remark):
 
 def api_registration_delete(ids):
     try:
-        mregistration.registration_delete_m(ids)
-        return {"status": True, "data": ""}
+        ret = registration_delete(ids)
+        return ret
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}

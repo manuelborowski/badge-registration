@@ -237,13 +237,6 @@ table.dataTable tbody td {
     background-color: #bcdd8f;
 }
 
-/* Tooltip container */
-.mtooltip {
-    /*position: relative;*/
-    display: inline-block;
-    border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
-}
-
 /* Tooltip text */
 .mtooltip .tooltiptext {
     visibility: hidden;

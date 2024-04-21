@@ -51,6 +51,34 @@ def get_filters(location_types):
                     'choices': location_choices,
                     'default': location_choices[0][0],
                 },
+                {
+                    'type': 'select',
+                    'name': 'photo-size-select',
+                    'label': 'Foto grootte',
+                    'choices': [["50", "50%"], ["75", "75%"], ["100", "100%"], ["150", "150%"], ],
+                    'default': "50",
+                },
+                {
+                    'type': 'select',
+                    'name': 'sort-on-select',
+                    'label': 'Sorteer op',
+                    'choices': [["timestamp", "Tijdstempel"], ["name-firstname", "Naam, voornaam"], ["klas-name-firstname", "Klas, naam, voornaam"]],
+                    'default': "timestamp",
+                },
+                {
+                    'type': 'date',
+                    'name': 'filter-date',
+                    'label': 'Datum',
+                    'default': "timestamp",
+                    "store": False
+                },
+                {
+                    'type': 'select',
+                    'name': 'view-layout-select',
+                    'label': 'Layout',
+                    'choices': [["tile", "Tegel"], ["list", "Lijst"]],
+                    'default': "tile",
+                },
             ]
         return []
     except Exception as e:

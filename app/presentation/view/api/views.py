@@ -123,15 +123,20 @@ def remark_update():
     data = json.loads(request.data)
     id = data["id"]
     remark = data["remark"]
+    location = data["location_key"]
     ret = mregistration.api_registration_update_remark(id, remark)
+    msocketio.send_to_room({'type': 'update-remark', 'data': ret}, location)
     return json.dumps({"status": ret["status"]})
 
 
 @api.route('/api/registration/delete', methods=['POST'])
 @supervisor_key_required
 def registration_delete():
-    ids = json.loads(request.data)
+    data = json.loads(request.data)
+    ids = data["ids"]
+    location = data["location"]
     ret = mregistration.api_registration_delete(ids)
+    msocketio.send_to_room({'type': 'update-current-status', 'data': ret}, location)
     return json.dumps(ret)
 
 
