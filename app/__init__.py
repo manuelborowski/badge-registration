@@ -77,9 +77,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.53: added sms-to-field to test.
 # 0.54: reworked navbar.  Reworked context-menu
 # 0.55: implemented context-remark and tooltip.
+# 0.55-major-rework-0.2: reworked remark-popup, changed to update-registration iso update-remark.
 
-
-version = "0.55"
+version = "0.55-major-rework-0.2"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

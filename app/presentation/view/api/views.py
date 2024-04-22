@@ -117,15 +117,15 @@ def registration_add():
     return json.dumps({"status": ret["status"]})
 
 
-@api.route('/api/registration/update_remark', methods=['POST'])
+@api.route('/api/registration/update', methods=['POST'])
 @user_key_required
-def remark_update():
+def registration_update():
     data = json.loads(request.data)
     id = data["id"]
-    remark = data["remark"]
     location = data["location_key"]
-    ret = mregistration.api_registration_update_remark(id, remark)
-    msocketio.send_to_room({'type': 'update-remark', 'data': ret}, location)
+    fields = data["fields"]
+    ret = mregistration.api_registration_update(id, fields)
+    msocketio.send_to_room({'type': 'update-registration', 'data': ret}, location)
     return json.dumps({"status": ret["status"]})
 
 

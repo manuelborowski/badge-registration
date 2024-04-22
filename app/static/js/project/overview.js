@@ -1,7 +1,8 @@
 import {socketio} from "../base/socketio.js";
-import {subscribe_get_ids, subscribe_right_click, create_menu} from "../base/right_click.js";
+import {subscribe_get_ids, create_menu} from "../base/right_click.js";
 import {person_image} from "../../img/base64-person.js";
 import {busy_indication_on, busy_indication_off} from "../base/base.js";
+import {add_to_popup_body, create_checkbox_element, create_input_element, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
 
 let location_element = document.querySelector("#filter-location");
 let date_element = document.querySelector("#filter-date");
@@ -19,9 +20,10 @@ let canvas_container = null;
 const tooltip_items = [{item: "name", label: "naam"}, {item: "remark", label: "opm"}, {item: "sms", label: "sms"}];
 
 const right_click_menu = {
-    delete: {iconscout: "trash-alt", label: "Verwijder registratie", cb: delete_registration},
+    remark: {iconscout: "text", label: "Reden", cb: enter_remark},
     sms: {iconscout: "envelope-send", label: "Stuur sms", cb: delete_registration},
-    remark: {iconscout: "text", label: "Opmerking", cb: enter_remark},
+    delete: {iconscout: "trash-alt", label: "Verwijder registratie", cb: delete_registration},
+    ack: {iconscout: "comment-alt-verify", label: "Bevestig reden", cb: confirm_remark},
 }
 
 $(document).ready(function () {
@@ -29,7 +31,7 @@ $(document).ready(function () {
     current_room = location_element.value;
     socketio.subscribe_to_room(current_room);
     socketio.subscribe_on_receive("update-current-status", socketio_update_status);
-    socketio.subscribe_on_receive("update-remark", socketio_update_remark);
+    socketio.subscribe_on_receive("update-registration", socketio_update_registration);
     let now = new Date();
     date_element.value = now.toISOString().split("T")[0];
     location_element.addEventListener("change", get_current_registrations);
@@ -44,7 +46,7 @@ $(document).ready(function () {
         store_filter_settings();
     });
 
-        //Store locally in the client-browser
+    //Store locally in the client-browser
     function store_filter_settings() {
         var filter_settings = [];
         if (filters.length > 0) {
@@ -130,9 +132,16 @@ const socketio_update_status = (type, data) => {
                         registration_container.appendChild(figcaption);
                     } else {
                         registration_container = document.createElement("tr");
-                        registration_container.innerHTML = `<td>${item.timestamp.split(" ")[1]}</td> <td>${item.naam} ${item.voornaam}</td> <td>${item.klascode}</td> <td data-col="remark">${item.text1}</td>`
+                        registration_container.innerHTML = `
+                            <td><input type="checkbox" ${item.sms_sent ? "checked" : ""}></td> 
+                            <td>${item.timestamp.split(" ")[1]}</td> 
+                            <td>${item.naam} ${item.voornaam}</td> 
+                            <td>${item.klascode}</td> 
+                            <td data-col="remark">${item.remark}</td>`;
+                        if (item.remark_ack) {
+                            registration_container.style.background = "palegreen"
+                        }
                     }
-
                     registration_container.classList.add("S" + item.leerlingnummer, "mtooltip");
                     registration_container.dataset.id = item.id;
                     if (sort_on_element.value === "name-firstname") {
@@ -145,18 +154,16 @@ const socketio_update_status = (type, data) => {
                     const tooltip_span = document.createElement("span");
                     tooltip_span.classList.add("tooltiptext");
                     tooltip_span.dataset.name = `${item.naam} ${item.voornaam}`
-                    tooltip_span.dataset.remark = item.text1;
-                    tooltip_span.dataset.sms = "nee";
+                    tooltip_span.dataset.remark = item.remark;
+                    tooltip_span.dataset.remark_ack = item.remark_ack;
+                    tooltip_span.dataset.sms_sent = item.sms_sent;
                     let html = "";
                     for (const item of tooltip_items) {
                         html += `${item.label}: ${tooltip_span.dataset[item.item]}<br>`
                     }
                     tooltip_span.innerHTML = html;
-                    // tooltip_span.innerHTML = `opm: ${item.text1}<br>sms: nee`;
                     registration_container.appendChild(tooltip_span)
-                    // canvas_container.appendChild(registration_container);
-
-                    for(const container of canvas_container.childNodes) {
+                    for (const container of canvas_container.childNodes) {
                         if (registration_container.dataset.sort_on < container.dataset.sort_on) {
                             container.before(registration_container);
                             break
@@ -242,30 +249,62 @@ async function delete_registration(ids) {
     });
 }
 
-const socketio_update_remark = (type, data) => {
+const socketio_update_registration = (type, data) => {
     if (data.status) {
-        update_tooltip(data.data.id, "remark", data.data.remark);
-        document.querySelector(`[data-id="${data.data.id}"]`).querySelector('[data-col="remark"]').innerHTML = data.data.remark;
+        const row = document.querySelector(`[data-id="${data.data.id}"]`);
+        if (data.data.fields.remark) {
+            update_tooltip(data.data.id, "remark", data.data.fields.remark);
+            row.querySelector('[data-col="remark"]').innerHTML = data.data.fields.remark;
+        }
+        if (data.data.fields.remark_ack !== undefined) {
+            update_tooltip(data.data.id, "remark_ack", data.data.fields.remark_ack);
+            row.style.background = data.data.fields.remark_ack ? "palegreen" : "white";
+        }
     }
 }
 
+
+async function confirm_remark(ids) {
+    const fields = {remark_ack: true};
+    const ret = await fetch(Flask.url_for('api.registration_update'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({id: ids[0], location_key: current_room, fields}),});
+    const status = await ret.json();
+    if (!status.status) {
+        bootbox.alert(status.data);
+    }
+}
+
+
 async function enter_remark(ids) {
+    const remark_ok_cb = async opaque => {
+        const remark = document.querySelector("#remark").value;
+        const remark_ack = document.querySelector("#remark_ack").checked;
+        if (remark !== null) {
+            const fields = {remark, remark_ack}
+            const ret = await fetch(Flask.url_for('api.registration_update'), {
+                headers: {'x-api-key': api_key,},
+                method: 'POST',
+                body: JSON.stringify({id: ids[0], location_key: current_room, fields}),
+            });
+            const status = await ret.json();
+            if (!status.status) {
+                bootbox.alert(status.data);
+            }
+        }
+    }
+
     const view_tile = view_layout_element.value === "tile";
     var text = get_tooltip(ids[0], "remark");
     text = text === "" ? "Bus " : text;
-    bootbox.prompt({
-        title: "Opmerking",
-        value: text,
-        callback: async function (remark) {
-            if (remark !== null) {
-                const ret = await fetch(Flask.url_for('api.remark_update'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({id: ids[0], remark, location_key: current_room}),});
-                const status = await ret.json();
-                if (!status.status) {
-                    bootbox.alert(status.data);
-                }
-            }
-        }
-    });
+    var ack = get_tooltip(ids[0], "remark_ack");
+    ack = ack === "true";
+    const name = get_tooltip(ids[0], "name");
+    init_popup({title: name, save_button: false, ok_button: true, width: "75%"});
+    const remark_input = create_input_element("Opmerking", "remark", "remark", text, {style: "width: 90%"});
+    add_to_popup_body(remark_input);
+    const remark_ack = create_checkbox_element("Bevestigd?", "remark_ack", "remark_ack", ack);
+    add_to_popup_body(remark_ack);
+    subscribe_btn_ok(remark_ok_cb, null);
+    show_popup();
 }
 
 const update_tooltip = (id, item, text) => {

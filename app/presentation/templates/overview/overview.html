@@ -4,6 +4,7 @@
     {{ super() }}
     <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css">
     <link rel="stylesheet" href="/static/css/right_click.css">
+    <link rel="stylesheet" href="/static/css/popup.css">
 {% endblock %}
 
 {% block body %}
@@ -52,6 +53,23 @@
     <hr class="nice-green-line">
     <div class="right-click-canvas" id="canvas"></div>
 
+    <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popup-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="popup-label">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="popup-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleer</button>
+                    <button type="button" class="btn btn-primary">Bewaren</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
 

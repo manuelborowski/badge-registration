@@ -25,11 +25,11 @@ class Registration(db.Model, SerializerMixin):
     text1 = db.Column(db.String(256), default='')
     text2 = db.Column(db.String(256), default='')
 
-    flag1 = db.Column(db.Boolean, default=True)
-    flag2 = db.Column(db.Boolean, default=True)
-    flag3 = db.Column(db.Boolean, default=True)
-    flag4 = db.Column(db.Boolean, default=True)
-    flag5 = db.Column(db.Boolean, default=True)
+    flag1 = db.Column(db.Boolean, default=False)
+    flag2 = db.Column(db.Boolean, default=False)
+    flag3 = db.Column(db.Boolean, default=False)
+    flag4 = db.Column(db.Boolean, default=False)
+    flag5 = db.Column(db.Boolean, default=False)
 
 
 def get_columns():

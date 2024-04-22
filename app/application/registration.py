@@ -89,14 +89,20 @@ def registration_add(rfid, location_key, timestamp=None):
                     text_body = text_body.replace("%%VOORNAAM%%", student.voornaam)
                     text_body = text_body.replace("%%NAAM%%", student.naam)
                     text_body = text_body.replace("%%TIJD%%", str(now))
-                    if "to" in location:
-                        send_sms(location["to"], text_body)
-                    else:
-                        if student.lpv1_gsm != "":
-                            send_sms(student.lpv1_gsm, text_body)
-                        if student.lpv2_gsm != "":
-                            send_sms(student.lpv2_gsm, text_body)
-                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "text1": ""})
+                    sms_sent = False
+                    if "auto" in location and location["auto"]:
+                        if "to" in location:
+                            send_sms(location["to"], text_body)
+                        else:
+                            if student.lpv1_gsm != "":
+                                send_sms(student.lpv1_gsm, text_body)
+                            if student.lpv2_gsm != "":
+                                send_sms(student.lpv2_gsm, text_body)
+                        sms_sent = True
+                    # text1: remark
+                    # flag1: remark is acknowledged
+                    # flag2: sms is sent
+                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "remark": "", "remark_ack": False, "sms_sent": sms_sent})
                     return ret
 
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
@@ -142,7 +148,9 @@ def get_current_registrations(location, selected_day=None):
                 "photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else '',
                 "timestamp": str(registration.time_in),
                 "id": registration.id,
-                "text1": registration.text1
+                "remark": registration.text1,
+                "remark_ack": registration.flag1,
+                "sms_sent": registration.flag2,
             })
         return ret
     except Exception as e:
@@ -202,11 +210,17 @@ def api_registration_add(code, location_key, timestamp):
 
 
 # use field text1 to store the remark
-def api_registration_update_remark(id, remark):
+# use flag1 to store remark ack
+# use flag2 to store sms sent
+def api_registration_update(id, fields):
     try:
         registration = mregistration.registration_get(("id", "=", id))
-        mregistration.registration_update(registration, {"text1": remark})
-        return {"status": True, "data": {"id": id, "remark": remark}}
+        new_fields = {}
+        if "remark" in fields: new_fields["text1"] = fields["remark"]
+        if "remark_ack" in fields: new_fields["flag1"] = fields["remark_ack"]
+        if "sms_sent" in fields: new_fields["flag2"] = fields["sms_sent"]
+        mregistration.registration_update(registration, new_fields)
+        return {"status": True, "data": {"id": id, "fields": fields}}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}
