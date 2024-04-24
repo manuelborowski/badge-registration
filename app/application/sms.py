@@ -24,7 +24,7 @@ def send_sms(to, text):
                 to = "00" + to[1:]
             else:
                 log.error(f'{sys._getframe().f_code.co_name}: number is not valid {to}')
-        log.info(f"{sys._getframe().f_code.co_name}: send sms, to {to}, text {text[:20]}")
+        log.info(f"{sys._getframe().f_code.co_name}: TEST send sms, to {to}, text {text[:20]}")
         # res = client.sms.send(to=to, message=text)
         return True
     except SmsApiException as e:

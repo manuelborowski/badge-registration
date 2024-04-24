@@ -78,8 +78,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.54: reworked navbar.  Reworked context-menu
 # 0.55: implemented context-remark and tooltip.
 # 0.55-major-rework-0.2: reworked remark-popup, changed to update-registration iso update-remark.
+# 0.55-major-rework-0.3: overview update, added fields (sms-sent, remark-acked).  Take into account when 2 browsers, same location but different date, can handle socketio requests (registration updates)
 
-version = "0.55-major-rework-0.2"
+version = "0.55-major-rework-0.3"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

@@ -102,6 +102,7 @@ def registration_add(rfid, location_key, timestamp=None):
                     # text1: remark
                     # flag1: remark is acknowledged
                     # flag2: sms is sent
+                    mregistration.registration_update(registration, {"flag2": sms_sent})
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "remark": "", "remark_ack": False, "sms_sent": sms_sent})
                     return ret
 
@@ -221,6 +222,36 @@ def api_registration_update(id, fields):
         if "sms_sent" in fields: new_fields["flag2"] = fields["sms_sent"]
         mregistration.registration_update(registration, new_fields)
         return {"status": True, "data": {"id": id, "fields": fields}}
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"status": False, "data": str(e)}
+
+
+def api_registration_send_sms(id, location_key):
+    try:
+        registration = mregistration.registration_get(("id", "=", id))
+        student = mstudent.student_get([("leerlingnummer", "=", registration.leerlingnummer)])
+        if student:
+            location_settings = msettings.get_configuration_setting("location-profiles")
+            if location_key not in location_settings:
+                log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
+                return {"status": False, "data": f"Locatie {location_key} is niet geldig"}
+            location = location_settings[location_key]
+            if location["type"] == "sms":
+                log.info(f'{sys._getframe().f_code.co_name}: SMS ({location["locatie"]}), {student.leerlingnummer} at {registration.time_in}')
+                text_body = msettings.get_configuration_setting("sms-student-too-late")
+                text_body = text_body.replace("%%VOORNAAM%%", student.voornaam)
+                text_body = text_body.replace("%%NAAM%%", student.naam)
+                text_body = text_body.replace("%%TIJD%%", str(registration.time_in))
+                if "to" in location:
+                    send_sms(location["to"], text_body)
+                else:
+                    if student.lpv1_gsm != "":
+                        send_sms(student.lpv1_gsm, text_body)
+                    if student.lpv2_gsm != "":
+                        send_sms(student.lpv2_gsm, text_body)
+                mregistration.registration_update(registration, {"flag2": True}) # flag2 is used to indicate sms sent
+                return {"status": True, "data": {"id": id, "fields": {"sms_sent": True}}}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}

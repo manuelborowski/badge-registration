@@ -129,6 +129,17 @@ def registration_update():
     return json.dumps({"status": ret["status"]})
 
 
+@api.route('/api/registration/sms', methods=['POST'])
+@user_key_required
+def registration_send_sms():
+    data = json.loads(request.data)
+    id = data["id"]
+    location = data["location_key"]
+    ret = mregistration.api_registration_send_sms(id, location)
+    msocketio.send_to_room({'type': 'update-registration', 'data': ret}, location)
+    return json.dumps({"status": ret["status"]})
+
+
 @api.route('/api/registration/delete', methods=['POST'])
 @supervisor_key_required
 def registration_delete():
