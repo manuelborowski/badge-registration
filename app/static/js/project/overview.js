@@ -1,16 +1,16 @@
 import {socketio} from "../base/socketio.js";
-import {subscribe_get_ids, create_menu} from "../base/right_click.js";
+import {subscribe_get_ids, create_context_menu} from "../base/right_click.js";
 import {person_image} from "../../img/base64-person.js";
 import {busy_indication_on, busy_indication_off} from "../base/base.js";
 import {add_to_popup_body, create_checkbox_element, create_input_element, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
-import {create_filters} from "../base/filters.js";
+import {add_extra_filters, create_filters} from "../base/filters.js";
 
 let location_element,date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element;
 
 let nbr_registered_element = document.querySelector("#nbr-registered");
 let photo_size_factor = 50;
 let nbr_registered = 0;
-let current_room = "";
+let current_location = "";
 let canvas_container = null;
 
 
@@ -32,8 +32,8 @@ $(document).ready(function () {
     sort_on_element = document.querySelector("#sort-on-select");
 
     socketio.start(null, null);
-    current_room = location_element.value;
-    socketio.subscribe_to_room(current_room);
+    current_location = location_element.value;
+    socketio.subscribe_to_room(current_location);
     socketio.subscribe_on_receive("update-current-status", socketio_update_status);
     socketio.subscribe_on_receive("update-registration", socketio_update_registration);
     let now = new Date();
@@ -122,9 +122,9 @@ const socketio_update_status = (type, data) => {
 const get_current_registrations = () => {
     busy_indication_on();
     const view_tile = view_layout_element.value === "tile";
-    socketio.unsubscribe_from_room(current_room);
-    current_room = location_element.value;
-    socketio.subscribe_to_room(current_room);
+    socketio.unsubscribe_from_room(current_location);
+    current_location = location_element.value;
+    socketio.subscribe_to_room(current_location);
     let location_label = location_element.options[location_element.selectedIndex].innerHTML;
     canvas_element.innerHTML = "";
     // Add dummy element to indicate end of list
@@ -140,9 +140,12 @@ const get_current_registrations = () => {
         canvas_container.appendChild(last_row);
     }
     canvas_element.appendChild(canvas_container);
-    socketio.send_to_server("get-current-registrations", {location: location_element.value, date: date_element.value});
+    socketio.send_to_server("get-current-registrations", {location: current_location, date: date_element.value});
     reset_nbr_registered();
-    create_menu(current_room, right_click_menu);
+    const context_menu_items = "context_menu" in locations[current_location] ? locations[current_location].context_menu :  ["delete"];
+    create_context_menu(context_menu_items, right_click_menu);
+    const extra_filters = "extra_filters" in locations[current_location] ? locations[current_location].extra_filters : [];
+    add_extra_filters(extra_filters);
 }
 
 export const remove_all_photos = () => {
@@ -171,7 +174,7 @@ async function to_server_delete_registration(ids) {
     const name = get_tooltip(ids[0], "name");
     bootbox.confirm(`Wilt u de registratie van ${name} verwijderen?`, async result => {
         if (result) {
-            const ret = await fetch(Flask.url_for('api.registration_delete'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({ids, location: current_room}),});
+            const ret = await fetch(Flask.url_for('api.registration_delete'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({ids, location: current_location}),});
             const status = await ret.json();
             if (status.status) {
                 // get_current_registrations()
@@ -205,7 +208,7 @@ async function to_server_send_sms(ids) {
     const name = get_tooltip(ids[0], "name");
     bootbox.confirm(`Wilt u een sms sturen naar de ouders van ${name}?`, async result => {
         if (result) {
-            const ret = await fetch(Flask.url_for('api.registration_send_sms'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({id: ids[0], location_key: current_room}),});
+            const ret = await fetch(Flask.url_for('api.registration_send_sms'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({id: ids[0], location_key: current_location}),});
             const status = await ret.json();
             if (!status.status) {
                 bootbox.alert(status.data)
@@ -216,7 +219,7 @@ async function to_server_send_sms(ids) {
 
 async function to_server_confirm_remark(ids) {
     const fields = {remark_ack: true};
-    const ret = await fetch(Flask.url_for('api.registration_update'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({id: ids[0], location_key: current_room, fields}),});
+    const ret = await fetch(Flask.url_for('api.registration_update'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({id: ids[0], location_key: current_location, fields}),});
     const status = await ret.json();
     if (!status.status) {
         bootbox.alert(status.data);
@@ -229,7 +232,7 @@ async function enter_remark(ids) {
         const remark_ack = document.querySelector("#remark_ack").checked;
         if (remark !== null) {
             const fields = {remark, remark_ack}
-            const ret = await fetch(Flask.url_for('api.registration_update'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({id: ids[0], location_key: current_room, fields}),});
+            const ret = await fetch(Flask.url_for('api.registration_update'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({id: ids[0], location_key: current_location, fields}),});
             const status = await ret.json();
             if (!status.status) {
                 bootbox.alert(status.data);

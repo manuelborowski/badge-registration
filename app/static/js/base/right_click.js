@@ -40,9 +40,8 @@ const default_menu_template = {
     text_input: {}
 }
 
-export const create_menu = (location, menu_template) => {
+export const create_context_menu = (menu_items, menu_template) => {
     context_menu.innerHTML = "";
-    const menu_items = "menu" in locations[location] ? locations[location].menu :  ["delete"];
     menu_template = {...menu_template, ...default_menu_template};
     for (const mi of menu_items) {
         const item_template = menu_template[mi];

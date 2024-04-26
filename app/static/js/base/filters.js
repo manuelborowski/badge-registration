@@ -3,13 +3,15 @@ let filter_id;
 export const create_filters = (id, filter_element, filters) => {
     if (filters.length > 0) {
         for (const filter of filters) {
-            const form_group = document.createElement("div");
-            filter_element.appendChild(form_group);
             const label = document.createElement("label");
-            form_group.appendChild(label);
+            filter_element.appendChild(label);
             if (filter.tt) label.setAttribute("title", filter.tt);
+            if (filter.extra) {
+                label.setAttribute("hidden", "hidden");
+                label.classList.add("extra-filters");
+            }
+            label.style.marginRight = "10px";
             label.innerHTML = filter.label;
-
             if (filter.type === "select") {
                 const select = document.createElement("select");
                 label.appendChild(select);
@@ -42,14 +44,28 @@ export const create_filters = (id, filter_element, filters) => {
             location.reload();
         })
         //if a filter is changed, then the filter is applied by simulating a click on the filter button
-        $(".overview-filter").change(() => store_filter_settings());
+        $(".overview-filter").change(() => __store_filter_settings());
 
-        if (!load_filter_settings()) store_filter_settings(); //filters are applied when the page is loaded for the first time
+        if (!__load_filter_settings()) __store_filter_settings(); //filters are applied when the page is loaded for the first time
     }
 }
 
+export const add_extra_filters = filters => {
+    //Hide all extra filters
+    const hide_filters = document.querySelectorAll(".extra-filters");
+    for (const filter of hide_filters ) {
+        filter.setAttribute("hidden", "hidden");
+    }
+    //Unhide wanted filters
+    for (const filter of filters) {
+        const filter_element = document.querySelector(`#${filter}`).parentElement;
+        filter_element.removeAttribute("hidden");
+    }
+}
+
+
 //Store locally in the client-browser
-function store_filter_settings() {
+function __store_filter_settings() {
     var filter_settings = [];
     if (filters.length > 0) {
         filters.forEach(f => {
@@ -83,7 +99,7 @@ function store_filter_settings() {
     }
 }
 
-function load_filter_settings() {
+function __load_filter_settings() {
     if (filters.length === 0) return true;
     var filter_settings = JSON.parse(localStorage.getItem(`${filter_id}-filter`));
     if (!filter_settings) {
@@ -92,7 +108,8 @@ function load_filter_settings() {
     }
     filter_settings.forEach(f => {
         if (f.type === 'select' || f.type === 'text' || f.type === 'date') {
-            document.querySelector(`#${f.name}`).value = f.value;
+            const filter_element = document.querySelector(`#${f.name}`);
+            if(filter_element) filter_element.value = f.value;
         }
     })
     return true;

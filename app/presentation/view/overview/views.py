@@ -78,6 +78,7 @@ def get_filters(location_types):
                     'label': 'Layout',
                     'choices': [["tile", "Tegel"], ["list", "Lijst"]],
                     'default': "tile",
+                    "extra": True
                 },
             ]
         return []
