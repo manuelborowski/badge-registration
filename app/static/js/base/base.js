@@ -118,7 +118,6 @@ $(document).ready(() => {
                     }
                 }
                 dd_ctr++;
-
             } else {
                 // regular menu-item
                 const url_path = Flask.url_for(item[0]);

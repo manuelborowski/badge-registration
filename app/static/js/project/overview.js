@@ -3,14 +3,10 @@ import {subscribe_get_ids, create_menu} from "../base/right_click.js";
 import {person_image} from "../../img/base64-person.js";
 import {busy_indication_on, busy_indication_off} from "../base/base.js";
 import {add_to_popup_body, create_checkbox_element, create_input_element, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
+import {create_filters} from "../base/filters.js";
 
-let location_element = document.querySelector("#filter-location");
-let date_element = document.querySelector("#filter-date");
-let canvas_element = document.querySelector("#canvas");
-let photo_size_element = document.querySelector("#photo-size-select");
-let view_layout_element = document.querySelector("#view-layout-select");
-let sort_on_element = document.querySelector("#sort-on-select");
-let title_element = document.querySelector(".title-element");
+let location_element,date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element;
+
 let nbr_registered_element = document.querySelector("#nbr-registered");
 let photo_size_factor = 50;
 let nbr_registered = 0;
@@ -27,6 +23,14 @@ const right_click_menu = {
 }
 
 $(document).ready(function () {
+    create_filters("Overview", document.querySelector(".filters"), filters);
+    location_element = document.querySelector("#filter-location");
+    date_element = document.querySelector("#filter-date");
+    canvas_element = document.querySelector("#canvas");
+    photo_size_element = document.querySelector("#photo-size-select");
+    view_layout_element = document.querySelector("#view-layout-select");
+    sort_on_element = document.querySelector("#sort-on-select");
+
     socketio.start(null, null);
     current_room = location_element.value;
     socketio.subscribe_to_room(current_room);
@@ -40,71 +44,8 @@ $(document).ready(function () {
     view_layout_element.addEventListener("change", get_current_registrations);
     photo_size_element.addEventListener("change", resize_photos);
     subscribe_get_ids(get_ids_of_selected_items);
-
-    //if a filter is changed, then the filter is applied by simulating a click on the filter button
-    $(".overview-filter").change(function () {
-        store_filter_settings();
-    });
-
-    //Store locally in the client-browser
-    function store_filter_settings() {
-        var filter_settings = [];
-        if (filters.length > 0) {
-            filters.forEach(f => {
-                if (f.store === undefined || f.store === true) {
-                    if (f.type === 'select') {
-                        filter_settings.push({
-                            name: f.name,
-                            type: f.type,
-                            value: document.querySelector(`#${f.name} option:checked`).value
-                        });
-                    } else if (f.type === 'checkbox') {
-                        let boxes = [];
-                        f.boxes.forEach(([k, l]) => {
-                            boxes.push({id: k, checked: document.querySelector(`#${k}`).checked})
-                        });
-                        filter_settings.push({
-                            name: f.name,
-                            type: f.type,
-                            value: boxes
-                        })
-                    } else if (f.type === 'text' || f.type === 'date') {
-                        filter_settings.push({
-                            name: f.name,
-                            type: f.type,
-                            value: document.querySelector(`#${f.name}`).value
-                        })
-                    }
-                }
-            });
-            localStorage.setItem(`Filter-overview`, JSON.stringify(filter_settings));
-        }
-    }
-
-    function load_filter_settings() {
-        if (filters.length === 0) return true;
-        var filter_settings = JSON.parse(localStorage.getItem(`Filter-overview`));
-        if (!filter_settings) {
-            filter_settings = [];
-            return false
-        }
-        filter_settings.forEach(f => {
-            if (f.type === 'select' || f.type === 'text' || f.type === 'date') {
-                document.querySelector(`#${f.name}`).value = f.value;
-            }
-        })
-        return true;
-    }
-
-    if (!load_filter_settings()) store_filter_settings(); //filters are applied when the page is loaded for the first time
-
     get_current_registrations();
 });
-
-export function clear_filter_setting() {
-    localStorage.clear(`Filter-overview`);
-    location.reload();
-}
 
 const socketio_update_status = (type, data) => {
     if (data.status) {
@@ -132,7 +73,7 @@ const socketio_update_status = (type, data) => {
                     } else {
                         registration_container = document.createElement("tr");
                         registration_container.innerHTML = `
-                            <td><input data-col="sms" type="checkbox" ${item.sms_sent ? "checked" : ""}></td> 
+                            <td>SMS: <input data-col="sms" type="checkbox" ${item.sms_sent ? "checked" : ""}></td> 
                             <td>${item.timestamp.split(" ")[1]}</td> 
                             <td>${item.naam} ${item.voornaam}</td> 
                             <td>${item.klascode}</td> 
