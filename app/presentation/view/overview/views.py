@@ -16,9 +16,10 @@ def show():
 
 def get_current_registrations(msg, client_sid=None):
     location_key = msg["data"]["location"]
-    date = msg["data"]["date"]
+    filter_on = msg["data"]["filter_on"]
+    # date = msg["data"]["date"]
     try:
-        ret = mregistration.get_current_registrations(location_key, date)
+        ret = mregistration.get_current_registrations(location_key, filter_on)
         msocketio.send_to_client({'type': 'update-current-status', 'data': ret})
     except Exception as e:
         msocketio.send_to_client({'type': 'update-current-status', 'data': {'status': False, 'message': str(e)}})
@@ -78,6 +79,14 @@ def get_filters(location_types):
                     'label': 'Layout',
                     'choices': [["tile", "Tegel"], ["list", "Lijst"]],
                     'default': "tile",
+                    "extra": True
+                },
+                {
+                    'type': 'select',
+                    'name': 'sms-specific-select',
+                    'label': 'Filter op',
+                    'choices': [["all", "Alles"], ["no_sms_sent", "Geen sms gestuurd"], ["no_ack", "Niet bevestigd"]],
+                    'default': "all",
                     "extra": True
                 },
             ]

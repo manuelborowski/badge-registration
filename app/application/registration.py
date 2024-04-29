@@ -129,15 +129,22 @@ def registration_delete(ids):
         return {"status": False, "data": f"Fout, {str(e)}"}
 
 
-def get_current_registrations(location, selected_day=None):
+def get_current_registrations(location, filter_on):
     try:
-        if not selected_day:
-            selected_day = str(datetime.datetime.now())
-        time_in_low = datetime.datetime.strptime(selected_day, "%Y-%m-%d").date()
-        time_in_high = time_in_low + datetime.timedelta(days=1)
-        registrations = mregistration.registration_get_m([("location", "=", location), ("time_in", ">", time_in_low), ("time_in", "<", time_in_high), ("time_out", "=", None)], order_by="id")
+        if filter_on["sms_specific"] == "all":
+            selected_day = filter_on["date"]
+            if not selected_day:
+                selected_day = str(datetime.datetime.now())
+            time_in_low = datetime.datetime.strptime(selected_day, "%Y-%m-%d").date()
+            time_in_high = time_in_low + datetime.timedelta(days=1)
+            registrations = mregistration.registration_get_m([("location", "=", location), ("time_in", ">", time_in_low), ("time_in", "<", time_in_high), ("time_out", "=", None)], order_by="id")
+        elif filter_on["sms_specific"] == "no_sms_sent":
+            registrations = mregistration.registration_get_m([("location", "=", location), ("time_out", "=", None), ("flag2", "=", False)], order_by="id")
+        elif filter_on["sms_specific"] == "no_ack":
+            registrations = mregistration.registration_get_m([("location", "=", location), ("time_out", "=", None), ("flag1", "=", False)], order_by="id")
+
         data = []
-        ret = {'status': True, "action": "add", "data": data, "selected_day": selected_day}
+        ret = {'status': True, "action": "add", "data": data, "filter_on": filter_on}
         for registration in registrations:
             student = mstudent.student_get([("leerlingnummer", "=", registration.leerlingnummer)])
             photo = mphoto.photo_get({"id": student.foto_id})

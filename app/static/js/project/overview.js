@@ -5,7 +5,7 @@ import {busy_indication_on, busy_indication_off} from "../base/base.js";
 import {add_to_popup_body, create_checkbox_element, create_input_element, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
 import {add_extra_filters, create_filters} from "../base/filters.js";
 
-let location_element,date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element;
+let location_element,date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element, sms_specific_element;
 
 let nbr_registered_element = document.querySelector("#nbr-registered");
 let photo_size_factor = 50;
@@ -30,6 +30,7 @@ $(document).ready(function () {
     photo_size_element = document.querySelector("#photo-size-select");
     view_layout_element = document.querySelector("#view-layout-select");
     sort_on_element = document.querySelector("#sort-on-select");
+    sms_specific_element = document.querySelector("#sms-specific-select")
 
     socketio.start(null, null);
     current_location = location_element.value;
@@ -42,6 +43,7 @@ $(document).ready(function () {
     date_element.addEventListener("change", get_current_registrations);
     sort_on_element.addEventListener("change", get_current_registrations);
     view_layout_element.addEventListener("change", get_current_registrations);
+    sms_specific_element.addEventListener("change", get_current_registrations);
     photo_size_element.addEventListener("change", resize_photos);
     subscribe_get_ids(get_ids_of_selected_items);
     get_current_registrations();
@@ -51,7 +53,7 @@ const socketio_update_status = (type, data) => {
     if (data.status) {
         const view_tile = view_layout_element.value === "tile";
         if (data.action === "add") {
-            if (data.selected_day === date_element.value) {
+            if ( data.filter_on.sms_specific !== "all" || data.filter_on.date === date_element.value) {
                 data.data.forEach(item => {
                     let registration_container = null;
                     if (view_tile) {
@@ -74,7 +76,7 @@ const socketio_update_status = (type, data) => {
                         registration_container = document.createElement("tr");
                         registration_container.innerHTML = `
                             <td>SMS: <input data-col="sms" type="checkbox" ${item.sms_sent ? "checked" : ""}></td> 
-                            <td>${item.timestamp.split(" ")[1]}</td> 
+                            <td>${item.timestamp}</td> 
                             <td>${item.naam} ${item.voornaam}</td> 
                             <td>${item.klascode}</td> 
                             <td data-col="remark">${item.remark}</td>`;
@@ -135,12 +137,14 @@ const get_current_registrations = () => {
         canvas_container.appendChild(sentinel);
     } else {
         canvas_container = document.createElement("table")
+        canvas_container.style.margin = "auto";
         const last_row = document.createElement("tr");
         last_row.dataset.sort_on = "zz";
         canvas_container.appendChild(last_row);
     }
     canvas_element.appendChild(canvas_container);
-    socketio.send_to_server("get-current-registrations", {location: current_location, date: date_element.value});
+    const filter_on = {date: date_element.value, sms_specific: sms_specific_element.value}
+    socketio.send_to_server("get-current-registrations", {location: current_location, filter_on});
     reset_nbr_registered();
     const context_menu_items = "context_menu" in locations[current_location] ? locations[current_location].context_menu :  ["delete"];
     create_context_menu(context_menu_items, right_click_menu);
@@ -194,11 +198,11 @@ const socketio_update_registration = (type, data) => {
             row.querySelector('[data-col="remark"]').innerHTML = data.data.fields.remark;
         }
         if (data.data.fields.remark_ack !== undefined) {
-            update_tooltip(data.data.id, {remark_ack: data.data.fields.remark_ack});
+            update_tooltip_items(data.data.id, {remark_ack: data.data.fields.remark_ack});
             row.style.background = data.data.fields.remark_ack ? "palegreen" : "white";
         }
         if (data.data.fields.sms_sent !== undefined) {
-            update_tooltip(data.data.id, {sms_sent: data.data.fields.sms_sent});
+            update_tooltip_items(data.data.id, {sms_sent: data.data.fields.sms_sent});
             row.querySelector('[data-col="sms"]').checked = data.data.fields.sms_sent;
         }
     }

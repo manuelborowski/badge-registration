@@ -81,9 +81,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.55-major-rework-0.3: overview update, added fields (sms-sent, remark-acked).  Take into account when 2 browsers, same location but different date, can handle socketio requests (registration updates)
 # 0.55-major-rework-0.4: reworked filters, put in seperate file
 # 0.55-major-rework-0.5: minor updates.  Added concept of extra-filters
+# 0.55-major-rework-0.6: small updates.  Added filter on registrations.
 
 
-version = "0.55-major-rework-0.5"
+version = "0.55-major-rework-0.6"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

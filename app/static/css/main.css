@@ -258,4 +258,5 @@ table.dataTable tbody td {
 .mtooltip:hover .tooltiptext {
     visibility: visible;
     opacity: 1;
+    position: fixed;
 }
