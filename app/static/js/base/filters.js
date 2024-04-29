@@ -50,14 +50,26 @@ export const create_filters = (id, filter_element, filters) => {
     }
 }
 
-export const add_extra_filters = filters => {
+export const add_extra_filters = show_filters => {
     //Hide all extra filters
     const hide_filters = document.querySelectorAll(".extra-filters");
-    for (const filter of hide_filters ) {
+    for (const filter of hide_filters) {
         filter.setAttribute("hidden", "hidden");
+        //Set a hidden filter to its default value, unless it is present in show_filters.
+        if (filter.lastChild.type === "select-one") {
+            const id = filter.lastChild.id;
+            if (!show_filters.includes(id)) {
+                for (const f of filters) {
+                    if (f.name === id) {
+                        filter.lastChild.value = f.default;
+                        break;
+                    }
+                }
+            }
+        }
     }
     //Unhide wanted filters
-    for (const filter of filters) {
+    for (const filter of show_filters) {
         const filter_element = document.querySelector(`#${filter}`).parentElement;
         filter_element.removeAttribute("hidden");
     }
@@ -109,7 +121,7 @@ function __load_filter_settings() {
     filter_settings.forEach(f => {
         if (f.type === 'select' || f.type === 'text' || f.type === 'date') {
             const filter_element = document.querySelector(`#${f.name}`);
-            if(filter_element) filter_element.value = f.value;
+            if (filter_element) filter_element.value = f.value;
         }
     })
     return true;
