@@ -16,10 +16,10 @@ def show():
 
 def get_current_registrations(msg, client_sid=None):
     location_key = msg["data"]["location"]
-    filter_on = msg["data"]["filter_on"]
+    filter = msg["data"]["filter"]
     # date = msg["data"]["date"]
     try:
-        ret = mregistration.get_current_registrations(location_key, filter_on)
+        ret = mregistration.get_current_registrations(location_key, filter)
         msocketio.send_to_client({'type': 'update-current-status', 'data': ret})
     except Exception as e:
         msocketio.send_to_client({'type': 'update-current-status', 'data': {'status': False, 'message': str(e)}})

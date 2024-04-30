@@ -83,9 +83,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.55-major-rework-0.5: minor updates.  Added concept of extra-filters
 # 0.55-major-rework-0.6: small updates.  Added filter on registrations.
 # 0.55-major-rework-0.7: extra-filters, set to default value if they're hidden.
+# 0.55-major-rework-0.8: sms get status, update (bugfix) filtering.
 
 
-version = "0.55-major-rework-0.7"
+version = "0.55-major-rework-0.8"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

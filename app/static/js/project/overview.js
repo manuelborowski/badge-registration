@@ -53,7 +53,7 @@ const socketio_update_status = (type, data) => {
     if (data.status) {
         const view_tile = view_layout_element.value === "tile";
         if (data.action === "add") {
-            if ( data.filter_on.sms_specific !== "all" || data.filter_on.date === date_element.value) {
+            if ( !data.date || data.date === date_element.value) {
                 data.data.forEach(item => {
                     let registration_container = null;
                     if (view_tile) {
@@ -143,8 +143,8 @@ const get_current_registrations = () => {
         canvas_container.appendChild(last_row);
     }
     canvas_element.appendChild(canvas_container);
-    const filter_on = {date: date_element.value, sms_specific: sms_specific_element.value}
-    socketio.send_to_server("get-current-registrations", {location: current_location, filter_on});
+    const filter = {date: date_element.value, sms_specific: sms_specific_element.value}
+    socketio.send_to_server("get-current-registrations", {location: current_location, filter});
     reset_nbr_registered();
     const context_menu_items = "context_menu" in locations[current_location] ? locations[current_location].context_menu :  ["delete"];
     create_context_menu(context_menu_items, right_click_menu);
@@ -193,17 +193,18 @@ async function to_server_delete_registration(ids) {
 const socketio_update_registration = (type, data) => {
     if (data.status && document.querySelector(`[data-id="${data.data.id}"]`) !== null ) {
         const row = document.querySelector(`[data-id="${data.data.id}"]`);
+        const view_list = view_layout_element.value === "list";
         if (data.data.fields.remark) {
             update_tooltip_items(data.data.id, {remark: data.data.fields.remark});
-            row.querySelector('[data-col="remark"]').innerHTML = data.data.fields.remark;
+            if (view_list) row.querySelector('[data-col="remark"]').innerHTML = data.data.fields.remark;
         }
         if (data.data.fields.remark_ack !== undefined) {
             update_tooltip_items(data.data.id, {remark_ack: data.data.fields.remark_ack});
-            row.style.background = data.data.fields.remark_ack ? "palegreen" : "white";
+            if (view_list) row.style.background = data.data.fields.remark_ack ? "palegreen" : "white";
         }
         if (data.data.fields.sms_sent !== undefined) {
             update_tooltip_items(data.data.id, {sms_sent: data.data.fields.sms_sent});
-            row.querySelector('[data-col="sms"]').checked = data.data.fields.sms_sent;
+            if (view_list) row.querySelector('[data-col="sms"]').checked = data.data.fields.sms_sent;
         }
     }
 }

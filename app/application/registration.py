@@ -21,6 +21,7 @@ def registration_add(rfid, location_key, timestamp=None):
             now = datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
         else:
             now = datetime.datetime.now()
+        now = now.replace(microsecond=0)
         today = now.date()
         student = mstudent.student_get([("rfid", "=", rfid)])
         if student:
@@ -33,7 +34,7 @@ def registration_add(rfid, location_key, timestamp=None):
             location = location_settings[location_key]
             ret = {
                 "status": True,
-                "selected_day": str(today),
+                "date": str(today),
                 "action": "add",
                 "data": [{
                     "leerlingnummer": student.leerlingnummer,
@@ -129,22 +130,26 @@ def registration_delete(ids):
         return {"status": False, "data": f"Fout, {str(e)}"}
 
 
-def get_current_registrations(location, filter_on):
+def get_current_registrations(location, filter):
     try:
-        if filter_on["sms_specific"] == "all":
-            selected_day = filter_on["date"]
+        ret_filter = {}
+        registrations = []
+        if filter["sms_specific"] == "all":
+            selected_day = filter["date"]
             if not selected_day:
                 selected_day = str(datetime.datetime.now())
             time_in_low = datetime.datetime.strptime(selected_day, "%Y-%m-%d").date()
             time_in_high = time_in_low + datetime.timedelta(days=1)
             registrations = mregistration.registration_get_m([("location", "=", location), ("time_in", ">", time_in_low), ("time_in", "<", time_in_high), ("time_out", "=", None)], order_by="id")
-        elif filter_on["sms_specific"] == "no_sms_sent":
+            ret_filter = {"date": selected_day}
+        elif filter["sms_specific"] == "no_sms_sent":
             registrations = mregistration.registration_get_m([("location", "=", location), ("time_out", "=", None), ("flag2", "=", False)], order_by="id")
-        elif filter_on["sms_specific"] == "no_ack":
+        elif filter["sms_specific"] == "no_ack":
             registrations = mregistration.registration_get_m([("location", "=", location), ("time_out", "=", None), ("flag1", "=", False)], order_by="id")
 
         data = []
-        ret = {'status': True, "action": "add", "data": data, "filter_on": filter_on}
+        ret = {'status': True, "action": "add", "data": data}
+        ret.update(ret_filter)
         for registration in registrations:
             student = mstudent.student_get([("leerlingnummer", "=", registration.leerlingnummer)])
             photo = mphoto.photo_get({"id": student.foto_id})

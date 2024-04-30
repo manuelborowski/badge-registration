@@ -1,14 +1,14 @@
 const popup_body = document.querySelector('#popup .modal-body');
 
-export const init_popup = ({title = "", save_button = true, cancel_button = true, ok_button = false, width = "500px"}={}) => {
+export const init_popup = ({title = "", save_button = true, cancel_button = true, ok_button = false, width = "500px", default_button="ok"}={}) => {
     document.querySelector('#popup .modal-title').innerHTML = title;
     popup_body.replaceChildren();
     const popup_footer = document.querySelector('#popup .modal-footer');
     popup_footer.replaceChildren();
     popup_footer.innerHTML = ''
-    if (cancel_button) {popup_footer.innerHTML += '<button type="button" class="btn btn-primary" data-dismiss = "modal">Annuleer</button>'}
     if (ok_button) {popup_footer.innerHTML += '<button type="button" id="popup-btn-ok" class="btn btn-danger" data-dismiss = "modal">Ok</button>'}
     if (save_button) {popup_footer.innerHTML += '<button type="button" class="btn btn-primary">Bewaren</button>'}
+    if (cancel_button) {popup_footer.innerHTML += '<button type="button" class="btn btn-primary" data-dismiss = "modal">Annuleer</button>'}
     document.querySelector(".modal-dialog").style.maxWidth = width;
 }
 
