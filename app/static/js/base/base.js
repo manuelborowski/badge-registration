@@ -73,6 +73,8 @@ export const inject_menu = new_menu => {
 }
 
 $(document).ready(() => {
+    if (suppress_navbar) return;
+
     if (default_view) { // after login, go to default (= first) page
         document.location.href = Flask.url_for(menu[0][0])
     }

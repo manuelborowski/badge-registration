@@ -39,7 +39,6 @@ def login():
             return render_template('base.html', default_view=True)
 
     form = LoginForm(request.form)
-    locations = msettings.get_configuration_setting("location-profiles")
     if form.validate() and request.method == 'POST':
         user = muser.get_first_user ({'username': func.binary(form.username.data)})
         if user is not None and user.verify_password(form.password.data):
@@ -55,10 +54,10 @@ def login():
             utils.flash_plus(u'Ongeldige gebruikersnaam of paswoord')
             log.error(u'Invalid username/password')
     try:
-        return render_template('auth/login.html', form=form, title='Login', locations=locations)
+        return render_template('auth/login.html', form=form, title='Login', suppress_navbar=True)
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-        return render_template('auth/login.html', form=form, title='Login', locations={})
+        return render_template('auth/login.html', form=form, title='Login', suppress_navbar=True)
 
 
 @auth.route('/logout')

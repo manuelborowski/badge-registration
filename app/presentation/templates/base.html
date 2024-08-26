@@ -97,17 +97,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js"
             integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ=="
             crossorigin="anonymous"></script>
-    <script type="module" src="/static/js/base/base.js"></script>
     <script>
-        const current_user_level = {{ current_user.level }};
+        const current_user_level = {{ (current_user.level or 0) | tojson }};
         const stand_alone = {{ stand_alone|tojson }};
         const rfidusb_url = "{{ rfidusb_url }}";
         const rfidusb_br_url = "{{ rfidusb_br_url }}";
         const rfidusb_br_key = "{{ rfidusb_br_key }}";
         const locations = {{ locations|tojson }};
-        const default_view = {{ (default_view or False)|tojson }}
+        const default_view = {{ (default_view or False)|tojson }};
         const api_key = {{ (api_key or '') | tojson }};
+        const suppress_navbar = {{ (suppress_navbar or false) | tojson }};
     </script>
+    <script type="module" src="/static/js/base/base.js"></script>
     <script type="module">
         import {start_sync} from "/static/js/base/base.js";
         window.start_sync = start_sync;

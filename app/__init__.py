@@ -85,9 +85,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.55-major-rework-0.7: extra-filters, set to default value if they're hidden.
 # 0.55-major-rework-0.8: sms get status, update (bugfix) filtering.
 # 0.55-major-rework-0.9: added yaml to configure locations.  Added config-flag to disable sending sms
+# 0.55-major-rework-0.10: cleanup of login page.
 
-
-version = "0.55-major-rework-0.9"
+version = "0.55-major-rework-0.10"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
