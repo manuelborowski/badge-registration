@@ -3,7 +3,7 @@ import app.application
 import app.application.api
 import app
 from app import flask_app
-from app.data import student as mstudent, registration as mregistration, utils as mutils, photo as mphoto, settings as msettings
+from app.data import student as mstudent, registration as mregistration, photo as mphoto, settings as msettings
 from app.application.util import get_api_key
 from flask_login import current_user
 from app.application.sms import send_sms
@@ -28,6 +28,7 @@ def registration_add(rfid, location_key, timestamp=None):
             photo_obj = mphoto.photo_get({"id": student.foto_id})
             photo = base64.b64encode(photo_obj.photo).decode('utf-8') if photo_obj else ''
             location_settings = msettings.get_configuration_setting("location-profiles")
+
             if location_key not in location_settings:
                 log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
                 return {"status": False, "data": f"Locatie {location_key} is niet geldig"}
@@ -90,15 +91,16 @@ def registration_add(rfid, location_key, timestamp=None):
                     text_body = text_body.replace("%%VOORNAAM%%", student.voornaam)
                     text_body = text_body.replace("%%NAAM%%", student.naam)
                     text_body = text_body.replace("%%TIJD%%", str(now))
+                    enable_send_sms = location["enable_sending"]
                     sms_sent = False
-                    if "auto" in location and location["auto"]:
-                        if "to" in location:
-                            send_sms(location["to"], text_body)
+                    if "auto" in location and location["auto"]: # send sms when badge is scanned
+                        if "to" in location: # overwrite sms receivers
+                            send_sms(location["to"], text_body, enable_send_sms)
                         else:
                             if student.lpv1_gsm != "":
-                                send_sms(student.lpv1_gsm, text_body)
+                                send_sms(student.lpv1_gsm, text_body, enable_send_sms)
                             if student.lpv2_gsm != "":
-                                send_sms(student.lpv2_gsm, text_body)
+                                send_sms(student.lpv2_gsm, text_body, enable_send_sms)
                         sms_sent = True
                     # text1: remark
                     # flag1: remark is acknowledged
@@ -255,13 +257,14 @@ def api_registration_send_sms(id, location_key):
                 text_body = text_body.replace("%%VOORNAAM%%", student.voornaam)
                 text_body = text_body.replace("%%NAAM%%", student.naam)
                 text_body = text_body.replace("%%TIJD%%", str(registration.time_in))
+                enable_send_sms = location["enable_sending"]
                 if "to" in location:
-                    send_sms(location["to"], text_body)
+                    send_sms(location["to"], text_body, enable_send_sms)
                 else:
                     if student.lpv1_gsm != "":
-                        send_sms(student.lpv1_gsm, text_body)
+                        send_sms(student.lpv1_gsm, text_body, enable_send_sms)
                     if student.lpv2_gsm != "":
-                        send_sms(student.lpv2_gsm, text_body)
+                        send_sms(student.lpv2_gsm, text_body, enable_send_sms)
                 mregistration.registration_update(registration, {"flag2": True}) # flag2 is used to indicate sms sent
                 return {"status": True, "data": {"id": id, "fields": {"sms_sent": True}}}
     except Exception as e:

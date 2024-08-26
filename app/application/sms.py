@@ -13,7 +13,7 @@ log.addFilter(MyLogFilter())
 
 client = SmsApiComClient(access_token=flask_app.config["SMSAPI_TOKEN"])
 
-def send_sms(to, text):
+def send_sms(to, text, send_sms=True):
     try:
         # normalize "to" number
         to = to.replace(" ", "")
@@ -24,8 +24,9 @@ def send_sms(to, text):
                 to = "00" + to[1:]
             else:
                 log.error(f'{sys._getframe().f_code.co_name}: number is not valid {to}')
-        log.info(f"{sys._getframe().f_code.co_name}: TEST send sms, to {to}, text {text[:20]}")
-        # res = client.sms.send(to=to, message=text)
+        log.info(f"{sys._getframe().f_code.co_name}: send_sms {send_sms}, to {to}")
+        if send_sms:
+            res = client.sms.send(to=to, message=text)
         return True
     except SmsApiException as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e.message}, {e.code}')
