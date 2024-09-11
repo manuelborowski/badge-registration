@@ -134,6 +134,7 @@ def registration_delete(ids):
 
 def get_current_registrations(location, filter):
     try:
+        search_text = filter["search_text"].lower() if filter["search_text"] != "" else None
         ret_filter = {}
         registrations = []
         if filter["sms_specific"] == "all":
@@ -148,25 +149,25 @@ def get_current_registrations(location, filter):
             registrations = mregistration.registration_get_m([("location", "=", location), ("time_out", "=", None), ("flag2", "=", False)], order_by="id")
         elif filter["sms_specific"] == "no_ack":
             registrations = mregistration.registration_get_m([("location", "=", location), ("time_out", "=", None), ("flag1", "=", False)], order_by="id")
-
         data = []
         ret = {'status': True, "action": "add", "data": data}
         ret.update(ret_filter)
         for registration in registrations:
             student = mstudent.student_get([("leerlingnummer", "=", registration.leerlingnummer)])
-            photo = mphoto.photo_get({"id": student.foto_id})
-            data.append({
-                "leerlingnummer": student.leerlingnummer,
-                "naam": student.naam,
-                "voornaam": student.voornaam,
-                "klascode": student.klascode,
-                "photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else '',
-                "timestamp": str(registration.time_in),
-                "id": registration.id,
-                "remark": registration.text1,
-                "remark_ack": registration.flag1,
-                "sms_sent": registration.flag2,
-            })
+            if search_text and (search_text in f"{student.naam} {student.voornaam}".lower()) or not search_text:
+                photo = mphoto.photo_get({"id": student.foto_id})
+                data.append({
+                    "leerlingnummer": student.leerlingnummer,
+                    "naam": student.naam,
+                    "voornaam": student.voornaam,
+                    "klascode": student.klascode,
+                    "photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else '',
+                    "timestamp": str(registration.time_in),
+                    "id": registration.id,
+                    "remark": registration.text1,
+                    "remark_ack": registration.flag1,
+                    "sms_sent": registration.flag2,
+                })
         return ret
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')

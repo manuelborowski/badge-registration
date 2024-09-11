@@ -150,6 +150,9 @@ def get_multiple(model, filters=[], fields=[], order_by=None, first=False, count
             elif o == '=<':
                 if hasattr(model, k):
                     q = q.filter(getattr(model, k) <= v)
+            elif o == 'l':
+                if hasattr(model, k):
+                    q = q.filter(getattr(model, k).like(f"%{v}%"))
             else:
                 if hasattr(model, k):
                     q = q.filter(getattr(model, k) == v)

@@ -5,7 +5,7 @@ import {busy_indication_on, busy_indication_off} from "../base/base.js";
 import {add_to_popup_body, create_checkbox_element, create_input_element, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
 import {add_extra_filters, create_filters} from "../base/filters.js";
 
-let location_element,date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element, sms_specific_element;
+let location_element,date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element, sms_specific_element, search_text_element;
 
 let nbr_registered_element = document.querySelector("#nbr-registered");
 let photo_size_factor = 50;
@@ -29,6 +29,7 @@ $(document).ready(function () {
     canvas_element = document.querySelector("#canvas");
     photo_size_element = document.querySelector("#photo-size-select");
     view_layout_element = document.querySelector("#view-layout-select");
+    search_text_element = document.querySelector("#search-text");
     sort_on_element = document.querySelector("#sort-on-select");
     sms_specific_element = document.querySelector("#sms-specific-select")
 
@@ -41,6 +42,7 @@ $(document).ready(function () {
     date_element.value = now.toISOString().split("T")[0];
     location_element.addEventListener("change", get_current_registrations);
     date_element.addEventListener("change", get_current_registrations);
+    search_text_element.addEventListener("keydown", (event) => wait_for_enter(event));
     sort_on_element.addEventListener("change", get_current_registrations);
     view_layout_element.addEventListener("change", get_current_registrations);
     sms_specific_element.addEventListener("change", get_current_registrations);
@@ -121,6 +123,13 @@ const socketio_update_status = (type, data) => {
     }
 }
 
+const wait_for_enter = (event) => {
+    if (event.key === "Enter") {
+        get_current_registrations();
+        search_text_element.value = "";
+    }
+}
+
 const get_current_registrations = () => {
     busy_indication_on();
     const view_tile = view_layout_element.value === "tile";
@@ -143,7 +152,7 @@ const get_current_registrations = () => {
         canvas_container.appendChild(last_row);
     }
     canvas_element.appendChild(canvas_container);
-    const filter = {date: date_element.value, sms_specific: sms_specific_element.value}
+    const filter = {date: date_element.value, sms_specific: sms_specific_element.value, search_text: search_text_element.value}
     socketio.send_to_server("get-current-registrations", {location: current_location, filter});
     reset_nbr_registered();
     const context_menu_items = "context_menu" in locations[current_location] ? locations[current_location].context_menu :  ["delete"];

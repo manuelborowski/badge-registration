@@ -74,6 +74,12 @@ def get_filters(location_types):
                     "store": False
                 },
                 {
+                    'type': 'text',
+                    'name': 'search-text',
+                    'label': 'Zoeken',
+                    "store": False
+                },
+                {
                     'type': 'select',
                     'name': 'view-layout-select',
                     'label': 'Layout',
