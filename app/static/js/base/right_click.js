@@ -40,28 +40,26 @@ const default_menu_template = {
     text_input: {}
 }
 
-export const create_context_menu = (menu_items, menu_template) => {
+export const create_context_menu = (menu) => {
     context_menu.innerHTML = "";
-    menu_template = {...menu_template, ...default_menu_template};
-    for (const mi of menu_items) {
-        const item_template = menu_template[mi];
+    for (const mi of menu) {
         const li = document.createElement("li");
         context_menu.appendChild(li);
         li.classList.add("item");
         const span = document.createElement("span");
-        if(mi === "divider") {
+        if(mi.type === "divider") {
             span.innerHTML = "--------------";
-        } else if(mi === "text_input") {
+        } else if(mi.type === "text_input") {
             const input = document.createElement("input");
             span.appendChild(input);
         } else {
-            li.onclick = () => item_clicked_with_cb(item_template.cb);
-            if ("iconscout" in item_template) {
+            li.onclick = () => item_clicked_with_cb(mi.cb);
+            if ("iconscout" in mi) {
                 const i = document.createElement("i");
-                i.classList.add("uil", `uil-${item_template.iconscout}`);
+                i.classList.add("uil", `uil-${mi.iconscout}`);
                 li.appendChild(i);
             }
-            span.innerHTML = item_template.label;
+            span.innerHTML = mi.label;
         }
         li.appendChild(span);
     }

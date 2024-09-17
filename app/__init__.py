@@ -87,9 +87,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.55-major-rework-0.9: added yaml to configure locations.  Added config-flag to disable sending sms
 # 0.55-major-rework-0.10: cleanup of login page.
 # 0.55-major-rework-0.11: Added input field to search for surname, first name
+# 0.55-major-rework-0.12: updated filters.  Added location cellphone.  Reworked context-menu.  Optimized get_current_registrations, skip photo's if not required.
 
 
-version = "0.55-major-rework-0.11"
+version = "0.55-major-rework-0.12"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

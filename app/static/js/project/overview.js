@@ -3,9 +3,10 @@ import {subscribe_get_ids, create_context_menu} from "../base/right_click.js";
 import {person_image} from "../../img/base64-person.js";
 import {busy_indication_on, busy_indication_off} from "../base/base.js";
 import {add_to_popup_body, create_checkbox_element, create_input_element, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
-import {add_extra_filters, create_filters} from "../base/filters.js";
+import {add_extra_filters, create_filters, enable_filters, disable_filters, subscribe_reset_button} from "../base/filters.js";
 
 let location_element,date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element, sms_specific_element, search_text_element;
+let all_filters_element;
 
 let nbr_registered_element = document.querySelector("#nbr-registered");
 let photo_size_factor = 50;
@@ -14,16 +15,9 @@ let current_location = "";
 let canvas_container = null;
 
 
-const right_click_menu = {
-    remark: {iconscout: "text", label: "Reden", cb: enter_remark},
-    sms: {iconscout: "envelope-send", label: "Stuur sms", cb: to_server_send_sms},
-    delete: {iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration},
-    ack: {iconscout: "check", label: "Bevestig reden", cb: to_server_confirm_remark},
-
-}
-
 $(document).ready(function () {
-    create_filters("Overview", document.querySelector(".filters"), filters);
+    all_filters_element = document.querySelector(".filters");
+    create_filters("Overview", all_filters_element, filters);
     location_element = document.querySelector("#filter-location");
     date_element = document.querySelector("#filter-date");
     canvas_element = document.querySelector("#canvas");
@@ -41,19 +35,27 @@ $(document).ready(function () {
     let now = new Date();
     date_element.value = now.toISOString().split("T")[0];
     location_element.addEventListener("change", get_current_registrations);
-    date_element.addEventListener("change", get_current_registrations);
-    search_text_element.addEventListener("keydown", (event) => wait_for_enter(event));
+    date_element.addEventListener("change", event => __select_date(event));
+    search_text_element.addEventListener("keydown", (event) => __wait_for_enter(event));
     sort_on_element.addEventListener("change", get_current_registrations);
     view_layout_element.addEventListener("change", get_current_registrations);
     sms_specific_element.addEventListener("change", get_current_registrations);
     photo_size_element.addEventListener("change", resize_photos);
     subscribe_get_ids(get_ids_of_selected_items);
+    subscribe_reset_button(__reset_button_cb);
     get_current_registrations();
 });
 
 const socketio_update_status = (type, data) => {
     if (data.status) {
         const view_tile = view_layout_element.value === "tile";
+        if (data.search) {
+            disable_filters(Array.from(document.querySelectorAll(".overview-filter")));
+            enable_filters(search_text_element);
+            search_text_element.focus();
+        } else {
+            enable_filters(Array.from(document.querySelectorAll(".overview-filter")));
+        }
         if (data.action === "add") {
             if ( !data.date || data.date === date_element.value) {
                 data.data.forEach(item => {
@@ -74,17 +76,32 @@ const socketio_update_status = (type, data) => {
                         figcaption.style.textAlign = "center";
                         registration_container.appendChild(image);
                         registration_container.appendChild(figcaption);
+                        if (locations[current_location].type === "cellphone") {
+                            if (item.limit_reached) {
+                                figcaption.style.background = "lightpink"
+                            }
+                        }
                     } else {
                         registration_container = document.createElement("tr");
-                        registration_container.innerHTML = `
+                        if (locations[current_location].type === "sms") {
+                            registration_container.innerHTML = `
                             <td>SMS: <input data-col="sms" type="checkbox" ${item.sms_sent ? "checked" : ""}></td> 
                             <td>${item.timestamp}</td> 
                             <td>${item.naam} ${item.voornaam}</td> 
                             <td>${item.klascode}</td> 
                             <td data-col="remark">${item.remark}</td>`;
-                        if (item.remark_ack) {
-                            registration_container.style.background = "palegreen"
-                        }
+                            if (item.remark_ack) {
+                                registration_container.style.background = "palegreen"
+                            }
+                        } else if (locations[current_location].type === "cellphone") {
+                            registration_container.innerHTML = `
+                            <td>${item.timestamp}</td> 
+                            <td>${item.naam} ${item.voornaam}</td> 
+                            <td>${item.klascode}</td>`;
+                            if (item.limit_reached) {
+                                registration_container.style.background = "lightpink"
+                            }
+                        } 
                     }
                     registration_container.classList.add("S" + item.leerlingnummer, "mtooltip");
                     registration_container.dataset.id = item.id;
@@ -123,11 +140,41 @@ const socketio_update_status = (type, data) => {
     }
 }
 
-const wait_for_enter = (event) => {
+const __wait_for_enter = (event) => {
     if (event.key === "Enter") {
         get_current_registrations();
         search_text_element.value = "";
     }
+}
+
+const __select_date = (event) => {
+    sms_specific_element.value = "on_date";
+    get_current_registrations();
+}
+
+const __reset_button_cb = filters => {
+    for (const filter of filters) {
+        if (filter.name === "filter-location") {
+            location_element.value = filter.value;
+            get_current_registrations();
+        }
+    }
+}
+
+const context_menu_pool = {
+    sms: [
+    {type: "item", iconscout: "text", label: "Reden", cb: enter_remark},
+    {type: "item", iconscout: "check", label: "Bevestig reden", cb: to_server_confirm_remark},
+    {type: "item", iconscout: "envelope-send", label: "Stuur sms", cb: to_server_send_sms},
+    {type: "divider"},
+    {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}],
+    default: [{type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}]
+}
+
+const extra_filters_pool = {
+    sms: ["search-text", "view-layout-select", "sms-specific-select"],
+    cellphone: ["search-text", "view-layout-select"],
+    default: []
 }
 
 const get_current_registrations = () => {
@@ -153,11 +200,12 @@ const get_current_registrations = () => {
     }
     canvas_element.appendChild(canvas_container);
     const filter = {date: date_element.value, sms_specific: sms_specific_element.value, search_text: search_text_element.value}
-    socketio.send_to_server("get-current-registrations", {location: current_location, filter});
+    socketio.send_to_server("get-current-registrations", {location: current_location, filter, include_foto: view_tile});
     reset_nbr_registered();
-    const context_menu_items = "context_menu" in locations[current_location] ? locations[current_location].context_menu :  ["delete"];
-    create_context_menu(context_menu_items, right_click_menu);
-    const extra_filters = "extra_filters" in locations[current_location] ? locations[current_location].extra_filters : [];
+
+    const context_menu = locations[current_location].type in context_menu_pool ? context_menu_pool[locations[current_location].type] : context_menu_pool["default"];
+    create_context_menu(context_menu);
+    const extra_filters = locations[current_location].type in extra_filters_pool ? extra_filters_pool[locations[current_location].type] : extra_filters_pool["default"];
     add_extra_filters(extra_filters);
 }
 

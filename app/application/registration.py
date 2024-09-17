@@ -83,6 +83,8 @@ def registration_add(rfid, location_key, timestamp=None):
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id})
                     return ret
 
+            # When a student is too late in, scan its badge.  An sms is send to the parents and a why-too-late reason needs to be added
+            # If the student returns with a valid proof of being late, tick the registration as being acknowledged/finished
             if location["type"] == "sms":
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now})
                 if registration:
@@ -108,6 +110,23 @@ def registration_add(rfid, location_key, timestamp=None):
                     mregistration.registration_update(registration, {"flag2": sms_sent})
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "remark": "", "remark_ack": False, "sms_sent": sms_sent})
                     return ret
+            # When a student needs to hand in its cellphone, scan its badge.  After 4 scans (to be configurable), the student is highlighted and
+            # has to stay over after school
+            # aantal_items: store the sequence-counter
+            # flag1: cellphone limit reached
+            if location["type"] == "cellphone":
+                cellphone_limit = location["limiet"]
+                last_registration = mregistration.registration_get([("leerlingnummer", "=", student.leerlingnummer), ("location", "=", location_key)], order_by="-id")
+                if last_registration:
+                    sequence_counter = (last_registration.aantal_items + 1) % cellphone_limit
+                else:
+                    sequence_counter = 0
+                registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now,
+                                                               "aantal_items": sequence_counter, "flag1": sequence_counter == (cellphone_limit - 1)})
+                if registration:
+                    log.info(f'{sys._getframe().f_code.co_name}: CELLPHONE ({location["locatie"]}), {student.leerlingnummer} at {now}, sequence {sequence_counter}')
+                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "limit_reached": registration.flag1})
+                    return ret
 
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}
@@ -132,42 +151,56 @@ def registration_delete(ids):
         return {"status": False, "data": f"Fout, {str(e)}"}
 
 
-def get_current_registrations(location, filter):
+def get_current_registrations(location, filter, include_foto):
     try:
-        search_text = filter["search_text"].lower() if filter["search_text"] != "" else None
         ret_filter = {}
         registrations = []
-        if filter["sms_specific"] == "all":
+        locations = msettings.get_configuration_setting("location-profiles")
+        if filter["search_text"] != "":
+            registrations = mregistration.registration_student_photo_get(location, filter["search_text"], include_foto=include_foto)
+            ret_filter = {"search": True}
+        elif filter["sms_specific"] == "on_date":
             selected_day = filter["date"]
             if not selected_day:
                 selected_day = str(datetime.datetime.now())
             time_in_low = datetime.datetime.strptime(selected_day, "%Y-%m-%d").date()
             time_in_high = time_in_low + datetime.timedelta(days=1)
-            registrations = mregistration.registration_get_m([("location", "=", location), ("time_in", ">", time_in_low), ("time_in", "<", time_in_high), ("time_out", "=", None)], order_by="id")
+            registrations = mregistration.registration_student_photo_get(location, None, time_in_low, time_in_high, include_foto=include_foto)
             ret_filter = {"date": selected_day}
+        elif filter["sms_specific"] in ["last_2_months", "last_4_months"]:
+            delta = 60 if filter["sms_specific"] == "last_2_months" else 120
+            time_in_low = datetime.datetime.now() - datetime.timedelta(days=delta)
+            registrations = mregistration.registration_student_photo_get(location, None, time_in_low, include_foto=include_foto)
         elif filter["sms_specific"] == "no_sms_sent":
-            registrations = mregistration.registration_get_m([("location", "=", location), ("time_out", "=", None), ("flag2", "=", False)], order_by="id")
+            registrations = mregistration.registration_student_photo_get(location, None, None, None, None, False, include_foto=include_foto)
         elif filter["sms_specific"] == "no_ack":
-            registrations = mregistration.registration_get_m([("location", "=", location), ("time_out", "=", None), ("flag1", "=", False)], order_by="id")
+            registrations = mregistration.registration_student_photo_get(location, None, None, None, False, None, include_foto=include_foto)
         data = []
         ret = {'status': True, "action": "add", "data": data}
         ret.update(ret_filter)
-        for registration in registrations:
-            student = mstudent.student_get([("leerlingnummer", "=", registration.leerlingnummer)])
-            if search_text and (search_text in f"{student.naam} {student.voornaam}".lower()) or not search_text:
-                photo = mphoto.photo_get({"id": student.foto_id})
-                data.append({
-                    "leerlingnummer": student.leerlingnummer,
-                    "naam": student.naam,
-                    "voornaam": student.voornaam,
-                    "klascode": student.klascode,
-                    "photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else '',
-                    "timestamp": str(registration.time_in),
-                    "id": registration.id,
+        for tuple in registrations:
+            registration = tuple[0]
+            student = tuple[1]
+            item = {
+                "leerlingnummer": student.leerlingnummer,
+                "naam": student.naam,
+                "voornaam": student.voornaam,
+                "klascode": student.klascode,
+                "timestamp": str(registration.time_in),
+                "id": registration.id
+            }
+            if include_foto:
+                photo = tuple[2]
+                item.update({"photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else ''})
+            if locations[location]["type"] == "sms":
+                item.update({
                     "remark": registration.text1,
                     "remark_ack": registration.flag1,
                     "sms_sent": registration.flag2,
                 })
+            if locations[location]["type"] == "cellphone":
+                item.update({"limit_reached": registration.flag1})
+            data.append(item)
         return ret
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')

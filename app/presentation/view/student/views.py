@@ -39,18 +39,6 @@ def table_action(action, ids=None):
     return redirect(url_for('student.show'))
 
 
-@student.route('/student/right_click/', methods=['POST', 'GET'])
-@login_required
-def right_click():
-    try:
-        if 'jds' in request.values:
-            data = json.loads(request.values['jds'])
-    except Exception as e:
-        log.error(f"Error in get_form: {e}")
-        return {"message": f"get_form: {e}"}
-    return {"message": "iets is fout gelopen"}
-
-
 def get_filters():
     klassen = app.application.student.klassen_get_unique()
     klassen = [[k, k] for k in klassen]
@@ -64,18 +52,6 @@ def get_filters():
             'default': 'default',
         },
     ]
-
-
-def get_right_click_settings():
-    locations = msettings.get_configuration_setting("location-profiles")
-    [v.update({"key":k}) for k, v in locations.items()]
-    locations = sorted(locations.values(), key=lambda x: x["locatie"])
-    menu = [{'label': "Nieuwe registratie: " + l["locatie"], 'item': l["key"], 'iconscout': 'plus-circle'} for l in locations]
-    settings = {
-        'endpoint': 'student.right_click',
-        'menu': menu
-    }
-    return settings
 
 
 class Config(DatatableConfig):
@@ -98,7 +74,9 @@ class Config(DatatableConfig):
         return get_filters()
 
     def get_right_click(self):
-        return get_right_click_settings()
+        locations = msettings.get_configuration_setting("location-profiles")
+        locations = sorted([{"key": k, "label": v["locatie"]} for k,v in locations.items()], key=lambda x: x["label"])
+        return locations
 
 
 table_config = Config("student", "Overzicht Studenten")

@@ -11,15 +11,15 @@ from . import overview
 @overview.route('/overview/show', methods=['POST', 'GET'])
 @login_required
 def show():
-    return render_template('overview/overview.html', title="Overzicht", filters=get_filters(["sms", "nietverplicht", "verkoop"]))
+    return render_template('overview/overview.html', title="Overzicht", filters=get_filters(["sms", "cellphone", "nietverplicht", "verkoop"]))
 
 
 def get_current_registrations(msg, client_sid=None):
     location_key = msg["data"]["location"]
     filter = msg["data"]["filter"]
-    # date = msg["data"]["date"]
+    include_foto = msg["data"]["include_foto"]
     try:
-        ret = mregistration.get_current_registrations(location_key, filter)
+        ret = mregistration.get_current_registrations(location_key, filter, include_foto)
         msocketio.send_to_client({'type': 'update-current-status', 'data': ret})
     except Exception as e:
         msocketio.send_to_client({'type': 'update-current-status', 'data': {'status': False, 'message': str(e)}})
@@ -70,14 +70,15 @@ def get_filters(location_types):
                     'type': 'date',
                     'name': 'filter-date',
                     'label': 'Datum',
-                    'default': "timestamp",
-                    "store": False
+                    'default': "today",
+                    "store": True
                 },
                 {
                     'type': 'text',
                     'name': 'search-text',
                     'label': 'Zoeken',
-                    "store": False
+                    "store": False,
+                    "extra": True
                 },
                 {
                     'type': 'select',
@@ -91,8 +92,9 @@ def get_filters(location_types):
                     'type': 'select',
                     'name': 'sms-specific-select',
                     'label': 'Filter op',
-                    'choices': [["all", "Alles"], ["no_sms_sent", "Geen sms gestuurd"], ["no_ack", "Niet bevestigd"]],
-                    'default': "all",
+                    'choices': [["on_date", "Op datum"], ["no_sms_sent", "Geen sms gestuurd"], ["no_ack", "Niet bevestigd"],
+                                ["last_2_months", "Laatste 2 maanden"], ["last_4_months", "Laatste 4 maandend"],  ],
+                    'default': "on_date",
                     "extra": True
                 },
             ]

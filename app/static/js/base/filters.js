@@ -1,4 +1,5 @@
 let filter_id;
+let reset_button_cb = null;
 
 export const create_filters = (id, filter_element, filters) => {
     if (filters.length > 0) {
@@ -40,15 +41,23 @@ export const create_filters = (id, filter_element, filters) => {
         button.type = "button";
         button.innerHTML = "Reset";
         button.addEventListener("click", () => {
-            localStorage.clear(`${id}-filter`);
-            location.reload();
+            if (reset_button_cb) {
+                const filter_settings = __load_filter_settings();
+                __apply_filter_settings(true);
+                reset_button_cb(filter_settings);
+            } else {
+                localStorage.clear(`${id}-filter`);
+                location.reload();
+            }
         })
         //if a filter is changed, then the filter is applied by simulating a click on the filter button
         $(".overview-filter").change(() => __store_filter_settings());
 
-        if (!__load_filter_settings()) __store_filter_settings(); //filters are applied when the page is loaded for the first time
+        if (!__apply_filter_settings()) __store_filter_settings(); //filters are applied when the page is loaded for the first time
     }
 }
+
+export const subscribe_reset_button = cb => reset_button_cb = cb;
 
 export const add_extra_filters = show_filters => {
     //Hide all extra filters
@@ -75,6 +84,17 @@ export const add_extra_filters = show_filters => {
     }
 }
 
+export const disable_filters = (filters) => {__set_filters_state(filters, false);}
+
+export const enable_filters = (filters) => {__set_filters_state(filters, true);}
+
+const __set_filters_state = (filters, state) => {
+    if (!Array.isArray(filters)) filters = [filters];
+    filters.forEach(filter => {
+        filter.disabled = !state;
+        filter.style.opacity = state ? "1": "0.5";
+    })
+}
 
 //Store locally in the client-browser
 function __store_filter_settings() {
@@ -86,7 +106,8 @@ function __store_filter_settings() {
                     filter_settings.push({
                         name: f.name,
                         type: f.type,
-                        value: document.querySelector(`#${f.name} option:checked`).value
+                        value: document.querySelector(`#${f.name} option:checked`).value,
+                        default: f.default
                     });
                 } else if (f.type === 'checkbox') {
                     let boxes = [];
@@ -96,13 +117,15 @@ function __store_filter_settings() {
                     filter_settings.push({
                         name: f.name,
                         type: f.type,
-                        value: boxes
+                        value: boxes,
+                        default: f.default
                     })
                 } else if (f.type === 'text' || f.type === 'date') {
                     filter_settings.push({
                         name: f.name,
                         type: f.type,
-                        value: document.querySelector(`#${f.name}`).value
+                        value: document.querySelector(`#${f.name}`).value,
+                        default: f.default
                     })
                 }
             }
@@ -111,18 +134,30 @@ function __store_filter_settings() {
     }
 }
 
-function __load_filter_settings() {
-    if (filters.length === 0) return true;
-    var filter_settings = JSON.parse(localStorage.getItem(`${filter_id}-filter`));
-    if (!filter_settings) {
-        filter_settings = [];
-        return false
-    }
+function __apply_filter_settings(load_default_values=false) {
+    var filter_settings = __load_filter_settings();
+    if (filter_settings.length === 0) return false;
     filter_settings.forEach(f => {
         if (f.type === 'select' || f.type === 'text' || f.type === 'date') {
             const filter_element = document.querySelector(`#${f.name}`);
-            if (filter_element) filter_element.value = f.value;
+            if (filter_element) {
+                if (f.type === "date") {
+                    if (f.default === "today") {
+                            let now = new Date();
+                            filter_element.value = now.toISOString().split("T")[0];
+                    }
+                } else {
+                    filter_element.value = load_default_values ? f.default : f.value;
+                }
+            }
         }
     })
     return true;
+}
+
+function __load_filter_settings() {
+    if (filters.length === 0) return [];
+    var filter_settings = JSON.parse(localStorage.getItem(`${filter_id}-filter`));
+    if (!filter_settings) filter_settings = [];
+    return filter_settings;
 }
