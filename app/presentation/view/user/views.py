@@ -51,16 +51,6 @@ class UserConfig(DatatableConfig):
     def format_data(self, l, total_count, filtered_count):
         return app.application.user.format_data(l, total_count, filtered_count)
 
-    def get_right_click(self):
-        return {
-            'endpoint': 'user.right_click',
-            'menu': [
-                {'label': 'Nieuwe gebruiker', 'item': 'add', 'iconscout': 'plus-circle'},
-                {'label': 'Gebruiker aanpassen', 'item': 'edit', 'iconscout': 'pen'},
-                {'label': 'Gebruiker(s) verwijderen', 'item': 'delete', 'iconscout': 'trash-alt', 'ack': 'Bent u zeker dat u deze gebruiker(s) wilt verwijderen?'},
-            ]
-        }
-
 
 table_configuration = UserConfig("user", "Gebruikers")
 

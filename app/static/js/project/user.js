@@ -1,8 +1,8 @@
 import { formio_popup_create } from "../base/popup.js"
-import { subscribe_right_click } from "../base/right_click.js";
+import {create_context_menu} from "../base/right_click.js";
 import { ctx } from "../datatables/datatables.js"
 
-const user_add = async () => {
+const user_add = async (ids) => {
     formio_popup_create(ctx.popups.user_password_form, async (action, opaque, data = null) => {
         if (action === 'submit') {
             const ret = await fetch(Flask.url_for('api.user_add'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify(data),});
@@ -17,7 +17,7 @@ const user_add = async () => {
     }, {"new_password": true})
 }
 
-const user_update = async (item, ids) => {
+const user_update = async (ids) => {
     const ret = await fetch(Flask.url_for('api.user_get', {id: ids[0]}), {headers: {'x-api-key': api_key,}});
     const status = await ret.json();
     if (status.status) {
@@ -39,7 +39,7 @@ const user_update = async (item, ids) => {
 }
 
 
-const users_delete = async (item, ids) => {
+const users_delete = async (ids) => {
     bootbox.confirm("Wilt u deze gebruiker(s) verwijderen?", async result => {
         if (result) {
                 const ret = await fetch(Flask.url_for('api.user_delete'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify(ids),});
@@ -52,10 +52,14 @@ const users_delete = async (item, ids) => {
                 ctx.reload_table();
         }
     });
-
-
 }
 
-subscribe_right_click('add', (item, ids) => user_add());
-subscribe_right_click('edit', (item, ids) => user_update(item, ids));
-subscribe_right_click('delete', (item, ids) => users_delete(item, ids));
+
+$(document).ready(function () {
+    let menu = [
+        {type: "item", label: 'Nieuwe gebruiker',iconscout: 'plus-circle', cb: user_add},
+        {type: "item", label: 'Gebruiker aanpassen', iconscout: 'pen', cb: user_update},
+        {type: "item", label: 'Gebruiker(s) verwijderen', iconscout: 'trash-alt', cb: users_delete},
+]
+    create_context_menu(menu);
+});
