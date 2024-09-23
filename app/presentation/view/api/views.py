@@ -109,10 +109,11 @@ def schoolrekening_info():
 @user_key_required
 def registration_add():
     data = json.loads(request.data)
-    code = data["badge_code"]
+    code = data["badge_code"] if "code" in data else None
+    leerlingnummer = data["leerlingnummer"] if "leerlingnummer" in data else None
     location = data["location_key"]
     timestamp = data["timestamp"] if "timestamp" in data else None
-    ret = mregistration.api_registration_add(code, location, timestamp)
+    ret = mregistration.api_registration_add(location, timestamp, leerlingnummer, code)
     msocketio.send_to_room({'type': 'update-current-status', 'data': ret}, location)
     return json.dumps({"status": ret["status"]})
 

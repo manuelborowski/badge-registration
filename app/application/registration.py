@@ -15,7 +15,7 @@ log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
 
-def registration_add(rfid, location_key, timestamp=None):
+def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=None):
     try:
         if timestamp:
             now = datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
@@ -23,7 +23,10 @@ def registration_add(rfid, location_key, timestamp=None):
             now = datetime.datetime.now()
         now = now.replace(microsecond=0)
         today = now.date()
-        student = mstudent.student_get([("rfid", "=", rfid)])
+        if rfid:
+            student = mstudent.student_get([("rfid", "=", rfid)])
+        elif leerlingnummer:
+            student = mstudent.student_get([("leerlingnummer", "=", leerlingnummer)])
         if student:
             photo_obj = mphoto.photo_get({"id": student.foto_id})
             photo = base64.b64encode(photo_obj.photo).decode('utf-8') if photo_obj else ''
@@ -130,8 +133,8 @@ def registration_add(rfid, location_key, timestamp=None):
 
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}
-        log.info(f'{sys._getframe().f_code.co_name}:  {rfid} not found in database')
-        return {"status": False, "data": f"Kan student met rfid {rfid} niet vinden in database"}
+        log.info(f'{sys._getframe().f_code.co_name}:  rif {rfid}/leerlingnummer {leerlingnummer} not found in database')
+        return {"status": False, "data": f"Kan student met rfid {rfid} / leerlingnummer {leerlingnummer} niet vinden in database"}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": f"Fout, {str(e)}"}
@@ -249,9 +252,9 @@ def api_schoolrekening_get(options):
         return {"status": False, "data": str(e)}
 
 
-def api_registration_add(code, location_key, timestamp):
+def api_registration_add(location_key, timestamp, leerlingnummer=None, code=None):
     try:
-        ret = registration_add(code, location_key, timestamp)
+        ret = registration_add(location_key, timestamp, leerlingnummer, code)
         return ret
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
