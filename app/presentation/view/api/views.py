@@ -109,7 +109,7 @@ def schoolrekening_info():
 @user_key_required
 def registration_add():
     data = json.loads(request.data)
-    code = data["badge_code"] if "code" in data else None
+    code = data["badge_code"] if "badge_code" in data else None
     leerlingnummer = data["leerlingnummer"] if "leerlingnummer" in data else None
     location = data["location_key"]
     timestamp = data["timestamp"] if "timestamp" in data else None

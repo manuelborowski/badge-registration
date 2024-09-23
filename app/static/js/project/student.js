@@ -1,5 +1,6 @@
 import {subscribe_get_ids, create_context_menu} from "../base/right_click.js";
 import { ctx, get_data_of_row } from "../datatables/datatables.js"
+import {get_current_location} from "./locations.js";
 
 let menu_item2label = {};
 
@@ -21,9 +22,12 @@ const __registration_add = async (item, ids) => {
 
 $(document).ready(function () {
     let menu = [];
+    const current_location = get_current_location();
     for(const item of ctx.table_config.right_click) {
-        menu.push({type: "item", iconscout: "plus-circle", label: `Nieuwe registratie: ${item.label}`, cb: ids => __registration_add(item.key, ids)});
-        menu_item2label[item.key] = item.label;
+        if (current_location === item.key) {
+            menu.push({type: "item", iconscout: "plus-circle", label: `Nieuwe registratie: ${item.label}`, cb: ids => __registration_add(item.key, ids)});
+            menu_item2label[item.key] = item.label;
+        }
     }
     create_context_menu(menu);
 

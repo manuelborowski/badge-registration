@@ -91,9 +91,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.55-major-rework-0.13: bugfixed user menu
 # 0.55-major-rework-0.14: when adding registration from student-table, use leerlingnummer iso rfid.
 # 0.55-major-rework-0.15: cellphone, change colours.
+# 0.55-major-rework-0.16: bugfix.  In student-tab, make current location only visible.
 
 
-version = "0.55-major-rework-0.15"
+version = "0.55-major-rework-0.16"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
