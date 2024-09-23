@@ -77,8 +77,11 @@ const socketio_update_status = (type, data) => {
                         registration_container.appendChild(image);
                         registration_container.appendChild(figcaption);
                         if (locations[current_location].type === "cellphone") {
-                            if (item.limit_reached) {
-                                figcaption.style.background = "lightpink"
+                            const limit = locations[current_location].limiet;
+                            if (item.sequence_ctr === limit) {
+                                figcaption.style.background = "orangered"
+                            } else if (item.sequence_ctr > limit) {
+                                figcaption.style.background = "orange"
                             }
                         }
                     } else {
@@ -94,14 +97,17 @@ const socketio_update_status = (type, data) => {
                                 registration_container.style.background = "palegreen"
                             }
                         } else if (locations[current_location].type === "cellphone") {
+                            const limit = locations[current_location].limiet;
                             registration_container.innerHTML = `
                             <td>${item.timestamp}</td> 
                             <td>${item.naam} ${item.voornaam}</td> 
                             <td>${item.klascode}</td>`;
-                            if (item.limit_reached) {
-                                registration_container.style.background = "lightpink"
+                            if (item.sequence_ctr === limit) {
+                                registration_container.style.background = "orangered"
+                            } else if (item.sequence_ctr > limit) {
+                                registration_container.style.background = "orange"
                             }
-                        } 
+                        }
                     }
                     registration_container.classList.add("S" + item.leerlingnummer, "mtooltip");
                     registration_container.dataset.id = item.id;

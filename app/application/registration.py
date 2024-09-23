@@ -121,14 +121,14 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                 cellphone_limit = location["limiet"]
                 last_registration = mregistration.registration_get([("leerlingnummer", "=", student.leerlingnummer), ("location", "=", location_key)], order_by="-id")
                 if last_registration:
-                    sequence_counter = (last_registration.aantal_items + 1) % cellphone_limit
+                    sequence_counter = last_registration.aantal_items + 1
                 else:
-                    sequence_counter = 0
+                    sequence_counter = 1
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now,
-                                                               "aantal_items": sequence_counter, "flag1": sequence_counter == (cellphone_limit - 1)})
+                                                               "aantal_items": sequence_counter})
                 if registration:
                     log.info(f'{sys._getframe().f_code.co_name}: CELLPHONE ({location["locatie"]}), {student.leerlingnummer} at {now}, sequence {sequence_counter}')
-                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "limit_reached": registration.flag1})
+                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "sequence_ctr": sequence_counter})
                     return ret
 
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
@@ -202,7 +202,7 @@ def get_current_registrations(location, filter, include_foto):
                     "sms_sent": registration.flag2,
                 })
             if locations[location]["type"] == "cellphone":
-                item.update({"limit_reached": registration.flag1})
+                item.update({"sequence_ctr": registration.aantal_items})
             data.append(item)
         return ret
     except Exception as e:
