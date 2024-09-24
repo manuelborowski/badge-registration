@@ -189,6 +189,8 @@ const get_current_registrations = () => {
     socketio.unsubscribe_from_room(current_location);
     current_location = location_element.value;
     socketio.subscribe_to_room(current_location);
+    //store the current view-location
+    localStorage.setItem("view-location", current_location);
     let location_label = location_element.options[location_element.selectedIndex].innerHTML;
     canvas_element.innerHTML = "";
     // Add dummy element to indicate end of list

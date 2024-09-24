@@ -30,8 +30,6 @@ export const create_select_locations = locations => {
     return select_div
 }
 
-export const get_current_location = () => location_select.value;
-
 //if location has bevestig_met_pin attribute then, at page reload, do not ask for confirmation via pin
 const handle_location_select = (at_reload = false) => {
     localStorage.setItem("badge-location", location_select.value)
