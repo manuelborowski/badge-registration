@@ -122,21 +122,21 @@ def registration_add():
 @user_key_required
 def registration_update():
     data = json.loads(request.data)
-    id = data["id"]
+    ids = data["ids"]
     location = data["location_key"]
     fields = data["fields"]
-    ret = mregistration.api_registration_update(id, fields)
+    ret = mregistration.api_registration_update(location, ids, fields)
     msocketio.send_to_room({'type': 'update-registration', 'data': ret}, location)
     return json.dumps({"status": ret["status"]})
 
 
-@api.route('/api/registration/sms', methods=['POST'])
+@api.route('/api/registration/message', methods=['POST'])
 @user_key_required
-def registration_send_sms():
+def registration_send_message():
     data = json.loads(request.data)
-    id = data["id"]
+    ids = data["ids"]
     location = data["location_key"]
-    ret = mregistration.api_registration_send_sms(id, location)
+    ret = mregistration.api_registration_send_message(ids, location)
     msocketio.send_to_room({'type': 'update-registration', 'data': ret}, location)
     return json.dumps({"status": ret["status"]})
 

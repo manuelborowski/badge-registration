@@ -3,6 +3,7 @@ const context_menu = document.querySelector(".right-click-wrapper .menu");
 const context_active_area = document.querySelector(".right-click-canvas");
 let item_ids = 0;
 let get_ids_cb = null;
+let postprocessing_cb = null;
 let endpoint = null;
 
 context_active_area.addEventListener("contextmenu", e => {
@@ -67,9 +68,14 @@ export const create_context_menu = (menu) => {
 
 export const subscribe_get_ids = cb => get_ids_cb = cb;
 
+export const subscribe_post_processing = cb => postprocessing_cb = cb;
+
 export const set_endpoint = ep => endpoint = ep;
 
-const item_clicked_with_cb = cb => cb(item_ids);
+const item_clicked_with_cb = cb => {
+    cb(item_ids);
+    if (postprocessing_cb) postprocessing_cb(item_ids);
+}
 
 export function item_clicked(item) {
     if (item in right_click_cbs) {

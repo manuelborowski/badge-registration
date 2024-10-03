@@ -15,9 +15,6 @@
         <div class="form-group "><label class="control-label" for="nbr-registered" title="Aantal">Aantal</label>
             <input class="form-control" id="nbr-registered" value="0" size="5">
         </div>
-        {% if "remove-all" in buttons %}
-            <button class="btn btn-danger" type="button" onclick="remove_all_photos()">Alles verwijderen?</button>
-        {% endif %}
     </div>
     <hr class="nice-green-line">
     <div class="right-click-canvas" id="canvas"></div>
@@ -47,8 +44,6 @@
     <script type="module">
         import {item_clicked} from "/static/js/base/right_click.js";
         window.item_clicked = item_clicked;
-        import {remove_all_photos} from "/static/js/project/overview.js";
-        window.remove_all_photos = remove_all_photos;
     </script>
     <script>
         const filters = {{ (filters or []) | tojson }};

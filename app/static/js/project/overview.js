@@ -5,7 +5,9 @@ import {busy_indication_on, busy_indication_off} from "../base/base.js";
 import {add_to_popup_body, create_checkbox_element, create_input_element, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
 import {add_extra_filters, create_filters, enable_filters, disable_filters, subscribe_reset_button} from "../base/filters.js";
 
-let location_element,date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element, sms_specific_element, search_text_element;
+let location_element, date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element,
+    sms_specific_element, search_text_element;
+let cellphone_specific_element, period_element;
 let all_filters_element;
 
 let nbr_registered_element = document.querySelector("#nbr-registered");
@@ -25,7 +27,9 @@ $(document).ready(function () {
     view_layout_element = document.querySelector("#view-layout-select");
     search_text_element = document.querySelector("#search-text");
     sort_on_element = document.querySelector("#sort-on-select");
+    period_element = document.querySelector("#period-select");
     sms_specific_element = document.querySelector("#sms-specific-select")
+    cellphone_specific_element = document.querySelector("#cellphone-specific-select")
 
     socketio.start(null, null);
     current_location = location_element.value;
@@ -40,7 +44,9 @@ $(document).ready(function () {
     sort_on_element.addEventListener("change", get_current_registrations);
     view_layout_element.addEventListener("change", get_current_registrations);
     sms_specific_element.addEventListener("change", get_current_registrations);
-    photo_size_element.addEventListener("change", resize_photos);
+    period_element.addEventListener("change", get_current_registrations);
+    cellphone_specific_element.addEventListener("change", get_current_registrations);
+    photo_size_element.addEventListener("change", __resize_photos);
     subscribe_get_ids(get_ids_of_selected_items);
     subscribe_reset_button(__reset_button_cb);
     get_current_registrations();
@@ -56,9 +62,23 @@ const socketio_update_status = (type, data) => {
         } else {
             enable_filters(Array.from(document.querySelectorAll(".overview-filter")));
         }
+        if (!view_tile && data.headers) {
+            let header = document.createElement("tr");
+            header.dataset.sort_on = "1";
+            data.headers.unshift("<td><input class='select-all' type='checkbox' ''}></td>")
+            for (const item of data.headers) {
+                const th = document.createElement("th");
+                th.innerHTML = item;
+                header.appendChild(th);
+            }
+            canvas_container.prepend(header);
+            document.querySelector(".select-all").addEventListener("change", e => {
+                [...document.querySelectorAll(".item-select:enabled")].map(i => i.checked = e.target.checked)
+            });
+        }
         if (data.action === "add") {
-            if ( !data.date || data.date === date_element.value) {
-                data.data.forEach(item => {
+            if (!data.date || data.date === date_element.value) {
+                for (const item of data.data) {
                     let registration_container = null;
                     if (view_tile) {
                         registration_container = document.createElement("figure");
@@ -81,62 +101,61 @@ const socketio_update_status = (type, data) => {
                             if (item.sequence_ctr === limit) {
                                 figcaption.style.background = "orangered"
                             } else if (item.sequence_ctr > limit) {
-                                figcaption.style.background = "orange"
+                                figcaption.style.background = "yellow"
                             }
                         }
                     } else {
                         registration_container = document.createElement("tr");
+                        registration_container.innerHTML = `
+                            <td><input class="item-select" type="checkbox" ""}></td>
+                            <td>${item.timestamp}</td>
+                            <td data-col="name">${item.naam} ${item.voornaam}</td>
+                            <td>${item.klascode}</td>`
                         if (locations[current_location].type === "sms") {
-                            registration_container.innerHTML = `
-                            <td>SMS: <input data-col="sms" type="checkbox" ${item.sms_sent ? "checked" : ""}></td> 
-                            <td>${item.timestamp}</td> 
-                            <td>${item.naam} ${item.voornaam}</td> 
-                            <td>${item.klascode}</td> 
-                            <td data-col="remark">${item.remark}</td>`;
+                            registration_container.innerHTML += `
+                                <td><input data-col="sms" type="checkbox" ${item.sms_sent ? "checked" : ""}></td> 
+                                <td data-col="remark" data-remark-ack="${item.remark_ack}">${item.remark}</td>`;
                             if (item.remark_ack) {
                                 registration_container.style.background = "palegreen"
                             }
                         } else if (locations[current_location].type === "cellphone") {
+                            registration_container.innerHTML += `
+                                <td><input data-col="message" type="checkbox" ${item.message_sent ? "checked" : ""}></td> 
+                                <td>${item.sequence_ctr}</td>`;
                             const limit = locations[current_location].limiet;
-                            registration_container.innerHTML = `
-                            <td>${item.timestamp}</td> 
-                            <td>${item.naam} ${item.voornaam}</td> 
-                            <td>${item.klascode}</td>`;
                             if (item.sequence_ctr === limit) {
                                 registration_container.style.background = "orangered"
                             } else if (item.sequence_ctr > limit) {
-                                registration_container.style.background = "orange"
+                                registration_container.style.background = "yellow"
+                            } else if (item.sequence_ctr < (limit - 1)) {
+                                registration_container.firstElementChild.firstChild.disabled = true;
                             }
                         }
                     }
-                    registration_container.classList.add("S" + item.leerlingnummer, "mtooltip");
+                    registration_container.classList.add("S" + item.leerlingnummer);
                     registration_container.dataset.id = item.id;
                     if (sort_on_element.value === "name-firstname") {
                         registration_container.dataset.sort_on = item.naam + item.voornaam;
                     } else if (sort_on_element.value === "klas-name-firstname") {
                         registration_container.dataset.sort_on = item.klascode + item.naam + item.voornaam;
                     } else {
-                        registration_container.dataset.sort_on = 1000 - item.id;
+                        registration_container.dataset.sort_on = 100000 - item.id;
                     }
-                    const tooltip_span = document.createElement("span");
-                    tooltip_span.classList.add("tooltiptext");
-                    registration_container.appendChild(tooltip_span)
                     for (const container of canvas_container.childNodes) {
                         if (registration_container.dataset.sort_on < container.dataset.sort_on) {
                             container.before(registration_container);
                             break
                         }
                     }
-                    update_tooltip_items(item.id, {name: `${item.naam} ${item.voornaam}`, remark: item.remark, remark_ack: item.remark_ack, sms_sent: item.sms_sent})
-                    update_nbr_registered();
-                });
+                    __update_nbr_registered();
+                }
             }
         } else if (data.action === "delete") {
             data.data.forEach(item => {
                 const figure = document.querySelector(`[data-id="${item.id}"]`);
                 if (figure) {
                     figure.remove();
-                    update_nbr_registered(true);
+                    __update_nbr_registered(true);
                 }
             });
         }
@@ -146,40 +165,23 @@ const socketio_update_status = (type, data) => {
     }
 }
 
-const __wait_for_enter = (event) => {
-    if (event.key === "Enter") {
-        get_current_registrations();
-        search_text_element.value = "";
-    }
-}
-
-const __select_date = (event) => {
-    sms_specific_element.value = "on_date";
-    get_current_registrations();
-}
-
-const __reset_button_cb = filters => {
-    for (const filter of filters) {
-        if (filter.name === "filter-location") {
-            location_element.value = filter.value;
-            get_current_registrations();
-        }
-    }
-}
-
 const context_menu_pool = {
     sms: [
-    {type: "item", iconscout: "text", label: "Reden", cb: enter_remark},
-    {type: "item", iconscout: "check", label: "Bevestig reden", cb: to_server_confirm_remark},
-    {type: "item", iconscout: "envelope-send", label: "Stuur sms", cb: to_server_send_sms},
-    {type: "divider"},
-    {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}],
-    default: [{type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}]
+        {type: "item", iconscout: "text", label: "Reden", cb: enter_remark},
+        {type: "item", iconscout: "check", label: "Bevestig reden", cb: to_server_confirm_remark},
+        {type: "item", iconscout: "envelope-send", label: "Stuur sms", cb: to_server_send_message},
+        {type: "divider"},
+        {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}],
+    cellphone: [
+        {type: "item", iconscout: "envelope-send", label: "Stuur Smartschool bericht", cb: to_server_send_message},
+        {type: "divider"},
+        {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}],
+    default: [
+        {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}]
 }
 
 const extra_filters_pool = {
-    sms: ["search-text", "view-layout-select", "sms-specific-select"],
-    cellphone: ["search-text", "view-layout-select"],
+    sms: ["sms-specific-select"],
     default: []
 }
 
@@ -207,9 +209,12 @@ const get_current_registrations = () => {
         canvas_container.appendChild(last_row);
     }
     canvas_element.appendChild(canvas_container);
-    const filter = {date: date_element.value, sms_specific: sms_specific_element.value, search_text: search_text_element.value}
-    socketio.send_to_server("get-current-registrations", {location: current_location, filter, include_foto: view_tile});
-    reset_nbr_registered();
+    let filters = {};
+    for (const item of Array.from(document.querySelectorAll(".overview-filter"))) {
+        filters[item.id] = item.value;
+    }
+    socketio.send_to_server("get-current-registrations", {filters});
+    __reset_nbr_registered();
 
     const context_menu = locations[current_location].type in context_menu_pool ? context_menu_pool[locations[current_location].type] : context_menu_pool["default"];
     create_context_menu(context_menu);
@@ -217,83 +222,78 @@ const get_current_registrations = () => {
     add_extra_filters(extra_filters);
 }
 
-export const remove_all_photos = () => {
-    socketio.send_to_server("clear-all-registrations", {location: location_element.value});
-    get_current_registrations();
-}
 
-const resize_photos = () => {
-    photo_size_factor = photo_size_element.value;
-    get_current_registrations();
-}
-
-const update_nbr_registered = (delete_registration = false) => {
-    if (delete_registration) nbr_registered--
-    else nbr_registered++;
-    if (nbr_registered < 0) nbr_registered = 0;
-    nbr_registered_element.value = nbr_registered;
-}
-
-const reset_nbr_registered = () => {
-    nbr_registered = 0;
-    nbr_registered_element.value = nbr_registered;
-}
-
-async function to_server_delete_registration(ids) {
-    const name = get_tooltip(ids[0], "name");
-    bootbox.confirm(`Wilt u de registratie van ${name} verwijderen?`, async result => {
-        if (result) {
-            const ret = await fetch(Flask.url_for('api.registration_delete'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({ids, location: current_location}),});
-            const status = await ret.json();
-            if (status.status) {
-                // get_current_registrations()
-            } else {
-                bootbox.alert(status.data)
+const socketio_update_registration = (type, msg) => {
+    if (msg.status) {
+        for (const item of msg.data) {
+            if (document.querySelector(`[data-id="${item.id}"]`) !== null) {
+                const row = document.querySelector(`[data-id="${item.id}"]`);
+                const view_list = view_layout_element.value === "list";
+                if (item.remark !== undefined) {
+                    if (view_list) row.querySelector('[data-col="remark"]').innerHTML = item.remark;
+                }
+                if (item.remark_ack !== undefined) {
+                    if (view_list) row.style.background = item.remark_ack ? "palegreen" : "white";
+                }
+                if (item.sms_sent !== undefined) {
+                    if (view_list) row.querySelector('[data-col="sms"]').checked = item.id;
+                }
+                if (item.ss_message_sent !== undefined) {
+                    if (view_list) row.querySelector('[data-col="message"]').checked = item.id;
+                }
             }
-        }
-    });
-}
-
-// Check if data.data.id is valid, i.e. is present.  If not, it is because another browser did an update on a different date.
-const socketio_update_registration = (type, data) => {
-    if (data.status && document.querySelector(`[data-id="${data.data.id}"]`) !== null ) {
-        const row = document.querySelector(`[data-id="${data.data.id}"]`);
-        const view_list = view_layout_element.value === "list";
-        if (data.data.fields.remark) {
-            update_tooltip_items(data.data.id, {remark: data.data.fields.remark});
-            if (view_list) row.querySelector('[data-col="remark"]').innerHTML = data.data.fields.remark;
-        }
-        if (data.data.fields.remark_ack !== undefined) {
-            update_tooltip_items(data.data.id, {remark_ack: data.data.fields.remark_ack});
-            if (view_list) row.style.background = data.data.fields.remark_ack ? "palegreen" : "white";
-        }
-        if (data.data.fields.sms_sent !== undefined) {
-            update_tooltip_items(data.data.id, {sms_sent: data.data.fields.sms_sent});
-            if (view_list) row.querySelector('[data-col="sms"]').checked = data.data.fields.sms_sent;
         }
     }
 }
 
-async function to_server_send_sms(ids) {
-    const name = get_tooltip(ids[0], "name");
-    bootbox.confirm(`Wilt u een sms sturen naar de ouders van ${name}?`, async result => {
+async function to_server_delete_registration(ids) {
+    let message = "";
+    if (ids.length === 1) {
+        const name = document.querySelector(`[data-id='${ids[0]}']`).querySelector("[data-col='name']").innerHTML
+        message = `Wilt u de registratie van ${name} verwijderen?`;
+    } else {
+        message = `Wilt u de registraties van ${ids.length} studenten verwijderen?`;
+    }
+    bootbox.confirm(message, async result => {
         if (result) {
-            const ret = await fetch(Flask.url_for('api.registration_send_sms'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({id: ids[0], location_key: current_location}),});
+            const ret = await fetch(Flask.url_for('api.registration_delete'), {
+                headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({ids, location: current_location}),
+            });
             const status = await ret.json();
-            if (!status.status) {
-                bootbox.alert(status.data)
-            }
+            if (!status.status) bootbox.alert(status.data)
+            __clear_checkboxes();
+        }
+    });
+}
+
+async function to_server_send_message(ids) {
+    let message = "";
+    if (ids.length === 1) {
+        const name = document.querySelector(`[data-id='${ids[0]}']`).querySelector("[data-col='name']").innerHTML
+        message = `Wilt u een bericht sturen betreffende ${name}?`;
+    } else {
+        message = `Wilt u een bericht sturen betreffende ${ids.length} studenten?`;
+    }
+    bootbox.confirm(message, async result => {
+        if (result) {
+            const ret = await fetch(Flask.url_for('api.registration_send_message'), {
+                headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({ids, location_key: current_location}),
+            });
+            const status = await ret.json();
+            if (!status.status) bootbox.alert(status.data)
+            __clear_checkboxes();
         }
     });
 }
 
 async function to_server_confirm_remark(ids) {
     const fields = {remark_ack: true};
-    const ret = await fetch(Flask.url_for('api.registration_update'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({id: ids[0], location_key: current_location, fields}),});
+    const ret = await fetch(Flask.url_for('api.registration_update'), {
+        headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({ids, location_key: current_location, fields}),
+    });
     const status = await ret.json();
-    if (!status.status) {
-        bootbox.alert(status.data);
-    }
+    if (!status.status) bootbox.alert(status.data);
+    __clear_checkboxes();
 }
 
 async function enter_remark(ids) {
@@ -302,19 +302,19 @@ async function enter_remark(ids) {
         const remark_ack = document.querySelector("#remark_ack").checked;
         if (remark !== null) {
             const fields = {remark, remark_ack}
-            const ret = await fetch(Flask.url_for('api.registration_update'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({id: ids[0], location_key: current_location, fields}),});
+            const ret = await fetch(Flask.url_for('api.registration_update'), {
+                headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({ids, location_key: current_location, fields}),
+            });
             const status = await ret.json();
-            if (!status.status) {
-                bootbox.alert(status.data);
-            }
+            if (!status.status) bootbox.alert(status.data);
+            __clear_checkboxes();
         }
     }
-
-    var text = get_tooltip(ids[0], "remark");
+    let text = document.querySelector(`[data-id='${ids[0]}']`).querySelector("[data-col='remark']").innerHTML
+    let ack = document.querySelector(`[data-id='${ids[0]}']`).querySelector("[data-col='remark']").dataset.remarkAck;
     text = text === "" ? "Bus " : text;
-    var ack = get_tooltip(ids[0], "remark_ack");
     ack = ack === "true";
-    const name = get_tooltip(ids[0], "name");
+    const name = document.querySelector(`[data-id='${ids[0]}']`).querySelector("[data-col='name']").innerHTML
     init_popup({title: name, save_button: false, ok_button: true, width: "75%"});
     const remark_input = create_input_element("Opmerking", "remark", "remark", text, {style: "width: 90%"});
     add_to_popup_body(remark_input);
@@ -324,31 +324,51 @@ async function enter_remark(ids) {
     show_popup();
 }
 
-const tooltip_items = [{item: "name", label: "naam"}, {item: "remark", label: "opm"}, {item: "remark_ack", label: "Bevestigd?", type: "bool"}, {item: "sms_sent", label: "sms verzonden?", type: "bool"}];
+const get_ids_of_selected_items = mouse_event => {
+    let ids = [...document.querySelectorAll(".item-select:checked")].map(e => e.parentElement.parentElement.dataset.id); // if checkboxes are checked
+    if (ids.length === 0) ids = [mouse_event.target.parentElement.dataset.id]; // if not, select the current row
+    return ids;
+}
 
-const update_tooltip_items = (id, items) => {
-    const tooltip = document.querySelector(`[data-id="${id}"] .tooltiptext`);
-    for(const key in items) {
-        tooltip.dataset[key] = items[key];
+const __clear_checkboxes = ids => {
+    [...document.querySelectorAll(".item-select:checked")].map(e => e.checked = false);
+    document.querySelector(".select-all").checked = false;
+}
+
+const __resize_photos = () => {
+    photo_size_factor = photo_size_element.value;
+    get_current_registrations();
+}
+
+const __update_nbr_registered = (delete_registration = false) => {
+    if (delete_registration) nbr_registered--
+    else nbr_registered++;
+    if (nbr_registered < 0) nbr_registered = 0;
+    nbr_registered_element.value = nbr_registered;
+}
+
+const __reset_nbr_registered = () => {
+    nbr_registered = 0;
+    nbr_registered_element.value = nbr_registered;
+}
+
+const __wait_for_enter = (event) => {
+    if (event.key === "Enter") {
+        get_current_registrations();
+        search_text_element.value = "";
     }
-    let html = "";
-    for (const item of tooltip_items) {
-        if (item.type === "bool") {
-            html += `${item.label}: ${tooltip.dataset[item.item] === "true" ? "JA" : "NEE"}<br>`;
-        } else {
-            html += `${item.label}: ${tooltip.dataset[item.item]}<br>`;
+}
+
+const __select_date = (event) => {
+    sms_specific_element.value = "on-date";
+    get_current_registrations();
+}
+
+const __reset_button_cb = filters => {
+    for (const filter of filters) {
+        if (filter.name === "filter-location") {
+            location_element.value = filter.value;
+            get_current_registrations();
         }
     }
-    tooltip.innerHTML = html;
-    tooltip.classList.add("tooltiptext");
-}
-
-const get_tooltip = (id, item) => {
-    const tooltip = document.querySelector(`[data-id="${id}"] .tooltiptext`);
-    return tooltip.dataset[item];
-}
-
-const get_ids_of_selected_items = mouse_event => {
-    const ids = [mouse_event.target.parentElement.dataset.id];
-    return ids;
 }

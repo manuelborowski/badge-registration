@@ -15,11 +15,9 @@ def show():
 
 
 def get_current_registrations(msg, client_sid=None):
-    location_key = msg["data"]["location"]
-    filter = msg["data"]["filter"]
-    include_foto = msg["data"]["include_foto"]
+    filters = msg["data"]["filters"]
     try:
-        ret = mregistration.get_current_registrations(location_key, filter, include_foto)
+        ret = mregistration.registration_get(filters)
         msocketio.send_to_client({'type': 'update-current-status', 'data': ret})
     except Exception as e:
         msocketio.send_to_client({'type': 'update-current-status', 'data': {'status': False, 'message': str(e)}})
@@ -51,13 +49,7 @@ def get_filters(location_types):
                     'label': 'Locaties',
                     'choices': location_choices,
                     'default': location_choices[0][0],
-                },
-                {
-                    'type': 'select',
-                    'name': 'photo-size-select',
-                    'label': 'Foto grootte',
-                    'choices': [["50", "50%"], ["75", "75%"], ["100", "100%"], ["150", "150%"], ],
-                    'default': "50",
+                    "store": True
                 },
                 {
                     'type': 'select',
@@ -65,6 +57,7 @@ def get_filters(location_types):
                     'label': 'Sorteer op',
                     'choices': [["timestamp", "Tijdstempel"], ["name-firstname", "Naam, voornaam"], ["klas-name-firstname", "Klas, naam, voornaam"]],
                     'default': "timestamp",
+                    "store": True
                 },
                 {
                     'type': 'date',
@@ -78,23 +71,45 @@ def get_filters(location_types):
                     'name': 'search-text',
                     'label': 'Zoeken',
                     "store": False,
-                    "extra": True
                 },
                 {
                     'type': 'select',
                     'name': 'view-layout-select',
                     'label': 'Layout',
                     'choices': [["tile", "Tegel"], ["list", "Lijst"]],
-                    'default': "tile",
-                    "extra": True
+                    'default': "list",
+                    "store": True
+                },
+                {
+                    'type': 'select',
+                    'name': 'photo-size-select',
+                    'label': 'Foto grootte',
+                    'choices': [["50", "50%"], ["75", "75%"], ["100", "100%"], ["150", "150%"], ],
+                    'default': "50",
+                    "store": True
+                },
+                {
+                    'type': 'select',
+                    'name': 'period-select',
+                    'label': 'Periode',
+                    'choices': [["on-date", "Op datum"], ["last-2-months", "Laatste 2 maanden"], ["last-4-months", "Laatste 4 maandend"]],
+                    'default': "on-date",
+                    "store": True
                 },
                 {
                     'type': 'select',
                     'name': 'sms-specific-select',
                     'label': 'Filter op',
-                    'choices': [["on_date", "Op datum"], ["no_sms_sent", "Geen sms gestuurd"], ["no_ack", "Niet bevestigd"],
-                                ["last_2_months", "Laatste 2 maanden"], ["last_4_months", "Laatste 4 maandend"],  ],
-                    'default': "on_date",
+                    'choices': [["all", "Alles"], ["no-sms-sent", "Geen sms gestuurd"], ["no-ack", "Niet bevestigd"]],
+                    'default': "all",
+                    "extra": True
+                },
+                {
+                    'type': 'select',
+                    'name': 'cellphone-specific-select',
+                    'label': 'Filter op',
+                    'choices': [["all", "Alles"], ["no-message-sent", "Geen bericht gestuurd"]],
+                    'default': "all",
                     "extra": True
                 },
             ]

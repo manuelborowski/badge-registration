@@ -71,7 +71,7 @@ def registration_get(filters=[], order_by=None):
 
 ########### join registrations and students #############
 
-def registration_student_photo_get(location, search=None, time_low=None, time_high=None, flag1=None, flag2=None, include_foto=True):
+def registration_student_photo_get(location, search=None, time_low=None, time_high=None, flag1=None, flag2=None, include_foto=False):
     try:
         if include_foto:
             q = db.session.query(Registration, Student, Photo).join(Student, Student.leerlingnummer == Registration.leerlingnummer).join(Photo, Student.foto_id == Photo.id)
@@ -87,7 +87,7 @@ def registration_student_photo_get(location, search=None, time_low=None, time_hi
         if flag1 is not None:
             q = q.filter(Registration.flag1 == flag1)
         if flag2 is not None:
-            q = q.filter(Registration.flag1 == flag2)
+            q = q.filter(Registration.flag2 == flag2)
         q = q.order_by(desc(Registration.time_in))
         registrations = q.all()
         return registrations

@@ -3,8 +3,9 @@ import app.application
 import app.application.api
 import app
 from app import flask_app
-from app.data import student as mstudent, registration as mregistration, photo as mphoto, settings as msettings
+from app.data import student as mstudent, registration as mregistration, photo as mphoto, settings as msettings, staff as mstaff
 from app.application.util import get_api_key
+from app.application.smartschool import send_message as ss_send_message
 from flask_login import current_user
 from app.application.sms import send_sms
 
@@ -86,39 +87,24 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id})
                     return ret
 
-            # When a student is too late in, scan its badge.  An sms is send to the parents and a why-too-late reason needs to be added
+            # When a student is too late in, scan its badge.  An sms is sent to the parents and a why-too-late reason needs to be added
             # If the student returns with a valid proof of being late, tick the registration as being acknowledged/finished
+            # text1: remark
+            # flag1: remark is acknowledged
+            # flag2: sms is sent
             if location["type"] == "sms":
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now})
                 if registration:
-                    log.info(f'{sys._getframe().f_code.co_name}: SMS ({location["locatie"]}), {student.leerlingnummer} at {now}')
-                    text_body = msettings.get_configuration_setting("sms-student-too-late")
-                    text_body = text_body.replace("%%VOORNAAM%%", student.voornaam)
-                    text_body = text_body.replace("%%NAAM%%", student.naam)
-                    text_body = text_body.replace("%%TIJD%%", str(now))
-                    enable_send_sms = location["enable_sending"]
                     sms_sent = False
-                    if "auto" in location and location["auto"]: # send sms when badge is scanned
-                        if "to" in location: # overwrite sms receivers
-                            send_sms(location["to"], text_body, enable_send_sms)
-                        else:
-                            if student.lpv1_gsm != "":
-                                send_sms(student.lpv1_gsm, text_body, enable_send_sms)
-                            if student.lpv2_gsm != "":
-                                send_sms(student.lpv2_gsm, text_body, enable_send_sms)
-                        sms_sent = True
-                    # text1: remark
-                    # flag1: remark is acknowledged
-                    # flag2: sms is sent
-                    mregistration.registration_update(registration, {"flag2": sms_sent})
+                    if "auto" in location and location["auto"]:  # send sms when badge is scanned
+                        sms_sent = __send_sms(registration, location, student)
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "remark": "", "remark_ack": False, "sms_sent": sms_sent})
                     return ret
             # When a student needs to hand in its cellphone, scan its badge.  After 4 scans (to be configurable), the student is highlighted and
             # has to stay over after school
             # aantal_items: store the sequence-counter
-            # flag1: cellphone limit reached
+            # flag1: message sent
             if location["type"] == "cellphone":
-                cellphone_limit = location["limiet"]
                 last_registration = mregistration.registration_get([("leerlingnummer", "=", student.leerlingnummer), ("location", "=", location_key)], order_by="-id")
                 if last_registration:
                     sequence_counter = last_registration.aantal_items + 1
@@ -127,13 +113,15 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now,
                                                                "aantal_items": sequence_counter})
                 if registration:
-                    log.info(f'{sys._getframe().f_code.co_name}: CELLPHONE ({location["locatie"]}), {student.leerlingnummer} at {now}, sequence {sequence_counter}')
-                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "sequence_ctr": sequence_counter})
+                    message_sent = False
+                    if "auto" in location and location["auto"]: # send message when badge is scanned
+                        message_sent = __send_ss_message(registration, location, student)
+                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "sequence_ctr": sequence_counter, "message_sent": message_sent})
                     return ret
 
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}
-        log.info(f'{sys._getframe().f_code.co_name}:  rif {rfid}/leerlingnummer {leerlingnummer} not found in database')
+        log.info(f'{sys._getframe().f_code.co_name}:  rif/leerlingnummer {rfid}/{leerlingnummer} not found in database')
         return {"status": False, "data": f"Kan student met rfid {rfid} / leerlingnummer {leerlingnummer} niet vinden in database"}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
@@ -154,32 +142,50 @@ def registration_delete(ids):
         return {"status": False, "data": f"Fout, {str(e)}"}
 
 
-def get_current_registrations(location, filter, include_foto):
+overview_table_extra_headers = {
+    "sms": ["SMS", "Opmerking"],
+    "cellphone": ["Bericht", "Aantal", ]
+}
+
+
+def registration_get(filters):
     try:
         ret_filter = {}
-        registrations = []
         locations = msettings.get_configuration_setting("location-profiles")
-        if filter["search_text"] != "":
-            registrations = mregistration.registration_student_photo_get(location, filter["search_text"], include_foto=include_foto)
+        location = filters["filter-location"]
+        type = locations[location]["type"]
+        include_foto = filters["view-layout-select"] == "tile"
+        if filters["search-text"] != "":
+            registrations = mregistration.registration_student_photo_get(location, search=filters["search-text"], include_foto=include_foto)
             ret_filter = {"search": True}
-        elif filter["sms_specific"] == "on_date":
-            selected_day = filter["date"]
-            if not selected_day:
-                selected_day = str(datetime.datetime.now())
-            time_in_low = datetime.datetime.strptime(selected_day, "%Y-%m-%d").date()
-            time_in_high = time_in_low + datetime.timedelta(days=1)
-            registrations = mregistration.registration_student_photo_get(location, None, time_in_low, time_in_high, include_foto=include_foto)
-            ret_filter = {"date": selected_day}
-        elif filter["sms_specific"] in ["last_2_months", "last_4_months"]:
-            delta = 60 if filter["sms_specific"] == "last_2_months" else 120
-            time_in_low = datetime.datetime.now() - datetime.timedelta(days=delta)
-            registrations = mregistration.registration_student_photo_get(location, None, time_in_low, include_foto=include_foto)
-        elif filter["sms_specific"] == "no_sms_sent":
-            registrations = mregistration.registration_student_photo_get(location, None, None, None, None, False, include_foto=include_foto)
-        elif filter["sms_specific"] == "no_ack":
-            registrations = mregistration.registration_student_photo_get(location, None, None, None, False, None, include_foto=include_foto)
+        else:
+            flag1 = None
+            flag2 = None
+            time_low = None
+            time_high = None
+            # ignore period filter when the sms-specific or cellphone-specific is used
+            if type == "sms" and filters["sms-specific-select"] == "all" or type == "cellphone" and filters["cellphone-specific-select"] == "all":
+                if filters["period-select"] == "on-date":
+                    selected_day = filters["filter-date"]
+                    if not selected_day:
+                        selected_day = str(datetime.datetime.now())
+                    time_low = datetime.datetime.strptime(selected_day, "%Y-%m-%d").date()
+                    time_high = time_low + datetime.timedelta(days=1)
+                    ret_filter = {"date": selected_day}
+                elif filters["period-select"] in ["last-2-months", "last-4-months"]:
+                    delta = 60 if filters["period-select"] == "last-2-months" else 120
+                    time_low = datetime.datetime.now() - datetime.timedelta(days=delta)
+            if type == "sms":
+                flag1 = False if filters["sms-specific-select"] == "no-ack" else None
+                flag2 = False if filters["sms-specific-select"] == "no-sms-sent" else None
+            elif type == "cellphone":
+                flag1 = False if filters["cellphone-specific-select"] == "no-message-sent" else None
+            registrations = mregistration.registration_student_photo_get(location, time_low=time_low, time_high=time_high, flag1=flag1, flag2=flag2, include_foto=include_foto)
+        overview_table_headers = ["Tijdstempel", "Naam", "Klas"]
+        if type in overview_table_extra_headers:
+            overview_table_headers += overview_table_extra_headers[type]
         data = []
-        ret = {'status': True, "action": "add", "data": data}
+        ret = {'status': True, "action": "add", "data": data, "headers": overview_table_headers}
         ret.update(ret_filter)
         for tuple in registrations:
             registration = tuple[0]
@@ -195,14 +201,10 @@ def get_current_registrations(location, filter, include_foto):
             if include_foto:
                 photo = tuple[2]
                 item.update({"photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else ''})
-            if locations[location]["type"] == "sms":
-                item.update({
-                    "remark": registration.text1,
-                    "remark_ack": registration.flag1,
-                    "sms_sent": registration.flag2,
-                })
-            if locations[location]["type"] == "cellphone":
-                item.update({"sequence_ctr": registration.aantal_items})
+            if type == "sms":
+                item.update({"remark": registration.text1, "remark_ack": registration.flag1, "sms_sent": registration.flag2,})
+            elif type == "cellphone":
+                item.update({"sequence_ctr": registration.aantal_items, "message_sent": registration.flag1})
             data.append(item)
         return ret
     except Exception as e:
@@ -261,49 +263,54 @@ def api_registration_add(location_key, timestamp, leerlingnummer=None, code=None
         return {"status": False, "data": str(e)}
 
 
-# use field text1 to store the remark
-# use flag1 to store remark ack
-# use flag2 to store sms sent
-def api_registration_update(id, fields):
+def api_registration_update(location_key, ids, fields):
     try:
-        registration = mregistration.registration_get(("id", "=", id))
-        new_fields = {}
-        if "remark" in fields: new_fields["text1"] = fields["remark"]
-        if "remark_ack" in fields: new_fields["flag1"] = fields["remark_ack"]
-        if "sms_sent" in fields: new_fields["flag2"] = fields["sms_sent"]
-        mregistration.registration_update(registration, new_fields)
-        return {"status": True, "data": {"id": id, "fields": fields}}
+        location_settings = msettings.get_configuration_setting("location-profiles")
+        if location_key not in location_settings:
+            log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
+            return {"status": False, "data": f"Locatie {location_key} is niet geldig"}
+        location = location_settings[location_key]
+        data = []
+        for id in ids:
+            registration = mregistration.registration_get(("id", "=", id))
+            new_fields = {}
+            item = {}
+            if location["type"] == "sms":
+                if "remark" in fields:
+                    new_fields["text1"] = fields["remark"]
+                    item["remark"] = fields["remark"]
+                if "remark_ack" in fields:
+                    new_fields["flag1"] = fields["remark_ack"]
+                    item["remark_ack"] = fields["remark_ack"]
+                if item:
+                    item["id"] = id
+                    data.append(item)
+            mregistration.registration_update(registration, new_fields)
+        return {"status": True, "data": data}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}
 
 
-def api_registration_send_sms(id, location_key):
+def api_registration_send_message(ids, location_key):
     try:
-        registration = mregistration.registration_get(("id", "=", id))
-        student = mstudent.student_get([("leerlingnummer", "=", registration.leerlingnummer)])
-        if student:
-            location_settings = msettings.get_configuration_setting("location-profiles")
-            if location_key not in location_settings:
-                log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
-                return {"status": False, "data": f"Locatie {location_key} is niet geldig"}
-            location = location_settings[location_key]
-            if location["type"] == "sms":
-                log.info(f'{sys._getframe().f_code.co_name}: SMS ({location["locatie"]}), {student.leerlingnummer} at {registration.time_in}')
-                text_body = msettings.get_configuration_setting("sms-student-too-late")
-                text_body = text_body.replace("%%VOORNAAM%%", student.voornaam)
-                text_body = text_body.replace("%%NAAM%%", student.naam)
-                text_body = text_body.replace("%%TIJD%%", str(registration.time_in))
-                enable_send_sms = location["enable_sending"]
-                if "to" in location:
-                    send_sms(location["to"], text_body, enable_send_sms)
-                else:
-                    if student.lpv1_gsm != "":
-                        send_sms(student.lpv1_gsm, text_body, enable_send_sms)
-                    if student.lpv2_gsm != "":
-                        send_sms(student.lpv2_gsm, text_body, enable_send_sms)
-                mregistration.registration_update(registration, {"flag2": True}) # flag2 is used to indicate sms sent
-                return {"status": True, "data": {"id": id, "fields": {"sms_sent": True}}}
+        location_settings = msettings.get_configuration_setting("location-profiles")
+        if location_key not in location_settings:
+            log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
+            return {"status": False, "data": f"Locatie {location_key} is niet geldig"}
+        location = location_settings[location_key]
+        data = []
+        for id in ids:
+            registration = mregistration.registration_get(("id", "=", id))
+            student = mstudent.student_get([("leerlingnummer", "=", registration.leerlingnummer)])
+            if student:
+                if location["type"] == "sms":
+                    data.append({"id": id, "sms_sent": __send_sms(registration, location, student)})
+                if location["type"] == "cellphone":
+                    data.append({"id": id, "ss_message_sent": __send_ss_message(registration, location, student)})
+            else:
+                log.error(f'{sys._getframe().f_code.co_name}: could not find student fore registration {id}')
+        return {"status": True, "data": data}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}
@@ -386,3 +393,85 @@ def sync_registrations_client():
         return 0, 0
 
 
+def __send_sms(registration, location, student, force=False):
+    try:
+        receiver = ""
+        if not registration.flag2 or force:
+            text_body = msettings.get_configuration_setting("sms-student-too-late")
+            text_body = text_body.replace("%%VOORNAAM%%", student.voornaam)
+            text_body = text_body.replace("%%NAAM%%", student.naam)
+            text_body = text_body.replace("%%TIJD%%", str(registration.time_in))
+            enable_send_sms = location["enable_sending"]
+            if "force_to" in location:  # overwrite sms receivers
+                receiver = location["force_to"]
+                send_sms(receiver, text_body, enable_send_sms)
+            else:
+                if student.lpv1_gsm != "":
+                    send_sms(student.lpv1_gsm, text_body, enable_send_sms)
+                    receiver += student.lpv1_gsm + "/"
+                if student.lpv2_gsm != "":
+                    send_sms(student.lpv2_gsm, text_body, enable_send_sms)
+                    receiver += student.lpv2_gsm
+            # flag2: sms is sent
+            mregistration.registration_update(registration, {"flag2": True})
+        log.info(f'{sys._getframe().f_code.co_name}: SMS ({location["locatie"]}), {student.naam} {student.voornaam} at {registration.time_in}, to {receiver}')
+        return registration.flag2
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return False
+
+
+def __send_ss_message(registration, location, student, force=False):
+    try:
+        def __process_template(school, id):
+            out = {}
+            templates = msettings.get_configuration_setting("smartschool-message-templates").split("\n")
+            for type in ["ONDERWERP", "INHOUD"]:
+                start_subject_tag = f"%%{school}-{id}-{type}-START%%"
+                stop_subject_tag = f"%%{school}-{id}-{type}-STOP%%"
+                msg = None
+                for line in templates:
+                    if stop_subject_tag in line: break
+                    if msg is not None and msg != "": msg += "\n"
+                    if msg is not None: msg += line
+                    if start_subject_tag in line: msg = ""
+                if msg:
+                    msg = msg.replace("%%VOORNAAM%%", student.voornaam)
+                    msg = msg.replace("%%NAAM%%", student.naam)
+                    msg = msg.replace("%%TIJD%%", str(registration.time_in))
+                    msg = msg.replace("%%AANTAL-OVERTREDINGEN%%", str(registration.aantal_items))
+                out[type] = msg
+            return out
+
+        limit = location["limiet"]
+
+        seq_ctr = registration.aantal_items
+        if seq_ctr < (limit - 1): return False
+        if seq_ctr > (limit + 1): seq_ctr = limit + 1
+        school = student.get_school
+        if "force_to" in location:
+            tos = location["force_to"]
+        else:
+            tos = location["to"][school.lower()][seq_ctr]
+        ss_tos = []
+        for to in tos:
+            if to == "ouders":
+                ss_tos += [{"id": student.leerlingnummer, "coaccount": i} for i in range(3)]
+            else:
+                staff = mstaff.staff_get(("code", "=", to))
+                if staff:
+                    ss_tos.append({"id": staff.ss_internal_nbr, "coaccount": 0})
+                else:
+                    log.error(f'{sys._getframe().f_code.co_name}: Could not find ss internal number of {to}')
+
+        message = __process_template(school, seq_ctr)
+
+        for to in ss_tos:
+            ss_send_message(to["id"], "csu", message["ONDERWERP"], message["INHOUD"], to["coaccount"] )
+        # flag1: message is sent
+        mregistration.registration_update(registration, {"flag1": True})
+        log.info(f'{sys._getframe().f_code.co_name}: Smartschool ({location["locatie"]}), {student.naam} {student.voornaam} at {registration.time_in}')
+        return registration.flag1
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return False

@@ -103,6 +103,7 @@ default_configuration_settings = {
     'sdh-student-url': ('', Settings.SETTING_TYPE.E_STRING),
     'sdh-photo-url': ('', Settings.SETTING_TYPE.E_STRING),
     'sdh-photo-size-url': ('', Settings.SETTING_TYPE.E_STRING),
+    'sdh-staff-url': ('', Settings.SETTING_TYPE.E_STRING),
 
     'user-datatables-template': ({}, Settings.SETTING_TYPE.E_JSON),
 
@@ -131,6 +132,7 @@ default_configuration_settings = {
     'logging-inform-emails': ('', Settings.SETTING_TYPE.E_STRING),
 
     'sms-student-too-late': ('', Settings.SETTING_TYPE.E_STRING),
+    'smartschool-message-templates': ('', Settings.SETTING_TYPE.E_STRING),
 }
 
 

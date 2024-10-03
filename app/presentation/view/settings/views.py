@@ -269,6 +269,64 @@ settings_formio = \
                 ]
               }
             ]
+          },
+          {
+            "label": "Cellphone Locatie",
+            "tableView": false,
+            "validateWhenHidden": false,
+            "key": "cellphone-location",
+            "type": "container",
+            "input": true,
+            "components": [
+              {
+                "title": "Cellpone locaties",
+                "theme": "primary",
+                "collapsible": true,
+                "key": "RegistratieTemplate1",
+                "type": "panel",
+                "label": "Studenten",
+                "collapsed": true,
+                "input": false,
+                "tableView": false,
+                "components": [
+                  {
+                    "label": "Opslaan",
+                    "showValidations": false,
+                    "theme": "warning",
+                    "tableView": false,
+                    "key": "submit",
+                    "type": "button",
+                    "input": true,
+                    "saveOnEnter": false
+                  },
+                  {
+                    "label": "Smartschool berichten",
+                    "applyMaskOn": "change",
+                    "autoExpand": false,
+                    "tableView": true,
+                    "validateWhenHidden": false,
+                    "key": "smartschool-message-templates",
+                    "type": "textarea",
+                    "input": true
+                  },
+                  {
+                    "label": "HTML",
+                    "attrs": [
+                      {
+                        "attr": "",
+                        "value": ""
+                      }
+                    ],
+                    "content": "Variabelen<br>\n%%NAAM%%<br>\n%%VOORNAAM%%<br>\n%%TIJD%% (tijdstip van registratie)",
+                    "refreshOnChange": false,
+                    "key": "html",
+                    "type": "htmlelement",
+                    "input": false,
+                    "tableView": false
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -571,6 +629,17 @@ settings_formio = \
                     "tableView": true,
                     "persistent": false,
                     "key": "sdh-photo-url",
+                    "type": "textfield",
+                    "labelWidth": 20,
+                    "input": true
+                  },
+                  {
+                    "label": "URL voor ophalen van personeel",
+                    "applyMaskOn": "change",
+                    "tableView": true,
+                    "persistent": false,
+                    "validateWhenHidden": false,
+                    "key": "sdh-staff-url",
                     "type": "textfield",
                     "labelWidth": 20,
                     "input": true
