@@ -32,10 +32,10 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
             photo_obj = mphoto.photo_get({"id": student.foto_id})
             photo = base64.b64encode(photo_obj.photo).decode('utf-8') if photo_obj else ''
             location_settings = msettings.get_configuration_setting("location-profiles")
-
             if location_key not in location_settings:
                 log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
                 return {"status": False, "data": f"Locatie {location_key} is niet geldig"}
+            log.info(f'{sys._getframe().f_code.co_name}:  Add registration for {student.leerlingnummer}, {student.naam} {student.voornaam} {location_key}')
             location = location_settings[location_key]
             ret = {
                 "status": True,
