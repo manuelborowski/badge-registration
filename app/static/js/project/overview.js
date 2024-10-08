@@ -4,6 +4,7 @@ import {person_image} from "../../img/base64-person.js";
 import {busy_indication_on, busy_indication_off} from "../base/base.js";
 import {add_to_popup_body, create_checkbox_element, create_input_element, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
 import {add_extra_filters, create_filters, enable_filters, disable_filters, subscribe_reset_button} from "../base/filters.js";
+import {subscribe_location_changed} from "./locations.js";
 
 let location_element, date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element,
     sms_specific_element, search_text_element;
@@ -47,8 +48,9 @@ $(document).ready(function () {
     period_element.addEventListener("change", get_current_registrations);
     cellphone_specific_element.addEventListener("change", get_current_registrations);
     photo_size_element.addEventListener("change", __resize_photos);
-    subscribe_get_ids(get_ids_of_selected_items);
+    subscribe_get_ids(__get_ids_of_selected_items);
     subscribe_reset_button(__reset_button_cb);
+    subscribe_location_changed(__rfid_location_changed);
     get_current_registrations();
 });
 
@@ -324,7 +326,7 @@ async function enter_remark(ids) {
     show_popup();
 }
 
-const get_ids_of_selected_items = mouse_event => {
+const __get_ids_of_selected_items = mouse_event => {
     let ids = [...document.querySelectorAll(".item-select:checked")].map(e => e.parentElement.parentElement.dataset.id); // if checkboxes are checked
     if (ids.length === 0) ids = [mouse_event.target.parentElement.dataset.id]; // if not, select the current row
     return ids;
@@ -371,4 +373,9 @@ const __reset_button_cb = filters => {
             get_current_registrations();
         }
     }
+}
+
+const __rfid_location_changed = location => {
+    location_element.value = location;
+    get_current_registrations();
 }

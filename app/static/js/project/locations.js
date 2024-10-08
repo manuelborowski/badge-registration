@@ -30,6 +30,9 @@ export const create_select_locations = locations => {
     return select_div
 }
 
+let location_changed_cb = null;
+export const subscribe_location_changed = cb => location_changed_cb = cb;
+
 //if location has bevestig_met_pin attribute then, at page reload, do not ask for confirmation via pin
 const handle_location_select = (at_reload = false) => {
     localStorage.setItem("badge-location", location_select.value)
@@ -64,6 +67,7 @@ const handle_location_select = (at_reload = false) => {
             }
         }
     }
+    if(location_changed_cb) location_changed_cb(location_select.value);
 }
 
 const generate_and_confirm_pin = (location_key) => {

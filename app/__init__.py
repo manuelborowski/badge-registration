@@ -95,9 +95,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.55-major-rework-0.17: bugfix, when manually adding a registration for a student, use the view-location iso the badge-location.
 # 0.55-major-rework-0.18: reworked frontend
 # 0.55-major-rework-0.19: added logging
+# 0.55-major-rework-0.20: add period filter to all locations.  If rfid-location is changed, update view-location accordingly.
 
 
-version = "0.55-major-rework-0.19"
+version = "0.55-major-rework-0.20"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

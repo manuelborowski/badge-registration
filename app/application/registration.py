@@ -164,7 +164,7 @@ def registration_get(filters):
             time_low = None
             time_high = None
             # ignore period filter when the sms-specific or cellphone-specific is used
-            if type == "sms" and filters["sms-specific-select"] == "all" or type == "cellphone" and filters["cellphone-specific-select"] == "all":
+            if type == "sms" and filters["sms-specific-select"] == "all" or type == "cellphone" and filters["cellphone-specific-select"] == "all" or type not in ["sms", "cellphone"]:
                 if filters["period-select"] == "on-date":
                     selected_day = filters["filter-date"]
                     if not selected_day:
