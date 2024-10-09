@@ -92,7 +92,7 @@ def get_filters(location_types):
                     'type': 'select',
                     'name': 'period-select',
                     'label': 'Periode',
-                    'choices': [["on-date", "Op datum"], ["last-2-months", "Laatste 2 maanden"], ["last-4-months", "Laatste 4 maandend"]],
+                    'choices': [["on-date", "Op datum"], ["last-week", "Laatste week"], ["last-2-months", "Laatste 2 maanden"], ["last-4-months", "Laatste 4 maandend"]],
                     'default': "on-date",
                     "store": True
                 },

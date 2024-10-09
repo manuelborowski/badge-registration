@@ -172,8 +172,8 @@ def registration_get(filters):
                     time_low = datetime.datetime.strptime(selected_day, "%Y-%m-%d").date()
                     time_high = time_low + datetime.timedelta(days=1)
                     ret_filter = {"date": selected_day}
-                elif filters["period-select"] in ["last-2-months", "last-4-months"]:
-                    delta = 60 if filters["period-select"] == "last-2-months" else 120
+                elif filters["period-select"] in ["last-2-months", "last-4-months", "last-week"]:
+                    delta = 60 if filters["period-select"] == "last-2-months" else 120 if filters["period-select"] == "last-4-months" else 7
                     time_low = datetime.datetime.now() - datetime.timedelta(days=delta)
             if type == "sms":
                 flag1 = False if filters["sms-specific-select"] == "no-ack" else None

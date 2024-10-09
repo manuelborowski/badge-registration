@@ -136,6 +136,7 @@ const socketio_update_status = (type, data) => {
                     }
                     registration_container.classList.add("S" + item.leerlingnummer);
                     registration_container.dataset.id = item.id;
+                    registration_container.dataset.name = `${item.naam} ${item.voornaam}`;
                     if (sort_on_element.value === "name-firstname") {
                         registration_container.dataset.sort_on = item.naam + item.voornaam;
                     } else if (sort_on_element.value === "klas-name-firstname") {
@@ -169,14 +170,14 @@ const socketio_update_status = (type, data) => {
 
 const context_menu_pool = {
     sms: [
-        {type: "item", iconscout: "text", label: "Reden", cb: enter_remark},
-        {type: "item", iconscout: "check", label: "Bevestig reden", cb: to_server_confirm_remark},
-        {type: "item", iconscout: "envelope-send", label: "Stuur sms", cb: to_server_send_message},
-        {type: "divider"},
+        {type: "item", iconscout: "text", label: "Reden", cb: enter_remark, layout: "list"},
+        {type: "item", iconscout: "check", label: "Bevestig reden", cb: to_server_confirm_remark, layout: "list"},
+        {type: "item", iconscout: "envelope-send", label: "Stuur sms", cb: to_server_send_message, layout: "list"},
+        {type: "divider", layout: "list"},
         {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}],
     cellphone: [
-        {type: "item", iconscout: "envelope-send", label: "Stuur Smartschool bericht", cb: to_server_send_message},
-        {type: "divider"},
+        {type: "item", iconscout: "envelope-send", label: "Stuur Smartschool bericht", cb: to_server_send_message, layout: "list"},
+        {type: "divider", layout: "list"},
         {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}],
     default: [
         {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}]
@@ -218,12 +219,12 @@ const get_current_registrations = () => {
     socketio.send_to_server("get-current-registrations", {filters});
     __reset_nbr_registered();
 
-    const context_menu = locations[current_location].type in context_menu_pool ? context_menu_pool[locations[current_location].type] : context_menu_pool["default"];
+    let context_menu = locations[current_location].type in context_menu_pool ? context_menu_pool[locations[current_location].type] : context_menu_pool["default"];
+    context_menu = context_menu.filter(i => !("layout" in i) || i.layout === view_layout_element.value)
     create_context_menu(context_menu);
     const extra_filters = locations[current_location].type in extra_filters_pool ? extra_filters_pool[locations[current_location].type] : extra_filters_pool["default"];
     add_extra_filters(extra_filters);
 }
-
 
 const socketio_update_registration = (type, msg) => {
     if (msg.status) {
@@ -251,7 +252,7 @@ const socketio_update_registration = (type, msg) => {
 async function to_server_delete_registration(ids) {
     let message = "";
     if (ids.length === 1) {
-        const name = document.querySelector(`[data-id='${ids[0]}']`).querySelector("[data-col='name']").innerHTML
+        const name = document.querySelector(`[data-id='${ids[0]}']`).dataset.name;
         message = `Wilt u de registratie van ${name} verwijderen?`;
     } else {
         message = `Wilt u de registraties van ${ids.length} studenten verwijderen?`;
@@ -271,7 +272,7 @@ async function to_server_delete_registration(ids) {
 async function to_server_send_message(ids) {
     let message = "";
     if (ids.length === 1) {
-        const name = document.querySelector(`[data-id='${ids[0]}']`).querySelector("[data-col='name']").innerHTML
+        const name = document.querySelector(`[data-id='${ids[0]}']`).dataset.name;
         message = `Wilt u een bericht sturen betreffende ${name}?`;
     } else {
         message = `Wilt u een bericht sturen betreffende ${ids.length} studenten?`;
