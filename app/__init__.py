@@ -97,9 +97,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.55-major-rework-0.19: added logging
 # 0.55-major-rework-0.20: add period filter to all locations.  If rfid-location is changed, update view-location accordingly.
 # 0.55-major-rework-0.21: context-menu, select items depending on layout.  Updated period select.  Bugfix context-menu ico tiles.
+# 0.55-major-rework-0.22: cellphone, do not send message twice, updated table.
 
 
-version = "0.55-major-rework-0.21"
+version = "0.55-major-rework-0.22"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

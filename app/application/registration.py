@@ -414,7 +414,9 @@ def __send_sms(registration, location, student, force=False):
                     receiver += student.lpv2_gsm
             # flag2: sms is sent
             mregistration.registration_update(registration, {"flag2": True})
-        log.info(f'{sys._getframe().f_code.co_name}: SMS ({location["locatie"]}), {student.naam} {student.voornaam} at {registration.time_in}, to {receiver}')
+            log.info(f'{sys._getframe().f_code.co_name}: SMS ({location["locatie"]}), {student.naam} {student.voornaam} at {registration.time_in}, to {receiver}')
+        else:
+            log.info(f'{sys._getframe().f_code.co_name}: SMS ({location["locatie"]}), {student.naam} {student.voornaam} NOT sent')
         return registration.flag2
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
@@ -443,34 +445,36 @@ def __send_ss_message(registration, location, student, force=False):
                 out[type] = msg
             return out
 
-        limit = location["limiet"]
-
-        seq_ctr = registration.aantal_items
-        if seq_ctr < (limit - 1): return False
-        if seq_ctr > (limit + 1): seq_ctr = limit + 1
-        school = student.get_school
-        if "force_to" in location:
-            tos = location["force_to"]
-        else:
-            tos = location["to"][school.lower()][seq_ctr]
-        ss_tos = []
-        for to in tos:
-            if to == "ouders":
-                ss_tos += [{"id": student.leerlingnummer, "coaccount": i} for i in range(3)]
+        if not registration.flag1 or force:
+            limit = location["limiet"]
+            seq_ctr = registration.aantal_items
+            if seq_ctr < (limit - 1): return False
+            if seq_ctr > (limit + 1): seq_ctr = limit + 1
+            school = student.get_school
+            if "force_to" in location:
+                tos = location["force_to"]
             else:
-                staff = mstaff.staff_get(("code", "=", to))
-                if staff:
-                    ss_tos.append({"id": staff.ss_internal_nbr, "coaccount": 0})
+                tos = location["to"][school.lower()][seq_ctr]
+            ss_tos = []
+            for to in tos:
+                if to == "ouders":
+                    ss_tos += [{"id": student.leerlingnummer, "coaccount": i} for i in range(3)]
                 else:
-                    log.error(f'{sys._getframe().f_code.co_name}: Could not find ss internal number of {to}')
+                    staff = mstaff.staff_get(("code", "=", to))
+                    if staff:
+                        ss_tos.append({"id": staff.ss_internal_nbr, "coaccount": 0})
+                    else:
+                        log.error(f'{sys._getframe().f_code.co_name}: Could not find ss internal number of {to}')
 
-        message = __process_template(school, seq_ctr)
+            message = __process_template(school, seq_ctr)
 
-        for to in ss_tos:
-            ss_send_message(to["id"], "csu", message["ONDERWERP"], message["INHOUD"], to["coaccount"] )
-        # flag1: message is sent
-        mregistration.registration_update(registration, {"flag1": True})
-        log.info(f'{sys._getframe().f_code.co_name}: Smartschool ({location["locatie"]}), {student.naam} {student.voornaam} at {registration.time_in}')
+            for to in ss_tos:
+                ss_send_message(to["id"], "csu", message["ONDERWERP"], message["INHOUD"], to["coaccount"] )
+            # flag1: message is sent
+            mregistration.registration_update(registration, {"flag1": True})
+            log.info(f'{sys._getframe().f_code.co_name}: Smartschool ({location["locatie"]}), {student.naam} {student.voornaam} at {registration.time_in}')
+        else:
+            log.info(f'{sys._getframe().f_code.co_name}: Smartschool ({location["locatie"]}), {student.naam} {student.voornaam} NOT sent')
         return registration.flag1
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')

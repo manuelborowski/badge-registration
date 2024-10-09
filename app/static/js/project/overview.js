@@ -121,10 +121,10 @@ const socketio_update_status = (type, data) => {
                                 registration_container.style.background = "palegreen"
                             }
                         } else if (locations[current_location].type === "cellphone") {
-                            registration_container.innerHTML += `
-                                <td><input data-col="message" type="checkbox" ${item.message_sent ? "checked" : ""}></td> 
-                                <td>${item.sequence_ctr}</td>`;
                             const limit = locations[current_location].limiet;
+                            registration_container.innerHTML += `
+                                <td data-col="message">${(item.sequence_ctr < (limit-1)) ? "NVT" : item.message_sent ? "verstuurd" : "niet verstuurd"}</td> 
+                                <td>${item.sequence_ctr}</td>`;
                             if (item.sequence_ctr === limit) {
                                 registration_container.style.background = "orangered"
                             } else if (item.sequence_ctr > limit) {
@@ -242,7 +242,7 @@ const socketio_update_registration = (type, msg) => {
                     if (view_list) row.querySelector('[data-col="sms"]').checked = item.id;
                 }
                 if (item.ss_message_sent !== undefined) {
-                    if (view_list) row.querySelector('[data-col="message"]').checked = item.id;
+                    if (view_list) row.querySelector('[data-col="message"]').innerHTML = "verstuurd";
                 }
             }
         }
