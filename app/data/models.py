@@ -112,11 +112,12 @@ def update_multiple(model, data = [], timestamp=False):
 
 def delete_multiple(model, ids=[], objs=[]):
     try:
-        for id in ids:
-            obj = get_first_single(model, [("id", "=", id)])
-            db.session.delete(obj)
-        for obj in objs:
-            db.session.delete(obj)
+        if objs:
+            ids = [o.id for o in objs]
+        if ids:
+            objs = model.query.filter(model.id.in_(ids)).all()
+            for obj in objs:
+                db.session.delete(obj)
         db.session.commit()
     except Exception as e:
         db.session.rollback()
@@ -163,7 +164,8 @@ def get_multiple(model, filters=[], fields=[], order_by=None, first=False, count
                 q = q.order_by(getattr(model, order_by))
         else:
             q = q.order_by(getattr(model, "id"))
-        q = q.filter(model.active == active)
+        if active is not None:
+            q = q.filter(model.active == active)
         if start is not None and stop is not None:
             q = q.slice(start, stop)
         if first:

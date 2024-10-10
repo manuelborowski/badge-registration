@@ -1,7 +1,7 @@
 from flask import request
 from . import api
 from app.application import user as muser, settings as msettings, registration as mregistration, socketio as msocketio, location as mlocation, upgrade as mupgrade
-from app.application.student import student_load_from_sdh
+from app.application import student as mstudent
 from app import log, version
 import json, sys, html
 from functools import wraps
@@ -114,7 +114,10 @@ def registration_add():
     location = data["location_key"]
     timestamp = data["timestamp"] if "timestamp" in data else None
     ret = mregistration.api_registration_add(location, timestamp, leerlingnummer, code)
-    msocketio.send_to_room({'type': 'update-current-status', 'data': ret}, location)
+    if "is-reservation" in ret:
+        msocketio.broadcast_message({"type": "update-status", "data": {"item": "reservation", "status": True, "data": ret["data"]}})
+    else:
+        msocketio.send_to_room({'type': 'update-current-status', 'data': ret}, location)
     return json.dumps({"status": ret["status"]})
 
 
@@ -150,6 +153,17 @@ def registration_delete():
     ret = mregistration.api_registration_delete(ids)
     msocketio.send_to_room({'type': 'update-current-status', 'data': ret}, location)
     return json.dumps(ret)
+
+
+@api.route('/api/reservation/add', methods=['POST'])
+@supervisor_key_required
+def reserve_item():
+    data = json.loads(request.data)
+    leerlingnummer = data["leerlingnummer"]
+    location = data["location_key"]
+    item = data["item"]
+    ret = mstudent.api_reservation_add(leerlingnummer, location, item)
+    return json.dumps({"status": ret["status"]})
 
 
 @api.route('/api/location/get', methods=['GET'])

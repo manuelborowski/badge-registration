@@ -3,7 +3,7 @@ import app.application
 import app.application.api
 import app
 from app import flask_app
-from app.data import student as mstudent, registration as mregistration, photo as mphoto, settings as msettings, staff as mstaff
+from app.data import student as mstudent, registration as mregistration, photo as mphoto, settings as msettings, staff as mstaff, reservation as mreservation
 from app.application.util import get_api_key
 from app.application.smartschool import send_message as ss_send_message
 from flask_login import current_user
@@ -24,10 +24,25 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
             now = datetime.datetime.now()
         now = now.replace(microsecond=0)
         today = now.date()
+        reservation_margin = flask_app.config["RESERVATION_MARGIN"]
+        minimum_reservation_time = now - datetime.timedelta(seconds=reservation_margin)
+        reservations = mreservation.reservation_get_m([("valid", "=", False), ("timestamp", ">", minimum_reservation_time)])
+        if reservations:
+            reservation = reservations[0]
+            if reservation.item == "rfid":
+                rfid = rfid.upper()
+                reservation.data = rfid
+                reservation.valid = True
+                student = mstudent.student_get([("leerlingnummer", "=", reservation.leerlingnummer)])
+                student.rfid = rfid
+                mreservation.commit()
+                return {"status": True, "is-reservation": True, "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}"}
         if rfid:
             student = mstudent.student_get([("rfid", "=", rfid)])
         elif leerlingnummer:
             student = mstudent.student_get([("leerlingnummer", "=", leerlingnummer)])
+        else:
+            return {"status": False, "data": "Geen RFID of leerlingnummer gevonden"}
         if student:
             photo_obj = mphoto.photo_get({"id": student.foto_id})
             photo = base64.b64encode(photo_obj.photo).decode('utf-8') if photo_obj else ''
