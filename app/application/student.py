@@ -1,9 +1,10 @@
-from app.data import settings as msettings, student as mstudent, photo as mphoto, utils as mutils
-import sys, requests, base64
+from app.data import settings as msettings, student as mstudent, photo as mphoto, utils as mutils, reservation as mreservation
+import sys, requests, base64, datetime
 
 #logging on file level
 import logging
-from app import MyLogFilter, top_log_handle
+from app import MyLogFilter, top_log_handle, flask_app
+
 log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
@@ -16,8 +17,8 @@ def student_load_from_sdh(opaque=None, **kwargs):
     deleted_students = []
     try:
         # check for new, updated or deleted students
-        sdh_student_url = msettings.get_configuration_setting('sdh-student-url')
-        sdh_key = msettings.get_configuration_setting('sdh-api-key')
+        sdh_student_url = flask_app.config["SDH_GET_STUDENT_URL"]
+        sdh_key = flask_app.config["SDH_GET_API_KEY"]
         res = requests.get(sdh_student_url, headers={'x-api-key': sdh_key})
         if res.status_code == 200:
             sdh_students = res.json()
@@ -79,7 +80,7 @@ def student_load_from_sdh(opaque=None, **kwargs):
             log.error(f'{sys._getframe().f_code.co_name}: api call to {sdh_student_url} returned {res.status_code}')
 
         # check for all students if their photo is changed (different size)
-        sdh_photo_size_url = msettings.get_configuration_setting('sdh-photo-size-url')
+        sdh_photo_size_url = flask_app.config["SDH_GET_PHOTO_SIZE_URL"]
         db_students = mstudent.student_get_m()
         photo_ids = [str(s.foto_id) for s in db_students]
         sliced_photo_ids = mutils.slice_list(photo_ids, 200)
@@ -106,7 +107,7 @@ def student_load_from_sdh(opaque=None, **kwargs):
 
         # get the changed photos
         if photos_to_check:
-            sdh_photo_url = msettings.get_configuration_setting('sdh-photo-url')
+            sdh_photo_url = flask_app.config["SDH_GET_PHOTO_URL"]
             photo_ids = [str(p) for p in photos_to_check]
             sliced_photo_ids = mutils.slice_list(photo_ids, 200)
             for slice in sliced_photo_ids:
@@ -148,7 +149,38 @@ def klassen_get_unique():
     return klassen
 
 
+def api_reservation_add(leerlingnummer, location_key, item):
+    try:
+        now = datetime.datetime.now().replace(microsecond=0)
+        reservation = mreservation.reservation_add({"leerlingnummer": leerlingnummer, "location": location_key, "timestamp": now, "item": item})
+        if reservation:
+            log.info(f'{sys._getframe().f_code.co_name}: Reservation add, leerlingnummer {leerlingnummer}, location: {location_key}, time_in: {now}, item: {item}')
+            return {"status": True}
+        else:
+            return {"status": False, "data": "Kan reservatie niet maken"}
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"status": False, "data": str(e)}
 
+
+def  push_reservations_to_server(opaque=None, **kwargs):
+    try:
+        sdh_student_url = flask_app.config["SDH_SET_STUDENT_URL"]
+        sdh_key = flask_app.config["SDH_SET_API_KEY"]
+        sdh_test = flask_app.config["SDH_SET_TEST"]
+        reservations = mreservation.reservation_get_m(("valid", "=", True))
+        delete_reservations = []
+        for reservation in reservations:
+            if reservation.item == "rfid":
+                res = requests.post(sdh_student_url, headers={'x-api-key': sdh_key}, json={"leerlingnummer": reservation.leerlingnummer, "rfid": reservation.data, "test": sdh_test})
+                if res.status_code == 200:
+                    log.info(f'{sys._getframe().f_code.co_name}: Updated student RFID to SDH, {reservation.leerlingnummer}, {reservation.data}')
+                    delete_reservations.append(reservation.id)
+                else:
+                    log.error(f'{sys._getframe().f_code.co_name}: api call to {sdh_student_url} returned {res.status_code}')
+        mreservation.reservation_delete_m(ids=delete_reservations)
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
 
 ############ datatables: student overview list #########
 def format_data(db_list, total_count=None, filtered_count=None):

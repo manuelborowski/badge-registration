@@ -106,6 +106,7 @@
         const locations = {{ locations|tojson }};
         const default_view = {{ (default_view or False)|tojson }};
         const api_key = {{ (api_key or '') | tojson }};
+        const reservation_margin = {{ (reservation_margin or '') | tojson }};
         const suppress_navbar = {{ (suppress_navbar or false) | tojson }};
     </script>
     <script type="module" src="/static/js/base/base.js"></script>

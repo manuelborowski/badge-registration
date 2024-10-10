@@ -73,12 +73,6 @@ class Config(DatatableConfig):
     def show_filter_elements(self):
         return get_filters()
 
-    def get_right_click(self):
-        locations = msettings.get_configuration_setting("location-profiles")
-        locations = sorted([{"key": k, "label": v["locatie"]} for k,v in locations.items()], key=lambda x: x["label"])
-        return locations
-
-
 table_config = Config("student", "Overzicht Studenten")
 
 

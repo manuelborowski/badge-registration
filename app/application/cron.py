@@ -11,7 +11,7 @@ log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
 
-CRON_TASK = 'datacollector-task'
+CRON_TASK = 'badgereader-task'
 
 
 def cron_task():

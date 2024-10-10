@@ -6,7 +6,8 @@ import sys, requests, base64
 
 #logging on file level
 import logging
-from app import MyLogFilter, top_log_handle
+from app import MyLogFilter, top_log_handle, flask_app
+
 log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
@@ -17,8 +18,8 @@ def staff_load_from_sdh(opaque=None, **kwargs):
         updated_staff = []
         new_staff = []
         deleted_staff = []
-        sdh_url = msettings.get_configuration_setting("sdh-staff-url")
-        sdh_key = msettings.get_configuration_setting('sdh-api-key')
+        sdh_url = flask_app.config["SDH_GET_STAFF_URL"]
+        sdh_key = flask_app.config["SDH_GET_API_KEY"]
         res = requests.get(sdh_url, headers={'x-api-key': sdh_key})
         if res.status_code == 200:
             sdh_staffs = res.json()
