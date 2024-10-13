@@ -99,9 +99,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.55-major-rework-0.21: context-menu, select items depending on layout.  Updated period select.  Bugfix context-menu ico tiles.
 # 0.55-major-rework-0.22: cellphone, do not send message twice, updated table.
 # 0.55-major-rework-0.23: merge
+# 0.55-major-rework-0.24: clear all reservations after syncing with SDH
 
 
-version = "0.55-major-rework-0.23"
+version = "0.55-major-rework-0.24"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

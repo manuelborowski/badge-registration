@@ -169,15 +169,15 @@ def  push_reservations_to_server(opaque=None, **kwargs):
         sdh_key = flask_app.config["SDH_SET_API_KEY"]
         sdh_test = flask_app.config["SDH_SET_TEST"]
         reservations = mreservation.reservation_get_m(("valid", "=", True))
-        delete_reservations = []
         for reservation in reservations:
             if reservation.item == "rfid":
                 res = requests.post(sdh_student_url, headers={'x-api-key': sdh_key}, json={"leerlingnummer": reservation.leerlingnummer, "rfid": reservation.data, "test": sdh_test})
                 if res.status_code == 200:
                     log.info(f'{sys._getframe().f_code.co_name}: Updated student RFID to SDH, {reservation.leerlingnummer}, {reservation.data}')
-                    delete_reservations.append(reservation.id)
                 else:
                     log.error(f'{sys._getframe().f_code.co_name}: api call to {sdh_student_url} returned {res.status_code}')
+        reservations = mreservation.reservation_get_m()
+        delete_reservations = [r.id for r in reservations]
         mreservation.reservation_delete_m(ids=delete_reservations)
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
