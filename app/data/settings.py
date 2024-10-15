@@ -114,6 +114,8 @@ default_configuration_settings = {
     'location-profiles': ('', Settings.SETTING_TYPE.E_YAML),
     'artikel-profiles': ('', Settings.SETTING_TYPE.E_YAML),
 
+    'ss-internal-numbers': ('', Settings.SETTING_TYPE.E_YAML),
+
     'cron-scheduler-template': ('', Settings.SETTING_TYPE.E_STRING),
     'cron-enable-modules': ({}, Settings.SETTING_TYPE.E_JSON),
 

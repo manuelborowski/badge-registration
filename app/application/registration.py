@@ -461,6 +461,7 @@ def __send_ss_message(registration, location, student, force=False):
             return out
 
         if not registration.flag1 or force:
+            ss_internal_numbers = msettings.get_configuration_setting("ss-internal-numbers")
             limit = location["limiet"]
             seq_ctr = registration.aantal_items
             if seq_ctr < (limit - 1): return False
@@ -479,12 +480,15 @@ def __send_ss_message(registration, location, student, force=False):
                     if staff:
                         ss_tos.append({"id": staff.ss_internal_nbr, "coaccount": 0})
                     else:
-                        log.error(f'{sys._getframe().f_code.co_name}: Could not find ss internal number of {to}')
-
+                        if to in ss_internal_numbers:
+                            ss_tos.append({"id": ss_internal_numbers[to], "coaccount": 0})
+                        else:
+                            log.error(f'{sys._getframe().f_code.co_name}: Could not find ss internal number of {to}')
             message = __process_template(school, seq_ctr)
 
+            enable_sending = location["enable_sending"] if "enable_sending" in location else False
             for to in ss_tos:
-                ss_send_message(to["id"], "csu", message["ONDERWERP"], message["INHOUD"], to["coaccount"] )
+                ss_send_message(to["id"], "csu", message["ONDERWERP"], message["INHOUD"], to["coaccount"], enable_sending)
             # flag1: message is sent
             mregistration.registration_update(registration, {"flag1": True})
             log.info(f'{sys._getframe().f_code.co_name}: Smartschool ({location["locatie"]}), {student.naam} {student.voornaam} at {registration.time_in}')

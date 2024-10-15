@@ -580,6 +580,48 @@ settings_formio = \
             ]
           },
           {
+            "label": "smartschool",
+            "tableView": false,
+            "validateWhenHidden": false,
+            "key": "smartschool",
+            "type": "container",
+            "input": true,
+            "components": [
+              {
+                "title": "Smartschool",
+                "theme": "primary",
+                "collapsible": true,
+                "key": "smartschool",
+                "type": "panel",
+                "label": "Cardpresso",
+                "collapsed": true,
+                "input": false,
+                "tableView": false,
+                "components": [
+                  {
+                    "label": "Opslaan ",
+                    "showValidations": false,
+                    "theme": "warning",
+                    "tableView": false,
+                    "key": "submit",
+                    "type": "button",
+                    "input": true
+                  },
+                  {
+                    "label": "Internal numbers",
+                    "applyMaskOn": "change",
+                    "autoExpand": false,
+                    "tableView": true,
+                    "validateWhenHidden": false,
+                    "key": "ss-internal-numbers",
+                    "type": "textarea",
+                    "input": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "label": "API",
             "tableView": false,
             "key": "api1",
