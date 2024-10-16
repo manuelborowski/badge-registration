@@ -1,14 +1,22 @@
 const popup_body = document.querySelector('#popup .modal-body');
 
-export const init_popup = ({title = "", save_button = true, cancel_button = true, ok_button = false, width = "500px", default_button="ok"}={}) => {
+export const init_popup = ({title = "", save_button = true, cancel_button = true, ok_button = false, width = "500px", default_button=null, default_input_element=null}={}) => {
     document.querySelector('#popup .modal-title').innerHTML = title;
     popup_body.replaceChildren();
     const popup_footer = document.querySelector('#popup .modal-footer');
     popup_footer.replaceChildren();
     popup_footer.innerHTML = ''
     if (ok_button) {popup_footer.innerHTML += '<button type="button" id="popup-btn-ok" class="btn btn-danger" data-dismiss="modal">Ok</button>'}
-    if (save_button) {popup_footer.innerHTML += '<button type="button" class="btn btn-primary">Bewaren</button>'}
-    if (cancel_button) {popup_footer.innerHTML += '<button type="button" class="btn btn-primary" data-dismiss="modal">Annuleer</button>'}
+    if (save_button) {popup_footer.innerHTML += '<button type="button" id="popup-btn-save" class="btn btn-primary">Bewaren</button>'}
+    if (cancel_button) {popup_footer.innerHTML += '<button type="button" id="popup-btn-cancel" class="btn btn-primary" data-dismiss="modal">Annuleer</button>'}
+    if (default_button !== null && default_input_element !==null) {
+        const btn = document.querySelector(`#popup-btn-${default_button}`);
+        default_input_element.addEventListener("keyup", e => {
+            if (e.key === "Enter") {
+                btn.click();
+            }
+        });
+    }
     document.querySelector(".modal-dialog").style.maxWidth = width;
 }
 
@@ -16,9 +24,9 @@ export const hide_popup = () => {
     $('#popup').modal("hide");
 }
 
-
-export const show_popup = () => {
+export const show_popup = ({focus=null}) => {
     $('#popup').modal();
+    if (focus !== null) setTimeout(() => focus.focus(), 500);
 }
 
 const save_button_event = cb => {

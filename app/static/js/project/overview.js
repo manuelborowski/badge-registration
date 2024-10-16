@@ -2,7 +2,7 @@ import {socketio} from "../base/socketio.js";
 import {subscribe_get_ids, create_context_menu} from "../base/right_click.js";
 import {person_image} from "../../img/base64-person.js";
 import {busy_indication_on, busy_indication_off} from "../base/base.js";
-import {add_to_popup_body, create_checkbox_element, create_input_element, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
+import {add_to_popup_body, create_checkbox_element, create_input_element, hide_popup, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
 import {add_extra_filters, create_filters, enable_filters, disable_filters, subscribe_reset_button} from "../base/filters.js";
 import {subscribe_location_changed} from "./locations.js";
 
@@ -115,7 +115,7 @@ const socketio_update_status = (type, data) => {
                             <td>${item.klascode}</td>`
                         if (locations[current_location].type === "sms") {
                             registration_container.innerHTML += `
-                                <td><input data-col="sms" type="checkbox" ${item.sms_sent ? "checked" : ""}></td> 
+                                <td data-col="sms">${item.sms_sent ? "verstuurd" : "niet verstuurd"}</td> 
                                 <td data-col="remark" data-remark-ack="${item.remark_ack}">${item.remark}</td>`;
                             if (item.remark_ack) {
                                 registration_container.style.background = "palegreen"
@@ -151,6 +151,9 @@ const socketio_update_status = (type, data) => {
                         }
                     }
                     __update_nbr_registered();
+                    if (locations[current_location].type === "sms") {
+                        if (item.auto_remark) __enter_remark([item.id]);
+                    }
                 }
             }
         } else if (data.action === "delete") {
@@ -170,7 +173,7 @@ const socketio_update_status = (type, data) => {
 
 const context_menu_pool = {
     sms: [
-        {type: "item", iconscout: "text", label: "Reden", cb: enter_remark, layout: "list"},
+        {type: "item", iconscout: "text", label: "Reden", cb: __enter_remark, layout: "list"},
         {type: "item", iconscout: "check", label: "Bevestig reden", cb: to_server_confirm_remark, layout: "list"},
         {type: "item", iconscout: "envelope-send", label: "Stuur sms", cb: to_server_send_message, layout: "list"},
         {type: "divider", layout: "list"},
@@ -234,12 +237,13 @@ const socketio_update_registration = (type, msg) => {
                 const view_list = view_layout_element.value === "list";
                 if (item.remark !== undefined) {
                     if (view_list) row.querySelector('[data-col="remark"]').innerHTML = item.remark;
+                    hide_popup();
                 }
                 if (item.remark_ack !== undefined) {
                     if (view_list) row.style.background = item.remark_ack ? "palegreen" : "white";
                 }
                 if (item.sms_sent !== undefined) {
-                    if (view_list) row.querySelector('[data-col="sms"]').checked = item.id;
+                    if (view_list) row.querySelector('[data-col="sms"]').innerHTML = "verstuurd";
                 }
                 if (item.ss_message_sent !== undefined) {
                     if (view_list) row.querySelector('[data-col="message"]').innerHTML = "verstuurd";
@@ -299,7 +303,7 @@ async function to_server_confirm_remark(ids) {
     __clear_checkboxes();
 }
 
-async function enter_remark(ids) {
+async function __enter_remark(ids) {
     const remark_ok_cb = async opaque => {
         const remark = document.querySelector("#remark").value;
         const remark_ack = document.querySelector("#remark_ack").checked;
@@ -318,13 +322,13 @@ async function enter_remark(ids) {
     text = text === "" ? "Bus " : text;
     ack = ack === "true";
     const name = document.querySelector(`[data-id='${ids[0]}']`).querySelector("[data-col='name']").innerHTML
-    init_popup({title: name, save_button: false, ok_button: true, width: "75%"});
     const remark_input = create_input_element("Opmerking", "remark", "remark", text, {style: "width: 90%"});
+    init_popup({title: name, save_button: false, ok_button: true, width: "75%", default_button: "ok", default_input_element: remark_input});
     add_to_popup_body(remark_input);
     const remark_ack = create_checkbox_element("Bevestigd?", "remark_ack", "remark_ack", ack);
     add_to_popup_body(remark_ack);
     subscribe_btn_ok(remark_ok_cb, null);
-    show_popup();
+    show_popup({focus: remark_input.querySelector("input")});
 }
 
 const __get_ids_of_selected_items = mouse_event => {
