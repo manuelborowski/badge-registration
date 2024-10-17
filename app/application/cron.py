@@ -47,10 +47,11 @@ def update_cron_template(setting, value, opaque):
 
 def start_job():
     try:
-        cron_template = get_configuration_setting('cron-scheduler-template')
-        if cron_template != 'now':  # prevent to run the cronjob each time the server is rebooted
-            init_job(cron_template)
-        subscribe_handle_update_setting('cron-scheduler-template', update_cron_template, None)
+        with flask_app.app_context():
+            cron_template = get_configuration_setting('cron-scheduler-template')
+            if cron_template != 'now':  # prevent to run the cronjob each time the server is rebooted
+                init_job(cron_template)
+            subscribe_handle_update_setting('cron-scheduler-template', update_cron_template, None)
     except Exception as e:
         log.error(f'could not start cron-scheduler: {e}')
 

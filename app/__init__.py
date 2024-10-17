@@ -103,9 +103,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.55-major-rework-0.25: added mapping for smartschoolaccounts that are not in SDH.  Added enable_sending flag.
 # 0.55-major-rework-0.26: sms-specific, small updates
 # 0.55-major-rework-0.26-python-3.12-0.1: in flask_jsglue.py, change to "from markupsafe import Markup"
+# 0.55-major-rework-0.26-python-3.12-0.2: small update
 
 
-version = "0.55-major-rework-0.26-python-3.12-0.1"
+version = "0.55-major-rework-0.26-python-3.12-0.2"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
