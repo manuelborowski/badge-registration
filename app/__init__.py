@@ -102,8 +102,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.55-major-rework-0.24: clear all reservations after syncing with SDH
 # 0.55-major-rework-0.25: added mapping for smartschoolaccounts that are not in SDH.  Added enable_sending flag.
 # 0.55-major-rework-0.26: sms-specific, small updates
+# 0.55-major-rework-0.27: sms-specific, small updates
 
-version = "0.55-major-rework-0.26"
+version = "0.55-major-rework-0.27"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
