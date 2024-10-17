@@ -102,8 +102,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.55-major-rework-0.24: clear all reservations after syncing with SDH
 # 0.55-major-rework-0.25: added mapping for smartschoolaccounts that are not in SDH.  Added enable_sending flag.
 # 0.55-major-rework-0.26: sms-specific, small updates
+# 0.55-major-rework-0.26-python-3.12-0.1: in flask_jsglue.py, change to "from markupsafe import Markup"
 
-version = "0.55-major-rework-0.26"
+
+version = "0.55-major-rework-0.26-python-3.12-0.1"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -190,12 +192,13 @@ flask_app.extensions['mail'].debug = 0
 
 def create_admin():
     try:
-        from app.data.user import User
-        find_admin = User.query.filter(User.username == 'admin').first()
-        if not find_admin:
-            admin = User(username='admin', password='admin', level=User.LEVEL.ADMIN, user_type=User.USER_TYPE.LOCAL)
-            db.session.add(admin)
-            db.session.commit()
+        with flask_app.app_context():
+            from app.data.user import User
+            find_admin = User.query.filter(User.username == 'admin').first()
+            if not find_admin:
+                admin = User(username='admin', password='admin', level=User.LEVEL.ADMIN, user_type=User.USER_TYPE.LOCAL)
+                db.session.add(admin)
+                db.session.commit()
     except Exception as e:
         db.session.rollback()
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
