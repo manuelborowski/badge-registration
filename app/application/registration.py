@@ -457,6 +457,7 @@ def __send_ss_message(registration, location, student, force=False):
                     msg = msg.replace("%%VOORNAAM%%", student.voornaam)
                     msg = msg.replace("%%NAAM%%", student.naam)
                     msg = msg.replace("%%TIJD%%", str(registration.time_in))
+                    msg = msg.replace("%%KLAS%%", str(student.klascode))
                     msg = msg.replace("%%AANTAL-OVERTREDINGEN%%", str(registration.aantal_items))
                 out[type] = msg
             return out
