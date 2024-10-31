@@ -48,7 +48,7 @@ def table_action(action, ids=None):
 def export_config_csv(type, startdate, enddate):
     try:
         [balance_data, filename] = get_balance(type, startdate,enddate)
-        return send_file(io.BytesIO(str.encode(balance_data)), as_attachment=True, attachment_filename=filename, cache_timeout=0)
+        return send_file(io.BytesIO(str.encode(balance_data)), as_attachment=True, download_name=filename, max_age=0)
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": f'{sys._getframe().f_code.co_name}: {e}'}
@@ -59,7 +59,7 @@ def export_config_csv(type, startdate, enddate):
 @supervisor_required
 def export_papercut(type):
     [data, filename] = papercut_export(type)
-    return send_file(io.BytesIO(str.encode(data)), as_attachment=True, attachment_filename=filename, cache_timeout=0)
+    return send_file(io.BytesIO(str.encode(data)), as_attachment=True, download_name=filename, max_age=0)
 
 
 

@@ -1,9 +1,7 @@
-import { create_context_menu, subscribe_right_click } from "../base/right_click.js";
+import { create_context_menu} from "../base/right_click.js";
 import { ctx, get_data_of_row } from "../datatables/datatables.js"
 import {socketio} from "../base/socketio.js";
 import { formio_popup_create } from "../base/popup.js"
-
-let menu_item2label = {};
 
 const __registration_add = async (item, ids) => {
    let person = get_data_of_row(ids[0]);
@@ -38,7 +36,6 @@ const __reserve_student_rfid = async (ids) => {
     });
 }
 
-
 const export_student_balance_items = ["sui-drank", "sul-drank"]
 
 const export_student_balances_cb = (action, opaque, data=null) => {
@@ -49,7 +46,7 @@ const export_student_balances_cb = (action, opaque, data=null) => {
 
 const papercut_items = ["sui", "sul", "sum"]
 
-const upload_papercut = async () =>  {
+const __upload_papercut = async () =>  {
     const form = document.createElement("form")
     const input = document.createElement('input');
     form.appendChild(input)
@@ -71,23 +68,24 @@ const upload_papercut = async () =>  {
     input.click();
 }
 
-
-const export_student_balances = (popup) => {
+const __export_student_balances = (popup) => {
     console.log("yes")
     formio_popup_create(popup, export_student_balances_cb);
 }
 
-
-
-let context_menu = [{type: "divider"}, {type: "item", iconscout: "wifi", label: "RFID code aanpassen", cb: __reserve_student_rfid},]
+let context_menu = [
+    {type: "divider"},
+    {type: "item", iconscout: "wifi", label: "RFID code aanpassen", cb: __reserve_student_rfid},
+    {type: "divider"},
+    {type: "item", iconscout: "wifi", label: "Exporteer leerling rekeningen", cb: () => __export_student_balances(ctx.popups['export-student-balance'])},
+    {type: "item", iconscout: "wifi", label: "Exporteer leerling printer rekeningen", cb: () => __upload_papercut()},
+]
 $(document).ready(function () {
 const current_location = localStorage.getItem("view-location");
     context_menu.unshift({type: "item", iconscout: "plus-circle", label: `Nieuwe registratie: ${locations[current_location].locatie}`, cb: ids => __registration_add(current_location, ids)});
     create_context_menu(context_menu);
     socketio.start(null, null);
     socketio.subscribe_on_receive("update-status", __socketio_update_status);
-    subscribe_right_click('export-student-balance', (item, ids) => export_student_balances(ctx.popups['export-student-balance']));
-    subscribe_right_click('export-papercut-balance', (item, ids) => upload_papercut());
 });
 
 const __socketio_update_status = (type, data) => {
