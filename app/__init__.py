@@ -108,9 +108,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.55-major-rework-0.27: sms-specific, small updates
 # 0.55-major-rework-0.28: template update
 # 0.55-major-rework-0.29: merge from 0.55-major-rework-0.26-python-3.12-0.2
+# 0.55-major-rework-0.30: merge from 0.55-major-rework-0.26-python-3.12-0.2
 
 
-version = "0.55-major-rework-0.29"
+version = "0.55-major-rework-0.30"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
