@@ -4,14 +4,17 @@
 .right-click-wrapper{
   visibility: hidden;
   position: absolute;
-  width: 300px;
+  width: fit-content;
   border-radius: 10px;
   background: #fff;
   box-shadow: 0 12px 35px rgba(0,0,0,0.1);
+  z-index: 10;
+
 }
 .right-click-wrapper .menu{
   padding: 10px 12px;
   margin-bottom: 0px;
+  width: fit-content;
 }
 .right-click-wrapper .item{
   list-style: none;

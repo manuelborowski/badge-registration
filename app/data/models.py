@@ -112,11 +112,12 @@ def update_multiple(model, data = [], timestamp=False):
 
 def delete_multiple(model, ids=[], objs=[]):
     try:
-        for id in ids:
-            obj = get_first_single(model, [("id", "=", id)])
-            db.session.delete(obj)
-        for obj in objs:
-            db.session.delete(obj)
+        if objs:
+            ids = [o.id for o in objs]
+        if ids:
+            objs = model.query.filter(model.id.in_(ids)).all()
+            for obj in objs:
+                db.session.delete(obj)
         db.session.commit()
     except Exception as e:
         db.session.rollback()
@@ -133,6 +134,7 @@ def get_multiple(model, filters=[], fields=[], order_by=None, first=False, count
             q = model.query.with_entities(*entities)
         else:
             q = model.query
+        if type(filters) is not list: filters = [filters]
         for k, o, v in filters:
             if o == '!':
                 if hasattr(model, k):
@@ -149,6 +151,9 @@ def get_multiple(model, filters=[], fields=[], order_by=None, first=False, count
             elif o == '=<':
                 if hasattr(model, k):
                     q = q.filter(getattr(model, k) <= v)
+            elif o == 'l':
+                if hasattr(model, k):
+                    q = q.filter(getattr(model, k).like(f"%{v}%"))
             else:
                 if hasattr(model, k):
                     q = q.filter(getattr(model, k) == v)
@@ -159,7 +164,8 @@ def get_multiple(model, filters=[], fields=[], order_by=None, first=False, count
                 q = q.order_by(getattr(model, order_by))
         else:
             q = q.order_by(getattr(model, "id"))
-        q = q.filter(model.active == active)
+        if active is not None:
+            q = q.filter(model.active == active)
         if start is not None and stop is not None:
             q = q.slice(start, stop)
         if first:
@@ -171,7 +177,7 @@ def get_multiple(model, filters=[], fields=[], order_by=None, first=False, count
         return objs
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-    return None
+    return []
 
 
 def get_first_single(model, filters=[], order_by=None):

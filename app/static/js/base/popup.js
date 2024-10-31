@@ -1,30 +1,43 @@
 const popup_body = document.querySelector('#popup .modal-body');
 
-const init_popup = (title, save_button=true, cancel_button=true, ok_button=false) => {
+export const init_popup = ({title = "", save_button = true, cancel_button = true, ok_button = false, width = "500px", default_button=null, default_input_element=null}={}) => {
     document.querySelector('#popup .modal-title').innerHTML = title;
     popup_body.replaceChildren();
     const popup_footer = document.querySelector('#popup .modal-footer');
     popup_footer.replaceChildren();
     popup_footer.innerHTML = ''
-    if (cancel_button) {popup_footer.innerHTML += '<button type="button" class="btn btn-secondary" data-dismiss = "modal">Annuleer</button>'}
-    if (ok_button) {popup_footer.innerHTML += '<button type="button" class="btn btn-secondary" data-dismiss = "modal">Ok</button>'}
-    if (save_button) {popup_footer.innerHTML += '<button type="button" class="btn btn-primary">Bewaren</button>'}
+    if (ok_button) {popup_footer.innerHTML += '<button type="button" id="popup-btn-ok" class="btn btn-danger" data-dismiss="modal">Ok</button>'}
+    if (save_button) {popup_footer.innerHTML += '<button type="button" id="popup-btn-save" class="btn btn-primary">Bewaren</button>'}
+    if (cancel_button) {popup_footer.innerHTML += '<button type="button" id="popup-btn-cancel" class="btn btn-primary" data-dismiss="modal">Annuleer</button>'}
+    if (default_button !== null && default_input_element !==null) {
+        const btn = document.querySelector(`#popup-btn-${default_button}`);
+        default_input_element.addEventListener("keyup", e => {
+            if (e.key === "Enter") {
+                btn.click();
+            }
+        });
+    }
+    document.querySelector(".modal-dialog").style.maxWidth = width;
 }
 
-const hide_popup = () => {
+export const hide_popup = () => {
     $('#popup').modal("hide");
 }
 
-
-const show_popup = () => {
+export const show_popup = ({focus=null}) => {
     $('#popup').modal();
+    if (focus !== null) setTimeout(() => focus.focus(), 500);
 }
 
 const save_button_event = cb => {
     document.querySelector('#popup .btn-primary').addEventListener('click', cb);
 }
 
-const add_to_popup_body = child => {
+export const subscribe_btn_ok = (cb, opaque) => {
+    document.querySelector('#popup-btn-ok').addEventListener('click', () => cb(opaque));
+}
+
+export const add_to_popup_body = child => {
     popup_body.appendChild(child)
 }
 
@@ -51,7 +64,7 @@ const create_select_element = (label, id, name, options, attributes={}) => {
 }
 
 
-const create_input_element = (label, id, name, attributes={}) => {
+export const create_input_element = (label, id, name, value=null, attributes={}) => {
     const div_element = document.createElement('div');
     div_element.classList.add('popup-div')
     const label_element = document.createElement('label');
@@ -60,6 +73,8 @@ const create_input_element = (label, id, name, attributes={}) => {
     const input_element = document.createElement('input');
     input_element.name = name;
     input_element.id = id;
+    if(value !== null)
+        input_element.value = value;
     for (const [k, v] of Object.entries(attributes)) {input_element.setAttribute(k, v);}
     div_element.appendChild(label_element);
     div_element.appendChild(input_element);
@@ -67,7 +82,7 @@ const create_input_element = (label, id, name, attributes={}) => {
 }
 
 
-const create_checkbox_element = (label, id, name, attributes={}) => {
+export const create_checkbox_element = (label, id, name, value=null, attributes={}) => {
     const div_element = document.createElement('div');
     div_element.classList.add('popup-div')
     const label_element = document.createElement('label');
@@ -77,6 +92,8 @@ const create_checkbox_element = (label, id, name, attributes={}) => {
     input_element.name = name;
     input_element.type = "checkbox";
     input_element.id = id;
+    if (value !== null)
+        input_element.checked = value;
     for (const [k, v] of Object.entries(attributes)) {input_element.setAttribute(k, v);}
     div_element.appendChild(label_element);
     div_element.appendChild(input_element);
@@ -84,7 +101,7 @@ const create_checkbox_element = (label, id, name, attributes={}) => {
 }
 
 
-const create_p_element = (text) => {
+export const create_p_element = (text) => {
     const p_element = document.createElement('p');
     p_element.innerHTML = text;
     return p_element
@@ -98,13 +115,13 @@ export const formio_popup_create = async (template, cb = null, defaults = null, 
     if (width)
         document.querySelector('#formio-popup-dialog').style.maxWidth = width;
     formio_popup_form = await Formio.createForm(document.getElementById('formio-popup-content'), template, form_options)
-        if (defaults != null) {
-            Object.entries(defaults).forEach(([k, v]) => {
-                try {
-                    formio_popup_form.getComponent(k).setValue(v);
-                } catch (error) {
-                }
-        });
+    if (defaults != null) {
+        Object.entries(defaults).forEach(([k, v]) => {
+            try {
+                formio_popup_form.getComponent(k).setValue(v);
+            } catch (error) {
+            }
+    });
     }
     formio_popup_form.on('submit', async submitted => {
         $('#formio-popup').modal("hide");

@@ -1,11 +1,8 @@
-import re
-import sys
-
 from flask_login import current_user
 from app import log, db
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.dialects.mysql import MEDIUMTEXT
-import json
+import json, yaml, re, sys
 
 
 class Settings(db.Model):
@@ -17,6 +14,7 @@ class Settings(db.Model):
         E_FLOAT = 'FLOAT'
         E_BOOL = 'BOOL'
         E_JSON = 'JSON'
+        E_YAML = 'YAML'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(256))
@@ -45,6 +43,8 @@ def get_setting(name, id=-1, convert_to_string=False):
             value = True if setting.value == 'True' else False
         elif setting.type == Settings.SETTING_TYPE.E_JSON:
             value = json.dumps(json.loads(setting.value), indent=2) if convert_to_string else json.loads(setting.value)
+        elif setting.type == Settings.SETTING_TYPE.E_YAML:
+            value = setting.value if convert_to_string else yaml.safe_load(setting.value)
         else:
             value = setting.value
     except Exception as e:
@@ -103,6 +103,7 @@ default_configuration_settings = {
     'sdh-student-url': ('', Settings.SETTING_TYPE.E_STRING),
     'sdh-photo-url': ('', Settings.SETTING_TYPE.E_STRING),
     'sdh-photo-size-url': ('', Settings.SETTING_TYPE.E_STRING),
+    'sdh-staff-url': ('', Settings.SETTING_TYPE.E_STRING),
 
     'user-datatables-template': ({}, Settings.SETTING_TYPE.E_JSON),
 
@@ -110,8 +111,10 @@ default_configuration_settings = {
 
     'history-datatables-template': ({}, Settings.SETTING_TYPE.E_JSON),
 
-    'location-profiles': ({}, Settings.SETTING_TYPE.E_JSON),
-    'artikel-profiles': ({}, Settings.SETTING_TYPE.E_JSON),
+    'location-profiles': ('', Settings.SETTING_TYPE.E_YAML),
+    'artikel-profiles': ('', Settings.SETTING_TYPE.E_YAML),
+
+    'ss-internal-numbers': ('', Settings.SETTING_TYPE.E_YAML),
 
     'cron-scheduler-template': ('', Settings.SETTING_TYPE.E_STRING),
     'cron-enable-modules': ({}, Settings.SETTING_TYPE.E_JSON),
@@ -129,6 +132,9 @@ default_configuration_settings = {
     'popup-new-update-user': ({}, Settings.SETTING_TYPE.E_JSON),
 
     'logging-inform-emails': ('', Settings.SETTING_TYPE.E_STRING),
+
+    'sms-student-too-late': ('', Settings.SETTING_TYPE.E_STRING),
+    'smartschool-message-templates': ('', Settings.SETTING_TYPE.E_STRING),
 }
 
 

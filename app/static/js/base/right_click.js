@@ -3,6 +3,7 @@ const context_menu = document.querySelector(".right-click-wrapper .menu");
 const context_active_area = document.querySelector(".right-click-canvas");
 let item_ids = 0;
 let get_ids_cb = null;
+let postprocessing_cb = null;
 let endpoint = null;
 
 context_active_area.addEventListener("contextmenu", e => {
@@ -34,9 +35,47 @@ context_active_area.addEventListener("contextmenu", e => {
     context_wrapper.style.visibility = "visible";
 });
 
+
+const default_menu_template = {
+    divider: {},
+    text_input: {}
+}
+
+export const create_context_menu = (menu) => {
+    context_menu.innerHTML = "";
+    for (const mi of menu) {
+        const li = document.createElement("li");
+        context_menu.appendChild(li);
+        li.classList.add("item");
+        const span = document.createElement("span");
+        if(mi.type === "divider") {
+            span.innerHTML = "--------------";
+        } else if(mi.type === "text_input") {
+            const input = document.createElement("input");
+            span.appendChild(input);
+        } else {
+            li.onclick = () => item_clicked_with_cb(mi.cb);
+            if ("iconscout" in mi) {
+                const i = document.createElement("i");
+                i.classList.add("uil", `uil-${mi.iconscout}`);
+                li.appendChild(i);
+            }
+            span.innerHTML = mi.label;
+        }
+        li.appendChild(span);
+    }
+}
+
 export const subscribe_get_ids = cb => get_ids_cb = cb;
 
+export const subscribe_post_processing = cb => postprocessing_cb = cb;
+
 export const set_endpoint = ep => endpoint = ep;
+
+const item_clicked_with_cb = cb => {
+    cb(item_ids);
+    if (postprocessing_cb) postprocessing_cb(item_ids);
+}
 
 export function item_clicked(item) {
     if (item in right_click_cbs) {

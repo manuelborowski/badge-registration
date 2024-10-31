@@ -4,7 +4,7 @@ from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from flask_jsglue import JSGlue
 from werkzeug.routing import IntegerConverter as OrigIntegerConvertor
-import logging, logging.handlers, os, sys
+import logging.handlers, os, sys
 from functools import wraps
 from flask_socketio import SocketIO
 from flask_apscheduler import APScheduler
@@ -65,12 +65,53 @@ flask_app.config.from_pyfile('config.py')
 # 0.43-bgfx_save_new_article-V0.1: small bugfix
 # 0.44: merge
 # 0.45: update version tag
+# 0.44: added location-select in navbar
+# 0.45: implement rfidusb heartbeat, remove location-select if rfidusb-server is not running, color orange if no badgereader is connect to usb.
+# 0.46: badgreader can update br-url and br-key
+# 0.47: default page after login.  Added sms-registration.  Bugfix import new students.
+# 0.48: reworked api-key.  Added upgrade button (not implemented yet)
+# 0.49: added support for smsAPI
+# 0.50: updated location selector
+# 0.51: update requirements.txt
+# 0.52: create autologin url
+# 0.53: added sms-to-field to test.
+# 0.54: reworked navbar.  Reworked context-menu
+# 0.55: implemented context-remark and tooltip.
+# 0.55-major-rework-0.2: reworked remark-popup, changed to update-registration iso update-remark.
+# 0.55-major-rework-0.3: overview update, added fields (sms-sent, remark-acked).  Take into account when 2 browsers, same location but different date, can handle socketio requests (registration updates)
+# 0.55-major-rework-0.4: reworked filters, put in seperate file
+# 0.55-major-rework-0.5: minor updates.  Added concept of extra-filters
+# 0.55-major-rework-0.6: small updates.  Added filter on registrations.
+# 0.55-major-rework-0.7: extra-filters, set to default value if they're hidden.
+# 0.55-major-rework-0.8: sms get status, update (bugfix) filtering.
+# 0.55-major-rework-0.9: added yaml to configure locations.  Added config-flag to disable sending sms
+# 0.55-major-rework-0.10: cleanup of login page.
+# 0.55-major-rework-0.11: Added input field to search for surname, first name
+# 0.55-major-rework-0.12: updated filters.  Added location cellphone.  Reworked context-menu.  Optimized get_current_registrations, skip photo's if not required.
+# 0.55-major-rework-0.13: bugfixed user menu
+# 0.55-major-rework-0.14: when adding registration from student-table, use leerlingnummer iso rfid.
+# 0.55-major-rework-0.15: cellphone, change colours.
+# 0.55-major-rework-0.16: bugfix.  In student-tab, make current location only visible.
+# 0.55-major-rework-0.17: bugfix, when manually adding a registration for a student, use the view-location iso the badge-location.
+# 0.55-major-rework-0.18: reworked frontend
+# 0.55-major-rework-0.19: added logging
+# 0.55-major-rework-0.20: add period filter to all locations.  If rfid-location is changed, update view-location accordingly.
+# 0.55-major-rework-0.21: context-menu, select items depending on layout.  Updated period select.  Bugfix context-menu ico tiles.
+# 0.55-major-rework-0.22: cellphone, do not send message twice, updated table.
+# 0.55-major-rework-0.23: merge
+# 0.55-major-rework-0.24: clear all reservations after syncing with SDH
+# 0.55-major-rework-0.25: added mapping for smartschoolaccounts that are not in SDH.  Added enable_sending flag.
+# 0.55-major-rework-0.26: sms-specific, small updates
+# 0.55-major-rework-0.26-python-3.12-0.1: in flask_jsglue.py, change to "from markupsafe import Markup"
+# 0.55-major-rework-0.26-python-3.12-0.2: small update
+# 0.55-major-rework-0.27: merge from 0.55-major-rework-0.26-python-3.12-0.2
+# 0.55-major-rework-0.27: sms-specific, small updates
+# 0.55-major-rework-0.28: template update
+# 0.55-major-rework-0.29: merge from 0.55-major-rework-0.26-python-3.12-0.2
+# 0.55-major-rework-0.30: merge from 0.55-major-rework-0.26-python-3.12-0.2
+# 0.56: merge from 0.55-major-rework-0.30
 
-
-@flask_app.context_processor
-def inject_defaults():
-    return dict(version='@ 2022 MB. V0.45', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone)
-
+version = "0.56"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -157,12 +198,13 @@ flask_app.extensions['mail'].debug = 0
 
 def create_admin():
     try:
-        from app.data.user import User
-        find_admin = User.query.filter(User.username == 'admin').first()
-        if not find_admin:
-            admin = User(username='admin', password='admin', level=User.LEVEL.ADMIN, user_type=User.USER_TYPE.LOCAL)
-            db.session.add(admin)
-            db.session.commit()
+        with flask_app.app_context():
+            from app.data.user import User
+            find_admin = User.query.filter(User.username == 'admin').first()
+            if not find_admin:
+                admin = User(username='admin', password='admin', level=User.LEVEL.ADMIN, user_type=User.USER_TYPE.LOCAL)
+                db.session.add(admin)
+                db.session.commit()
     except Exception as e:
         db.session.rollback()
         log.error(f'{sys._getframe().f_code.co_name}: {e}')

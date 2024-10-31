@@ -61,4 +61,4 @@ def broadcast_message(msg):
 
 
 def send_to_client(msg):
-    emit("send_to_client", msg)
+    emit("send_to_client", msg, namespace="/")

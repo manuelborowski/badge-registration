@@ -1,3 +1,5 @@
+import { create_select_locations} from "../project/locations.js";
+
 export function flash_messages(list) {
     for (var i = 0; i < list.length; i++) {
         var message = list[i];
@@ -50,25 +52,32 @@ export const start_sync = async () => {
     busy_indication_off();
 }
 
+export const start_upgrade = async () => {
+    busy_indication_on();
+    bootbox.confirm("Start met software upgrade...",
+        async result => {const ret = await fetch(Flask.url_for('api.upgrade_software_client'), {method: 'POST', headers: {'x-api-key': api_key,}})});
+    busy_indication_off();
+}
+
+
 var menu = [
-    ["overview.show_nietverplicht", "Niet-verplicht", 1],
-    ["overview.show_verkoop", "Verkoop", 1],
+    ["overview.show", "Overzicht", 1],
     ["student.show", "Studenten", 1],
     ["user.show", "Gebruikers", 5],
     ["settings.show", "Instellingen", 5],
 ]
 
-var locations = [
-    ["default", "Kies locatie"],
-    ["een", "Een"],
-    ["twee", "Twee"],
-]
 
 export const inject_menu = new_menu => {
     menu = new_menu;
 }
 
 $(document).ready(() => {
+    if (suppress_navbar) return;
+
+    if (default_view) { // after login, go to default (= first) page
+        document.location.href = Flask.url_for(menu[0][0])
+    }
     const navbar_element = document.querySelector("#navbar");
     let dd_ctr = 0;
     for (const item of menu) {
@@ -111,7 +120,6 @@ $(document).ready(() => {
                     }
                 }
                 dd_ctr++;
-
             } else {
                 // regular menu-item
                 const url_path = Flask.url_for(item[0]);
@@ -129,18 +137,7 @@ $(document).ready(() => {
         }
     }
 
-    // const select_div = document.createElement("div");
-    // select_div.classList.add("blink");
-    // const location_select = document.createElement("select");
-    // location_select.classList.add("form-select", "form-select-sm");
-    // for (const location of locations) {
-    //     const option = document.createElement("option");
-    //     option.innerHTML = location[1];
-    //     option.value = location[0];
-    //     location_select.appendChild(option);
-    // }
-    // select_div.appendChild(location_select);
-    // navbar_element.appendChild(select_div);
+    navbar_element.appendChild(create_select_locations(locations));
 
     if (stand_alone) {
         const btn_div = document.createElement("div");
@@ -152,6 +149,16 @@ $(document).ready(() => {
         sync_btn.innerHTML = "Sync";
         btn_div.appendChild(sync_btn);
         navbar_element.appendChild(btn_div);
+
+        const upgrade_div = document.createElement("div");
+        upgrade_div.classList.add("nav-buttons");
+        const upgade_btn = document.createElement("button");
+        upgade_btn.classList.add("btn", "btn-warning");
+        upgade_btn.type = "button";
+        upgade_btn.onclick = start_upgrade;
+        upgade_btn.innerHTML = "Upgrade";
+        upgrade_div.appendChild(upgade_btn);
+        navbar_element.appendChild(upgrade_div);
     }
 });
 

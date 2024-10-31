@@ -1,82 +1,169 @@
 import {socketio} from "../base/socketio.js";
-import {subscribe_get_ids, subscribe_right_click} from "../base/right_click.js";
-import { person_image } from "../../img/base64-person.js";
-import { busy_indication_on, busy_indication_off } from "../base/base.js";
+import {subscribe_get_ids, create_context_menu} from "../base/right_click.js";
+import {person_image} from "../../img/base64-person.js";
+import {busy_indication_on, busy_indication_off} from "../base/base.js";
+import {add_to_popup_body, create_checkbox_element, create_input_element, hide_popup, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
+import {add_extra_filters, create_filters, enable_filters, disable_filters, subscribe_reset_button} from "../base/filters.js";
+import {subscribe_location_changed} from "./locations.js";
 
-let location_element = document.querySelector("#filter-location");
-let date_element = document.querySelector("#filter-date");
-let canvas_element = document.querySelector("#canvas");
-let photo_size_element = document.querySelector("#photo-size-select");
-let sort_on_element = document.querySelector("#sort-on-select");
-let title_element = document.querySelector(".title-element");
+let location_element, date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element,
+    sms_specific_element, search_text_element;
+let cellphone_specific_element, period_element;
+let all_filters_element;
+
 let nbr_registered_element = document.querySelector("#nbr-registered");
 let photo_size_factor = 50;
 let nbr_registered = 0;
-let current_room = "";
+let current_location = "";
+let canvas_container = null;
+
 
 $(document).ready(function () {
+    all_filters_element = document.querySelector(".filters");
+    create_filters("Overview", all_filters_element, filters);
+    location_element = document.querySelector("#filter-location");
+    date_element = document.querySelector("#filter-date");
+    canvas_element = document.querySelector("#canvas");
+    photo_size_element = document.querySelector("#photo-size-select");
+    view_layout_element = document.querySelector("#view-layout-select");
+    search_text_element = document.querySelector("#search-text");
+    sort_on_element = document.querySelector("#sort-on-select");
+    period_element = document.querySelector("#period-select");
+    sms_specific_element = document.querySelector("#sms-specific-select")
+    cellphone_specific_element = document.querySelector("#cellphone-specific-select")
+
     socketio.start(null, null);
-    current_room = location_element.value;
-    socketio.subscribe_to_room(current_room);
+    current_location = location_element.value;
+    socketio.subscribe_to_room(current_location);
     socketio.subscribe_on_receive("update-current-status", socketio_update_status);
+    socketio.subscribe_on_receive("update-registration", socketio_update_registration);
     let now = new Date();
     date_element.value = now.toISOString().split("T")[0];
     location_element.addEventListener("change", get_current_registrations);
-    date_element.addEventListener("change", get_current_registrations);
+    date_element.addEventListener("change", event => __select_date(event));
+    search_text_element.addEventListener("keydown", (event) => __wait_for_enter(event));
     sort_on_element.addEventListener("change", get_current_registrations);
-    photo_size_element.addEventListener("change", resize_photos);
-    subscribe_get_ids(get_ids_of_selected_items);
-
+    view_layout_element.addEventListener("change", get_current_registrations);
+    sms_specific_element.addEventListener("change", get_current_registrations);
+    period_element.addEventListener("change", get_current_registrations);
+    cellphone_specific_element.addEventListener("change", get_current_registrations);
+    photo_size_element.addEventListener("change", __resize_photos);
+    subscribe_get_ids(__get_ids_of_selected_items);
+    subscribe_reset_button(__reset_button_cb);
+    subscribe_location_changed(__rfid_location_changed);
     get_current_registrations();
 });
 
-
 const socketio_update_status = (type, data) => {
     if (data.status) {
-        if (data.selected_day === date_element.value) {
-            if (data.action === "add") {
-                data.data.forEach(item => {
-                    let figures = document.querySelectorAll(".fig-group");
-                    let figure = document.createElement("figure");
-                    figure.classList.add("S" + item.leerlingnummer);
-                    if (sort_on_element.value === "name-firstname") {
-                        figure.dataset.sort_on = item.naam + item.voornaam;
-                    } else if (sort_on_element.value === "klas-name-firstname") {
-                        figure.dataset.sort_on = item.klascode + item.naam + item.voornaam;
+        const view_tile = view_layout_element.value === "tile";
+        if (data.search) {
+            disable_filters(Array.from(document.querySelectorAll(".overview-filter")));
+            enable_filters(search_text_element);
+            search_text_element.focus();
+        } else {
+            enable_filters(Array.from(document.querySelectorAll(".overview-filter")));
+        }
+        if (!view_tile && data.headers) {
+            let header = document.createElement("tr");
+            header.dataset.sort_on = "1";
+            data.headers.unshift("<td><input class='select-all' type='checkbox' ''}></td>")
+            for (const item of data.headers) {
+                const th = document.createElement("th");
+                th.innerHTML = item;
+                header.appendChild(th);
+            }
+            canvas_container.prepend(header);
+            document.querySelector(".select-all").addEventListener("change", e => {
+                [...document.querySelectorAll(".item-select:enabled")].map(i => i.checked = e.target.checked)
+            });
+        }
+        if (data.action === "add") {
+            if (!data.date || data.date === date_element.value) {
+                for (const item of data.data) {
+                    let registration_container = null;
+                    if (view_tile) {
+                        registration_container = document.createElement("figure");
+                        registration_container.style.display = "inline-block";
+                        registration_container.style.marginRight = "10px";
+                        registration_container.style.zIndex = "1";
+                        let src = "data:image/jpeg;base64," + (item.photo !== "" ? item.photo : person_image);
+                        let image = document.createElement('img');
+                        image.src = src;
+                        image.width = (2 * photo_size_factor).toString();
+                        let figcaption = document.createElement("figcaption");
+                        figcaption.innerHTML = "(" + item.timestamp.split(" ")[1] + ") " + item.klascode + "<br>" + item.naam + " " + item.voornaam;
+                        figcaption.style.fontSize = (1.5 * photo_size_factor / 100).toString() + "rem";
+                        figcaption.style.fontWeight = "bold";
+                        figcaption.style.textAlign = "center";
+                        registration_container.appendChild(image);
+                        registration_container.appendChild(figcaption);
+                        if (locations[current_location].type === "cellphone") {
+                            const limit = locations[current_location].limiet;
+                            if (item.sequence_ctr === limit) {
+                                figcaption.style.background = "orangered"
+                            } else if (item.sequence_ctr > limit) {
+                                figcaption.style.background = "yellow"
+                            }
+                        }
                     } else {
-                        figure.dataset.sort_on = 1000 - item.id;
-                    }
-                    figure.classList.add("fig-group");
-                    figure.style.display = "inline-block";
-                    figure.style.marginRight = "10px";
-                    figure.dataset.id = item.id;
-                    let src = "data:image/jpeg;base64," + (item.photo !== "" ? item.photo : person_image);
-                    let image = document.createElement('img');
-                    image.src = src;
-                    let image_width = 2 * photo_size_factor;
-                    image.width = (2 * photo_size_factor).toString();
-                    let figcaption = document.createElement("figcaption");
-                    figcaption.innerHTML = "(" + item.timestamp.split(" ")[1] + ") " + item.klascode + "<br>" + item.naam + " " + item.voornaam;
-                    figcaption.style.fontSize = (1.5 * photo_size_factor / 100).toString() + "rem";
-                    figcaption.style.fontWeight = "bold";
-                    figcaption.style.textAlign = "center";
-                    figure.appendChild(image);
-                    figure.appendChild(figcaption);
-                    for (let i = 0; i < figures.length; i++) {
-                        if (figure.dataset.sort_on < figures[i].dataset.sort_on) {
-                            figures[i].before(figure);
-                            break;
+                        registration_container = document.createElement("tr");
+                        registration_container.innerHTML = `
+                            <td><input class="item-select" type="checkbox" ""}></td>
+                            <td>${item.timestamp}</td>
+                            <td data-col="name">${item.naam} ${item.voornaam}</td>
+                            <td>${item.klascode}</td>`
+                        if (locations[current_location].type === "sms") {
+                            registration_container.innerHTML += `
+                                <td data-col="sms">${item.sms_sent ? "verstuurd" : "niet verstuurd"}</td> 
+                                <td data-col="remark" data-remark-ack="${item.remark_ack}">${item.remark}</td>`;
+                            if (item.remark_ack) {
+                                registration_container.style.background = "palegreen"
+                            }
+                        } else if (locations[current_location].type === "cellphone") {
+                            const limit = locations[current_location].limiet;
+                            registration_container.innerHTML += `
+                                <td data-col="message">${(item.sequence_ctr < (limit-1)) ? "NVT" : item.message_sent ? "verstuurd" : "niet verstuurd"}</td> 
+                                <td>${item.sequence_ctr}</td>`;
+                            if (item.sequence_ctr === limit) {
+                                registration_container.style.background = "orangered"
+                            } else if (item.sequence_ctr > limit) {
+                                registration_container.style.background = "yellow"
+                            } else if (item.sequence_ctr < (limit - 1)) {
+                                registration_container.firstElementChild.firstChild.disabled = true;
+                            }
                         }
                     }
-                    update_nbr_registered();
-                });
-            } else if (data.action === "delete") {
-                data.data.forEach(item => {
-                    let figure = document.querySelector(".S" + item.leerlingnummer);
-                    figure.remove();
-                    update_nbr_registered(true);
-                });
+                    registration_container.classList.add("S" + item.leerlingnummer);
+                    registration_container.dataset.id = item.id;
+                    registration_container.dataset.name = `${item.naam} ${item.voornaam}`;
+                    if (sort_on_element.value === "name-firstname") {
+                        registration_container.dataset.sort_on = item.naam + item.voornaam;
+                    } else if (sort_on_element.value === "klas-name-firstname") {
+                        registration_container.dataset.sort_on = item.klascode + item.naam + item.voornaam;
+                    } else {
+                        registration_container.dataset.sort_on = 100000 - item.id;
+                    }
+                    for (const container of canvas_container.childNodes) {
+                        if (registration_container.dataset.sort_on < container.dataset.sort_on) {
+                            container.before(registration_container);
+                            break
+                        }
+                    }
+                    __update_nbr_registered();
+                    if (locations[current_location].type === "sms") {
+                        if (item.auto_remark) __enter_remark([item.id]);
+                    }
+                }
             }
+        } else if (data.action === "delete") {
+            data.data.forEach(item => {
+                const figure = document.querySelector(`[data-id="${item.id}"]`);
+                if (figure) {
+                    figure.remove();
+                    __update_nbr_registered(true);
+                }
+            });
         }
         busy_indication_off();
     } else {
@@ -84,66 +171,216 @@ const socketio_update_status = (type, data) => {
     }
 }
 
+const context_menu_pool = {
+    sms: [
+        {type: "item", iconscout: "text", label: "Reden", cb: __enter_remark, layout: "list"},
+        {type: "item", iconscout: "check", label: "Bevestig reden", cb: to_server_confirm_remark, layout: "list"},
+        {type: "item", iconscout: "envelope-send", label: "Stuur sms", cb: to_server_send_message, layout: "list"},
+        {type: "divider", layout: "list"},
+        {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}],
+    cellphone: [
+        {type: "item", iconscout: "envelope-send", label: "Stuur Smartschool bericht", cb: to_server_send_message, layout: "list"},
+        {type: "divider", layout: "list"},
+        {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}],
+    default: [
+        {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}]
+}
+
+const extra_filters_pool = {
+    sms: ["sms-specific-select"],
+    default: []
+}
+
 const get_current_registrations = () => {
     busy_indication_on();
-    socketio.unsubscribe_from_room(current_room);
-    current_room = location_element.value;
-    socketio.subscribe_to_room(current_room);
+    const view_tile = view_layout_element.value === "tile";
+    socketio.unsubscribe_from_room(current_location);
+    current_location = location_element.value;
+    socketio.subscribe_to_room(current_location);
+    //store the current view-location
+    localStorage.setItem("view-location", current_location);
     let location_label = location_element.options[location_element.selectedIndex].innerHTML;
-    // let title = title_element.innerHTML.split(": ")[0];
-    // title_element.innerHTML = title;
     canvas_element.innerHTML = "";
-    // Add dummy figure to indicate end of list
-    let figure = document.createElement("div");
-    figure.dataset.sort_on = "zz";
-    figure.classList.add("fig-group");
-    canvas_element.appendChild(figure);
-    socketio.send_to_server("get-current-registrations", {location: location_element.value, date: date_element.value});
-    reset_nbr_registered();
+    // Add dummy element to indicate end of list
+    if (view_tile) {
+        canvas_container = document.createElement("div");
+        const sentinel = document.createElement("div");
+        sentinel.dataset.sort_on = "zz";
+        canvas_container.appendChild(sentinel);
+    } else {
+        canvas_container = document.createElement("table")
+        canvas_container.style.margin = "auto";
+        const last_row = document.createElement("tr");
+        last_row.dataset.sort_on = "zz";
+        canvas_container.appendChild(last_row);
+    }
+    canvas_element.appendChild(canvas_container);
+    let filters = {};
+    for (const item of Array.from(document.querySelectorAll(".overview-filter"))) {
+        filters[item.id] = item.value;
+    }
+    socketio.send_to_server("get-current-registrations", {filters});
+    __reset_nbr_registered();
+
+    let context_menu = locations[current_location].type in context_menu_pool ? context_menu_pool[locations[current_location].type] : context_menu_pool["default"];
+    context_menu = context_menu.filter(i => !("layout" in i) || i.layout === view_layout_element.value)
+    create_context_menu(context_menu);
+    const extra_filters = locations[current_location].type in extra_filters_pool ? extra_filters_pool[locations[current_location].type] : extra_filters_pool["default"];
+    add_extra_filters(extra_filters);
 }
 
-
-export const remove_all_photos = () => {
-    socketio.send_to_server("clear-all-registrations", {location: location_element.value});
-    get_current_registrations();
+const socketio_update_registration = (type, msg) => {
+    if (msg.status) {
+        for (const item of msg.data) {
+            if (document.querySelector(`[data-id="${item.id}"]`) !== null) {
+                const row = document.querySelector(`[data-id="${item.id}"]`);
+                const view_list = view_layout_element.value === "list";
+                if (item.remark !== undefined) {
+                    if (view_list) row.querySelector('[data-col="remark"]').innerHTML = item.remark;
+                    hide_popup();
+                }
+                if (item.remark_ack !== undefined) {
+                    if (view_list) row.style.background = item.remark_ack ? "palegreen" : "white";
+                }
+                if (item.sms_sent !== undefined) {
+                    if (view_list) row.querySelector('[data-col="sms"]').innerHTML = "verstuurd";
+                }
+                if (item.ss_message_sent !== undefined) {
+                    if (view_list) row.querySelector('[data-col="message"]').innerHTML = "verstuurd";
+                }
+            }
+        }
+    }
 }
 
-const resize_photos = () => {
+async function to_server_delete_registration(ids) {
+    let message = "";
+    if (ids.length === 1) {
+        const name = document.querySelector(`[data-id='${ids[0]}']`).dataset.name;
+        message = `Wilt u de registratie van ${name} verwijderen?`;
+    } else {
+        message = `Wilt u de registraties van ${ids.length} studenten verwijderen?`;
+    }
+    bootbox.confirm(message, async result => {
+        if (result) {
+            const ret = await fetch(Flask.url_for('api.registration_delete'), {
+                headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({ids, location: current_location}),
+            });
+            const status = await ret.json();
+            if (!status.status) bootbox.alert(status.data)
+            __clear_checkboxes();
+        }
+    });
+}
+
+async function to_server_send_message(ids) {
+    let message = "";
+    if (ids.length === 1) {
+        const name = document.querySelector(`[data-id='${ids[0]}']`).dataset.name;
+        message = `Wilt u een bericht sturen betreffende ${name}?`;
+    } else {
+        message = `Wilt u een bericht sturen betreffende ${ids.length} studenten?`;
+    }
+    bootbox.confirm(message, async result => {
+        if (result) {
+            const ret = await fetch(Flask.url_for('api.registration_send_message'), {
+                headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({ids, location_key: current_location}),
+            });
+            const status = await ret.json();
+            if (!status.status) bootbox.alert(status.data)
+            __clear_checkboxes();
+        }
+    });
+}
+
+async function to_server_confirm_remark(ids) {
+    const fields = {remark_ack: true};
+    const ret = await fetch(Flask.url_for('api.registration_update'), {
+        headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({ids, location_key: current_location, fields}),
+    });
+    const status = await ret.json();
+    if (!status.status) bootbox.alert(status.data);
+    __clear_checkboxes();
+}
+
+async function __enter_remark(ids) {
+    const remark_ok_cb = async opaque => {
+        const remark = document.querySelector("#remark").value;
+        const remark_ack = document.querySelector("#remark_ack").checked;
+        if (remark !== null) {
+            const fields = {remark, remark_ack}
+            const ret = await fetch(Flask.url_for('api.registration_update'), {
+                headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({ids, location_key: current_location, fields}),
+            });
+            const status = await ret.json();
+            if (!status.status) bootbox.alert(status.data);
+            __clear_checkboxes();
+        }
+    }
+    let text = document.querySelector(`[data-id='${ids[0]}']`).querySelector("[data-col='remark']").innerHTML
+    let ack = document.querySelector(`[data-id='${ids[0]}']`).querySelector("[data-col='remark']").dataset.remarkAck;
+    text = text === "" ? "Bus " : text;
+    ack = ack === "true";
+    const name = document.querySelector(`[data-id='${ids[0]}']`).querySelector("[data-col='name']").innerHTML
+    const remark_input = create_input_element("Opmerking", "remark", "remark", text, {style: "width: 90%"});
+    init_popup({title: name, save_button: false, ok_button: true, width: "75%", default_button: "ok", default_input_element: remark_input});
+    add_to_popup_body(remark_input);
+    const remark_ack = create_checkbox_element("Bevestigd?", "remark_ack", "remark_ack", ack);
+    add_to_popup_body(remark_ack);
+    subscribe_btn_ok(remark_ok_cb, null);
+    show_popup({focus: remark_input.querySelector("input")});
+}
+
+const __get_ids_of_selected_items = mouse_event => {
+    let ids = [...document.querySelectorAll(".item-select:checked")].map(e => e.parentElement.parentElement.dataset.id); // if checkboxes are checked
+    if (ids.length === 0) ids = [mouse_event.target.parentElement.dataset.id]; // if not, select the current row
+    return ids;
+}
+
+const __clear_checkboxes = ids => {
+    [...document.querySelectorAll(".item-select:checked")].map(e => e.checked = false);
+    document.querySelector(".select-all").checked = false;
+}
+
+const __resize_photos = () => {
     photo_size_factor = photo_size_element.value;
     get_current_registrations();
 }
 
-const update_nbr_registered = (delete_registration = false) => {
+const __update_nbr_registered = (delete_registration = false) => {
     if (delete_registration) nbr_registered--
     else nbr_registered++;
     if (nbr_registered < 0) nbr_registered = 0;
     nbr_registered_element.value = nbr_registered;
 }
 
-const reset_nbr_registered = () => {
+const __reset_nbr_registered = () => {
     nbr_registered = 0;
     nbr_registered_element.value = nbr_registered;
 }
 
-const delete_registration = async (item, ids) => {
-    bootbox.confirm("Wilt u deze registratie verwijderen?", async result => {
-        if (result) {
-            const ret = await fetch(Flask.url_for('api.registration_delete'), {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify(ids),});
-            const status = await ret.json();
-            if (status.status) {
-                // bootbox.alert(`Registratie is verwijderd.`)
-                get_current_registrations()
-            } else {
-                bootbox.alert(status.data)
-            }
+const __wait_for_enter = (event) => {
+    if (event.key === "Enter") {
+        get_current_registrations();
+        search_text_element.value = "";
+    }
+}
+
+const __select_date = (event) => {
+    sms_specific_element.value = "on-date";
+    get_current_registrations();
+}
+
+const __reset_button_cb = filters => {
+    for (const filter of filters) {
+        if (filter.name === "filter-location") {
+            location_element.value = filter.value;
+            get_current_registrations();
         }
-    });
+    }
 }
 
-
-const get_ids_of_selected_items = mouse_event => {
-    const ids = [mouse_event.target.parentElement.dataset.id];
-    return ids;
+const __rfid_location_changed = location => {
+    location_element.value = location;
+    get_current_registrations();
 }
-
-subscribe_right_click('delete', (item, ids) => delete_registration(item, ids));

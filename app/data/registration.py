@@ -2,8 +2,10 @@ import sys, json
 
 import app.data.models
 from app import log, db
-from sqlalchemy import text, func, desc
+from sqlalchemy import text, func, desc, or_
 from sqlalchemy_serializer import SerializerMixin
+from app.data.student import Student
+from app.data.photo import Photo
 
 
 class Registration(db.Model, SerializerMixin):
@@ -21,6 +23,15 @@ class Registration(db.Model, SerializerMixin):
     active = db.Column(db.Boolean, default=True)
     aantal_items = db.Column(db.Integer, default=1)
     prijs_per_item = db.Column(db.Integer, default=100) # eurocents
+
+    text1 = db.Column(db.String(256), default='')
+    text2 = db.Column(db.String(256), default='')
+
+    flag1 = db.Column(db.Boolean, default=False)
+    flag2 = db.Column(db.Boolean, default=False)
+    flag3 = db.Column(db.Boolean, default=False)
+    flag4 = db.Column(db.Boolean, default=False)
+    flag5 = db.Column(db.Boolean, default=False)
 
 
 def get_columns():
@@ -55,11 +66,37 @@ def registration_get_m(filters=[], fields=[], order_by=None, first=False, count=
     return app.data.models.get_multiple(Registration, filters=filters, fields=fields, order_by=order_by, first=first, count=count, active=active)
 
 
-def registration_get(filters=[]):
-    return app.data.models.get_first_single(Registration, filters)
+def registration_get(filters=[], order_by=None):
+    return app.data.models.get_first_single(Registration, filters, order_by=order_by)
+
+########### join registrations and students #############
+
+def registration_student_photo_get(location, search=None, time_low=None, time_high=None, flag1=None, flag2=None, include_foto=False):
+    try:
+        if include_foto:
+            q = db.session.query(Registration, Student, Photo).join(Student, Student.leerlingnummer == Registration.leerlingnummer).join(Photo, Student.foto_id == Photo.id)
+        else:
+            q = db.session.query(Registration, Student).join(Student, Student.leerlingnummer == Registration.leerlingnummer)
+        q = q.filter(Registration.location == location)
+        if search is not None:
+            q = q.filter(or_(Student.naam.like(f"%{search}%"),Student.voornaam.like(f"%{search}%")))
+        if time_low:
+            q = q.filter(Registration.time_in >= time_low)
+        if time_high:
+            q = q.filter(Registration.time_in <= time_high)
+        if flag1 is not None:
+            q = q.filter(Registration.flag1 == flag1)
+        if flag2 is not None:
+            q = q.filter(Registration.flag2 == flag2)
+        q = q.order_by(desc(Registration.time_in))
+        registrations = q.all()
+        return registrations
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
 
 
 ############ Registration overview list #########
+
 def pre_sql_query():
     return db.session.query(Registration).filter(Registration.active == True)
 

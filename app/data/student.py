@@ -24,6 +24,7 @@ class Student(db.Model, SerializerMixin):
     soep = db.Column(db.String(256), default='')
     lpv1_gsm = db.Column(db.String(256), default='')
     lpv2_gsm = db.Column(db.String(256), default='')
+    instellingsnummer = db.Column(db.String(256), default='')
 
     timestamp = db.Column(db.DateTime)
 
@@ -36,6 +37,16 @@ class Student(db.Model, SerializerMixin):
     @property
     def person_id(self):
         return self.leerlingnummer
+
+    @property
+    def get_school(self):
+        if int(self.klascode[0]) < 3:
+            schoolnaam = "SUM"
+        elif self.instellingsnummer == "30569":
+            schoolnaam = "SUI"
+        else:
+            schoolnaam = "SUL"
+        return schoolnaam
 
 
 def get_columns():

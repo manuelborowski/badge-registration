@@ -213,6 +213,120 @@ settings_formio = \
                 ]
               }
             ]
+          },
+          {
+            "label": "Sms Locatie",
+            "tableView": false,
+            "key": "sms-location",
+            "type": "container",
+            "input": true,
+            "components": [
+              {
+                "title": "SMS locaties",
+                "theme": "primary",
+                "collapsible": true,
+                "key": "RegistratieTemplate1",
+                "type": "panel",
+                "label": "Studenten",
+                "collapsed": true,
+                "input": false,
+                "tableView": false,
+                "components": [
+                  {
+                    "label": "Opslaan",
+                    "showValidations": false,
+                    "theme": "warning",
+                    "tableView": false,
+                    "key": "submit",
+                    "type": "button",
+                    "input": true,
+                    "saveOnEnter": false
+                  },
+                  {
+                    "label": "Leerling te laat: SMS naar ouders (tekst)",
+                    "applyMaskOn": "change",
+                    "autoExpand": false,
+                    "tableView": true,
+                    "key": "sms-student-too-late",
+                    "type": "textarea",
+                    "input": true
+                  },
+                  {
+                    "label": "HTML",
+                    "attrs": [
+                      {
+                        "attr": "",
+                        "value": ""
+                      }
+                    ],
+                    "content": "Variabelen<br>\n%%NAAM%%<br>\n%%VOORNAAM%%<br>\n%%TIJD%% (tijdstip van registratie)",
+                    "refreshOnChange": false,
+                    "key": "html",
+                    "type": "htmlelement",
+                    "input": false,
+                    "tableView": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Cellphone Locatie",
+            "tableView": false,
+            "validateWhenHidden": false,
+            "key": "cellphone-location",
+            "type": "container",
+            "input": true,
+            "components": [
+              {
+                "title": "Cellpone locaties",
+                "theme": "primary",
+                "collapsible": true,
+                "key": "RegistratieTemplate1",
+                "type": "panel",
+                "label": "Studenten",
+                "collapsed": true,
+                "input": false,
+                "tableView": false,
+                "components": [
+                  {
+                    "label": "Opslaan",
+                    "showValidations": false,
+                    "theme": "warning",
+                    "tableView": false,
+                    "key": "submit",
+                    "type": "button",
+                    "input": true,
+                    "saveOnEnter": false
+                  },
+                  {
+                    "label": "Smartschool berichten",
+                    "applyMaskOn": "change",
+                    "autoExpand": false,
+                    "tableView": true,
+                    "validateWhenHidden": false,
+                    "key": "smartschool-message-templates",
+                    "type": "textarea",
+                    "input": true
+                  },
+                  {
+                    "label": "HTML",
+                    "attrs": [
+                      {
+                        "attr": "",
+                        "value": ""
+                      }
+                    ],
+                    "content": "Variabelen<br>\n%%NAAM%%<br>\n%%VOORNAAM%%<br>\n%%TIJD%%<br>%%KLAS%%<br>%%AANTAL-OVERTREDINGEN%%",
+                    "refreshOnChange": false,
+                    "key": "html",
+                    "type": "htmlelement",
+                    "input": false,
+                    "tableView": false
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -445,7 +559,7 @@ settings_formio = \
                   },
                   {
                     "label": "Locaties",
-                    "tooltip": "Een JSON lijst van locaties",
+                    "applyMaskOn": "change",
                     "autoExpand": false,
                     "tableView": true,
                     "key": "location-profiles",
@@ -454,7 +568,6 @@ settings_formio = \
                   },
                   {
                     "label": "Artikels",
-                    "tooltip": "Een JSON lijst van artikels",
                     "applyMaskOn": "change",
                     "autoExpand": false,
                     "tableView": true,
@@ -467,19 +580,20 @@ settings_formio = \
             ]
           },
           {
-            "label": "sdh",
+            "label": "smartschool",
             "tableView": false,
-            "key": "sdh2",
+            "validateWhenHidden": false,
+            "key": "smartschool",
             "type": "container",
             "input": true,
             "components": [
               {
-                "title": "School Data Hub",
+                "title": "Smartschool",
                 "theme": "primary",
                 "collapsible": true,
-                "key": "sdh",
+                "key": "smartschool",
                 "type": "panel",
-                "label": "Smartschool",
+                "label": "Cardpresso",
                 "collapsed": true,
                 "input": false,
                 "tableView": false,
@@ -494,80 +608,14 @@ settings_formio = \
                     "input": true
                   },
                   {
-                    "label": "URL voor ophalen studenten",
+                    "label": "Internal numbers",
+                    "applyMaskOn": "change",
+                    "autoExpand": false,
                     "tableView": true,
-                    "persistent": false,
-                    "key": "sdh-student-url",
-                    "type": "textfield",
-                    "labelWidth": 20,
+                    "validateWhenHidden": false,
+                    "key": "ss-internal-numbers",
+                    "type": "textarea",
                     "input": true
-                  },
-                  {
-                    "label": "URL voor ophalen groottes van studentenfoto's",
-                    "tableView": true,
-                    "persistent": false,
-                    "key": "sdh-photo-size-url",
-                    "type": "textfield",
-                    "labelWidth": 20,
-                    "input": true
-                  },
-                  {
-                    "label": "URL voor ophalen van studentenfoto's",
-                    "tableView": true,
-                    "persistent": false,
-                    "key": "sdh-photo-url",
-                    "type": "textfield",
-                    "labelWidth": 20,
-                    "input": true
-                  },
-                  {
-                    "label": "Columns",
-                    "columns": [
-                      {
-                        "components": [
-                          {
-                            "label": "Toon sleutel",
-                            "tableView": false,
-                            "defaultValue": false,
-                            "key": "sdh-show-key",
-                            "type": "checkbox",
-                            "input": true
-                          }
-                        ],
-                        "width": 2,
-                        "offset": 0,
-                        "push": 0,
-                        "pull": 0,
-                        "size": "md",
-                        "currentWidth": 2
-                      },
-                      {
-                        "components": [
-                          {
-                            "label": "API sleutel",
-                            "tableView": true,
-                            "key": "sdh-api-key",
-                            "conditional": {
-                              "show": true,
-                              "when": "sdh2.sdh-show-key",
-                              "eq": "true"
-                            },
-                            "type": "textfield",
-                            "input": true
-                          }
-                        ],
-                        "width": 5,
-                        "offset": 0,
-                        "push": 0,
-                        "pull": 0,
-                        "size": "md",
-                        "currentWidth": 5
-                      }
-                    ],
-                    "key": "columns",
-                    "type": "columns",
-                    "input": false,
-                    "tableView": false
                   }
                 ]
               }

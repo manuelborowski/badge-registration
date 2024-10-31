@@ -4,89 +4,49 @@
     {{ super() }}
     <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css">
     <link rel="stylesheet" href="/static/css/right_click.css">
+    <link rel="stylesheet" href="/static/css/popup.css">
 {% endblock %}
 
 {% block body %}
     {{ super() }}
     <div class="flex-container">
-    <h1 style=" margin-right: 30px;" class="title-element"></h1>
-        {% for f in filters %}
-            {% if f.type == "select" %}
-                <div class="form-group "><label class="control-label" for="{{ f.name }}"
-                                                title="{{ f.tt }}">{{ f.label }}</label>
-                    <select class="form-control table-filter" id="{{ f.name }}"
-                            name="{{ f.name }} {{ f.multiple }}">
-                        {% for o in f.choices %}
-                            <option value="{{ o[0] }}"
-                                    {% if o[0] == f.default %}selected{% endif %}>{{ o[1] }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            {% endif %}
-        {% endfor %}
-        <div class="form-group "><label class="control-label" for="photo-size-select" title="Foto grootte">Foto grootte</label>
-            <select class="form-control table-filter" name="Grootte" id="photo-size-select">
-                <option value="50">50%</option>
-                <option value="75">75%</option>
-                <option value="100">100%</option>
-                <option value="150">150%</option>
-            </select>
-        </div>
-        <div class="form-group "><label class="control-label" for="sort-on-select" title="Sorteer op">Sorteer op</label>
-            <select class="form-control table-filter" name="Sorteer" id="sort-on-select">
-                <option value="timestamp">Tijdstempel</option>
-                <option value="name-firstname">Naam, voornaam</option>
-                <option value="klas-name-firstname">Klas, naam, voornaam</option>
-            </select>
-        </div>
+        <h1 style=" margin-right: 30px;" class="title-element"></h1>
+        <div class="filters flex-container"></div>
         <div class="form-group "><label class="control-label" for="nbr-registered" title="Aantal">Aantal</label>
             <input class="form-control" id="nbr-registered" value="0" size="5">
         </div>
-        <div class="form-group "><label class="control-label" for="filter-date" title="Datum">Datum</label>
-            <input type="date" class="form-control" id="filter-date" value="2000-08-21">
-        </div>
-
-        {% if "remove-all" in buttons %}
-            <button class="btn btn-danger" type="button" onclick="remove_all_photos()">Alles verwijderen?</button>
-        {% endif %}
     </div>
     <hr class="nice-green-line">
     <div class="right-click-canvas" id="canvas"></div>
 
-    {% if right_click %}
-    <div class="right-click-wrapper">
-        <ul class="menu">
-            {% for item in right_click.menu %}
-                {% if item.item == "horizontal-line" %}
-                    <li class="item">
-                        <span>---------------------</span>
-                    </li>
-                {% else %}
-                    <li class="item" onclick=item_clicked("{{ item.item }}")>
-                        {% if 'iconscout' in item %}
-                            <i class="uil uil-{{ item.iconscout }}"></i>
-                        {% endif %}
-                        <span>{{ item.label }}</span>
-                    </li>
-                {% endif %}
-            {% endfor %}
-        </ul>
+    <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popup-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="popup-label">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="popup-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleer</button>
+                    <button type="button" class="btn btn-primary">Bewaren</button>
+                </div>
+            </div>
+        </div>
     </div>
-{% endif %}
-
 
 {% endblock %}
 
 {% block scripts %}
     {{ super() }}
-    <script>
-        const api_key = {{ (api_key or "") | tojson }};
-    </script>
     <script type="module">
         import {item_clicked} from "/static/js/base/right_click.js";
         window.item_clicked = item_clicked;
-        import {remove_all_photos} from "/static/js/project/overview.js";
-        window.remove_all_photos = remove_all_photos;
+    </script>
+    <script>
+        const filters = {{ (filters or []) | tojson }};
     </script>
     <script type="module" src="/static/js/project/overview.js"></script>
 {% endblock %}
