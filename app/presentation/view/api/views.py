@@ -1,9 +1,9 @@
-from flask import request
+from flask import request, send_file
 from . import api
-from app.application import user as muser, settings as msettings, registration as mregistration, socketio as msocketio, location as mlocation, upgrade as mupgrade
-from app.application import student as mstudent
+from app.application import user as muser, settings as msettings, registration as mregistration, socketio as msocketio, location as mlocation, upgrade as mupgrade, balance as mbalance
+from app.application.student import student_load_from_sdh
 from app import log, version
-import json, sys, html
+import json, sys, html, io
 from functools import wraps
 
 
@@ -221,6 +221,16 @@ def upgrade_software_server():
     versions = request.args.get("versions", "")
     files = mupgrade.get_upgrade_files(versions)
     return {"status": True, "data": files}
+
+
+
+@api.route('/api/papercut/upload', methods=['POST'])
+@user_key_required
+def papercut_upload():
+    files = [f for f in request.files.getlist("papercut_file")]
+    ret = mbalance.papercut_upload(files)
+    return ret
+
 
 
 

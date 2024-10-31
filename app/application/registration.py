@@ -377,13 +377,21 @@ def sync_registrations_server(data):
             log.info(f"Oldest, {oldest}")
             db_registrations = mregistration.registration_get_m([("time_in", ">=", oldest[0])])
             db_cache = {str(d.time_in) + d.leerlingnummer + d.location: d for d in db_registrations}
+
+            locations = msettings.get_configuration_setting("location-profiles")
+            artikels = msettings.get_configuration_setting("artikel-profiles")
+            location2ppi = {}
+            for location, data in locations.items():
+                price_per_item = int(artikels[data["artikel"]]["prijs-per-item"]) if "artikel" in data else 0
+                location2ppi[location] = price_per_item
+
             for registration in registrations:
                 key = str(registration[0]) + registration[2] + registration[3]
                 if key in db_cache:
                     log.info(f'{sys._getframe().f_code.co_name}: registration already present, {registration}')
                     nbr_doubles += 1
                     continue
-                new_registrations.append({"leerlingnummer": registration[2], "location": registration[3], "time_in": registration[0], "time_out": registration[1]})
+                new_registrations.append({"leerlingnummer": registration[2], "location": registration[3], "time_in": registration[0], "time_out": registration[1], "prijs_per_item": location2ppi[registration[3]]})
             mregistration.registration_add_m(new_registrations)
         return len(new_registrations), nbr_doubles
     except Exception as e:

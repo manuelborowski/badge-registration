@@ -148,7 +148,7 @@ def get_multiple(model, filters=[], fields=[], order_by=None, first=False, count
             elif o == '>=':
                 if hasattr(model, k):
                     q = q.filter(getattr(model, k) >= v)
-            elif o == '=<':
+            elif o == '<=':
                 if hasattr(model, k):
                     q = q.filter(getattr(model, k) <= v)
             elif o == 'l':

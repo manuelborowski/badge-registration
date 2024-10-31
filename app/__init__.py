@@ -62,9 +62,6 @@ flask_app.config.from_pyfile('config.py')
 # 0.41: update navbar
 # 0.42: bugfix when adding new data in column soep.  Reworked registration and student syncing
 # 0.43: sync locations and articles
-# 0.43-bgfx_save_new_article-V0.1: small bugfix
-# 0.44: merge
-# 0.45: update version tag
 # 0.44: added location-select in navbar
 # 0.45: implement rfidusb heartbeat, remove location-select if rfidusb-server is not running, color orange if no badgereader is connect to usb.
 # 0.46: badgreader can update br-url and br-key
@@ -75,6 +72,11 @@ flask_app.config.from_pyfile('config.py')
 # 0.51: update requirements.txt
 # 0.52: create autologin url
 # 0.53: added sms-to-field to test.
+# 0.53-export_leerling_rekening-0.1: bugfix standalone with server, take correct price-per-item into account.  Export student balances
+# 0.53-export_leerling_rekening-0.2: Make enddate until-and-included iso until
+# 0.53-export_leerling_rekening-0.3: added export of papercut overview
+# 0.53-export_leerling_rekening-0.4: dateformat: add leading 0 if needed.
+# 0.53-export_leerling_rekening-0.5: small updates
 # 0.54: reworked navbar.  Reworked context-menu
 # 0.55: implemented context-remark and tooltip.
 # 0.55-major-rework-0.2: reworked remark-popup, changed to update-registration iso update-remark.
