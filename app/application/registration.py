@@ -457,6 +457,7 @@ def __send_ss_message(registration, location, student, force=False):
                     msg = msg.replace("%%VOORNAAM%%", student.voornaam)
                     msg = msg.replace("%%NAAM%%", student.naam)
                     msg = msg.replace("%%TIJD%%", str(registration.time_in))
+                    msg = msg.replace("%%KLAS%%", str(student.klascode))
                     msg = msg.replace("%%AANTAL-OVERTREDINGEN%%", str(registration.aantal_items))
                 out[type] = msg
             return out
@@ -481,10 +482,13 @@ def __send_ss_message(registration, location, student, force=False):
                     if staff:
                         ss_tos.append({"id": staff.ss_internal_nbr, "coaccount": 0})
                     else:
-                        if to in ss_internal_numbers:
-                            ss_tos.append({"id": ss_internal_numbers[to], "coaccount": 0})
+                        if ss_internal_numbers is not None:
+                            if to in ss_internal_numbers:
+                                ss_tos.append({"id": ss_internal_numbers[to], "coaccount": 0})
+                            else:
+                                log.error(f'{sys._getframe().f_code.co_name}: Could not find ss internal number of {to}')
                         else:
-                            log.error(f'{sys._getframe().f_code.co_name}: Could not find ss internal number of {to}')
+                            log.error(f'{sys._getframe().f_code.co_name}: Could not find ss internal number/or not defined in settings of {to}')
             message = __process_template(school, seq_ctr)
 
             enable_sending = location["enable_sending"] if "enable_sending" in location else False

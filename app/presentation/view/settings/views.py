@@ -317,7 +317,7 @@ settings_formio = \
                         "value": ""
                       }
                     ],
-                    "content": "Variabelen<br>\n%%NAAM%%<br>\n%%VOORNAAM%%<br>\n%%TIJD%% (tijdstip van registratie)",
+                    "content": "Variabelen<br>\n%%NAAM%%<br>\n%%VOORNAAM%%<br>\n%%TIJD%%<br>%%KLAS%%<br>%%AANTAL-OVERTREDINGEN%%",
                     "refreshOnChange": false,
                     "key": "html",
                     "type": "htmlelement",
