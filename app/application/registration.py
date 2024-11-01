@@ -113,8 +113,9 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     sms_sent = False
                     if "auto" in location and location["auto"]:  # send sms when badge is scanned
                         sms_sent = __send_sms(registration, location, student)
+                    auto_remark = location["auto_remark"] if "auto_remark" in location else False
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "remark": "", "remark_ack": False,
-                                           "sms_sent": sms_sent, "auto_remark": location["auto_remark"]})
+                                           "sms_sent": sms_sent, "auto_remark": auto_remark})
                     return ret
             # When a student needs to hand in its cellphone, scan its badge.  After 4 scans (to be configurable), the student is highlighted and
             # has to stay over after school
