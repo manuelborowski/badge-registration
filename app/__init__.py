@@ -115,9 +115,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.57: cleanup after merge.  Small bugfixes due to update to latest version of Flask
 # 0.58: export student balance, update and bugfix.
 # 0.59: update requirements.txt
+# 0.60: update requirements.txt
 
 
-version = "0.59"
+version = "0.60"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
