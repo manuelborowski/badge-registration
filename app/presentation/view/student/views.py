@@ -42,12 +42,12 @@ def table_action(action, ids=None):
     return redirect(url_for('student.show'))
 
 
-@student.route('/student/export/<string:type>/<string:startdate>/<string:enddate>', methods=['GET'])
+@student.route('/student/export/<string:key>/<string:startdate>/<string:enddate>', methods=['GET'])
 @login_required
 @supervisor_required
-def export_config_csv(type, startdate, enddate):
+def export_config_csv(key, startdate, enddate):
     try:
-        [balance_data, filename] = get_balance(type, startdate,enddate)
+        [balance_data, filename] = get_balance(key, startdate,enddate)
         return send_file(io.BytesIO(str.encode(balance_data)), as_attachment=True, download_name=filename, max_age=0)
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')

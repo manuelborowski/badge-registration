@@ -36,11 +36,13 @@ const __reserve_student_rfid = async (ids) => {
     });
 }
 
-const export_student_balance_items = ["sui-drank", "sul-drank"]
-
 const export_student_balances_cb = (action, opaque, data=null) => {
     if (action === 'submit') {
-        export_student_balance_items.forEach(item => window.open(`/student/export/${item}/${data.startdate}/${data.enddate}`, '_blank'))
+        for (const [key, location] of Object.entries(locations)) {
+            if (location.type === "verkoop") {
+                window.open(`/student/export/${key}/${data.startdate}/${data.enddate}`, '_blank');
+            }
+        }
     }
 }
 
@@ -69,7 +71,6 @@ const __upload_papercut = async () =>  {
 }
 
 const __export_student_balances = (popup) => {
-    console.log("yes")
     formio_popup_create(popup, export_student_balances_cb);
 }
 
@@ -77,8 +78,8 @@ let context_menu = [
     {type: "divider"},
     {type: "item", iconscout: "wifi", label: "RFID code aanpassen", cb: __reserve_student_rfid},
     {type: "divider"},
-    {type: "item", iconscout: "wifi", label: "Exporteer leerling rekeningen", cb: () => __export_student_balances(ctx.popups['export-student-balance'])},
-    {type: "item", iconscout: "wifi", label: "Exporteer leerling printer rekeningen", cb: () => __upload_papercut()},
+    {type: "item", iconscout: "export", label: "Exporteer leerling rekeningen", cb: () => __export_student_balances(ctx.popups['export-student-balance'])},
+    // {type: "item", iconscout: "wifi", label: "Exporteer leerling printer rekeningen", cb: () => __upload_papercut()},
 ]
 $(document).ready(function () {
 const current_location = localStorage.getItem("view-location");

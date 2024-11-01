@@ -42,7 +42,9 @@ class Student(db.Model, SerializerMixin):
 
     @property
     def get_school(self):
-        if int(self.klascode[0]) < 3:
+        if self.klascode == "OKAN":
+            return "SUL"
+        elif int(self.klascode[0]) < 3:
             schoolnaam = "SUM"
         elif self.instellingsnummer == "30569":
             schoolnaam = "SUI"
