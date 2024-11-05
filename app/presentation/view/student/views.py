@@ -127,11 +127,18 @@ class Config(DatatableConfig):
 table_config = Config("student", "Overzicht Studenten")
 
 
-@student.route('/student/sync', methods=['POST'])
+@student.route('/student/sync/registrations', methods=['POST'])
 @login_required
-def sync_students():
+def sync_student_registrations():
     nbr_new, nbr_updated, nbr_deleted = app.application.student.student_load_from_sdh()
     ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_updated": nbr_updated, "nbr_deleted": nbr_deleted }}
+    return json.dumps(ret)
+
+
+@student.route('/student/sync/reservations', methods=['POST'])
+@login_required
+def sync_student_reservations():
+    ret = app.application.student.push_reservations_to_server()
     return json.dumps(ret)
 
 

@@ -1,7 +1,7 @@
 from flask import request, send_file
 from . import api
-from app.application import user as muser, settings as msettings, registration as mregistration, socketio as msocketio, location as mlocation, upgrade as mupgrade, balance as mbalance
-from app.application.student import student_load_from_sdh
+from app.application import user as muser, settings as msettings, registration as mregistration
+from app.application import socketio as msocketio, location as mlocation, upgrade as mupgrade, balance as mbalance, student as mstudent
 from app import log, version
 import json, sys, html, io
 from functools import wraps

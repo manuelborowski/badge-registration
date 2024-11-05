@@ -80,6 +80,8 @@ def set_setting(name, value, id=-1):
                     value = json.dumps(value)
                 else:
                     value = json.dumps(json.loads(value))
+            elif setting.type == Settings.SETTING_TYPE.E_YAML:
+                value = yaml.dump(value)
             setting.value = value
             db.session.commit()
     except Exception as e:
