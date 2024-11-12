@@ -108,6 +108,7 @@
         const api_key = {{ (api_key or '') | tojson }};
         const reservation_margin = {{ (reservation_margin or '') | tojson }};
         const suppress_navbar = {{ (suppress_navbar or false) | tojson }};
+        const show_badge_location = {{ (show_badge_location or false) | tojson }};
     </script>
     <script type="module" src="/static/js/base/base.js"></script>
     <script type="module">

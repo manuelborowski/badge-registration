@@ -50,7 +50,6 @@ export const create_filters = (id, filter_element, filters) => {
                 location.reload();
             }
         })
-        //if a filter is changed, then the filter is applied by simulating a click on the filter button
         $(".overview-filter").change(() => __store_filter_settings());
 
         if (!__apply_filter_settings()) __store_filter_settings(); //filters are applied when the page is loaded for the first time
@@ -103,30 +102,15 @@ function __store_filter_settings() {
         filters.forEach(f => {
             if (f.store === undefined || f.store === true) {
                 if (f.type === 'select') {
-                    filter_settings.push({
-                        name: f.name,
-                        type: f.type,
-                        value: document.querySelector(`#${f.name} option:checked`).value,
-                        default: f.default
-                    });
+                    filter_settings.push({name: f.name, type: f.type, value: document.querySelector(`#${f.name} option:checked`).value, default: f.default});
                 } else if (f.type === 'checkbox') {
                     let boxes = [];
                     f.boxes.forEach(([k, l]) => {
                         boxes.push({id: k, checked: document.querySelector(`#${k}`).checked})
                     });
-                    filter_settings.push({
-                        name: f.name,
-                        type: f.type,
-                        value: boxes,
-                        default: f.default
-                    })
+                    filter_settings.push({name: f.name, type: f.type, value: boxes, default: f.default})
                 } else if (f.type === 'text' || f.type === 'date') {
-                    filter_settings.push({
-                        name: f.name,
-                        type: f.type,
-                        value: document.querySelector(`#${f.name}`).value,
-                        default: f.default
-                    })
+                    filter_settings.push({name: f.name, type: f.type, value: document.querySelector(`#${f.name}`).value, default: f.default})
                 }
             }
         });

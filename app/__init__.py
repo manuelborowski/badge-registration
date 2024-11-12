@@ -118,9 +118,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.60: update requirements.txt
 # 0.61: small bugfix
 # 0.62: standalone, sync reservations with SDH.  small bugfix in saving YAML
+# 0.63: The badge-location-select (in the navbar) is visible only on the overview page.
 
 
-version = "0.62"
+version = "0.63"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

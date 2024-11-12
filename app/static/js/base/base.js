@@ -147,7 +147,9 @@ $(document).ready(() => {
         }
     }
 
-    navbar_element.appendChild(create_select_locations(locations));
+    if (show_badge_location) {
+        navbar_element.appendChild(create_select_locations(locations));
+    }
 
     if (stand_alone) {
         const btn_div = document.createElement("div");

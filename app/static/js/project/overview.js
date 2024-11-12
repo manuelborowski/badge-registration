@@ -380,7 +380,8 @@ const __reset_button_cb = filters => {
     }
 }
 
+// When the location in the menubar is changed (where scanned rfid code is sent to), the overview select follows
 const __rfid_location_changed = location => {
     location_element.value = location;
-    get_current_registrations();
+    location_element.dispatchEvent(new Event("change"));
 }
