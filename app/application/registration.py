@@ -39,6 +39,8 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     mreservation.commit()
                     log.info(f'{sys._getframe().f_code.co_name}:  Add reservation for {student.leerlingnummer}, {student.naam} {student.voornaam} {location_key}')
                     return {"status": True, "is-reservation": True, "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}"}
+            log.info(f'{sys._getframe().f_code.co_name}:  No valid reservation for {location_key}')
+            return {"status": False, "is-reservation": True, "data": f"Nieuwe RFID niet gelukt.  Misschien te lang gewacht met scannen, probeer nogmaals"}
         if rfid:
             student = mstudent.student_get([("rfid", "=", rfid)])
         elif leerlingnummer:

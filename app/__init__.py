@@ -120,9 +120,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.62: standalone, sync reservations with SDH.  small bugfix in saving YAML
 # 0.63: The badge-location-select (in the navbar) is visible only on the overview page.
 # 0.64: add dummy location (new-rfid) that is set when the students page is displayed, this to avoid accidentally adding a registration.  Bugfix updating the "soep" field
+# 0.65: when both the overview and students page are opened in seperate tab, select the correct location depending on the visibility of the tab.  Small update when making an RFID reservation
 
 
-version = "0.64"
+version = "0.65"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

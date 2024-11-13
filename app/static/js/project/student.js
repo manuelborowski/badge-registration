@@ -92,6 +92,11 @@ $(document).ready(function () {
     // Even on the students page, it is possible to get status-popups
     socketio.start(null, null);
     socketio.subscribe_on_receive("update-status", __socketio_update_status);
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+            rfidusb_set_location("new-rfid");
+        }
+    });
 });
 
 const __socketio_update_status = (type, data) => {

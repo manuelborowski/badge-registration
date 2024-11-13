@@ -4,7 +4,7 @@ import {person_image} from "../../img/base64-person.js";
 import {busy_indication_on, busy_indication_off} from "../base/base.js";
 import {add_to_popup_body, create_checkbox_element, create_input_element, hide_popup, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
 import {add_extra_filters, create_filters, enable_filters, disable_filters, subscribe_reset_button} from "../base/filters.js";
-import {subscribe_location_changed} from "./rfidusb_locations.js";
+import {rfidusb_set_location, subscribe_location_changed} from "./rfidusb_locations.js";
 
 let location_element, date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element,
     sms_specific_element, search_text_element;
@@ -52,6 +52,12 @@ $(document).ready(function () {
     subscribe_reset_button(__reset_button_cb);
     subscribe_location_changed(__rfid_location_changed_cb);
     get_current_registrations();
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+            rfidusb_set_location(current_location);
+        }
+    });
+
 });
 
 const socketio_update_status = (type, data) => {
