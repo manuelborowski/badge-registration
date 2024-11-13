@@ -27,6 +27,7 @@ def student_load_from_sdh(opaque=None, **kwargs):
                 db_students = mstudent.student_get_m()
                 db_leerlingnummer_to_student = {s.leerlingnummer: s for s in db_students}
                 for sdh_student in sdh_students["data"]:
+                    soep_changed = False
                     if sdh_student["leerlingnummer"] in db_leerlingnummer_to_student:
                         # check for changed rfid or classgroup
                         db_student = db_leerlingnummer_to_student[sdh_student["leerlingnummer"]]
@@ -44,6 +45,7 @@ def student_load_from_sdh(opaque=None, **kwargs):
                             soep = sdh_student["soep"][:2] + "0" + sdh_student["soep"][2:]
                             if db_student.soep[:5] != soep:
                                 update["soep"] = soep + "/00000"
+                                soep_changed = True
                         if db_student.lpv1_gsm != sdh_student["lpv1_gsm"]:
                             update["lpv1_gsm"] = sdh_student["lpv1_gsm"]
                         if db_student.lpv2_gsm != sdh_student["lpv2_gsm"]:
@@ -57,7 +59,7 @@ def student_load_from_sdh(opaque=None, **kwargs):
                             updated_students.append(update)
                             log.info(f'{sys._getframe().f_code.co_name}, Update student {db_student.leerlingnummer}, update {update}')
                             nbr_updated += 1
-                        if db_student.soep != "": #reset soep quantity counters
+                        if db_student.soep != "" and not soep_changed: #reset soep quantity counters
                             updated_students.append({"item": db_student, "soep": db_student.soep[:5] + "/00000"})
                         del(db_leerlingnummer_to_student[sdh_student["leerlingnummer"]])
                     else:

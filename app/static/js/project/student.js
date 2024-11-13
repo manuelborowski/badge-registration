@@ -2,6 +2,7 @@ import { create_context_menu} from "../base/right_click.js";
 import { ctx, get_data_of_row } from "../datatables/datatables.js"
 import {socketio} from "../base/socketio.js";
 import { formio_popup_create } from "../base/popup.js"
+import {rfidusb_start_timer_to_check_state, rfidusb_set_location, rfidusb_set_state} from "./rfidusb_locations.js";
 
 const __registration_add = async (item, ids) => {
    let person = get_data_of_row(ids[0]);
@@ -20,12 +21,11 @@ const __registration_add = async (item, ids) => {
 }
 
 const __reserve_student_rfid = async (ids) => {
-    const current_location = localStorage.getItem("view-location");
     const person = get_data_of_row(ids[0]);
     bootbox.confirm(`Nieuwe RFID voor: ${person.naam} ${person.voornaam}<br>Druk op ok en u heeft ${reservation_margin} seconden om de badge te registreren`, async result => {
         if (result) {
-            const ret = await fetch(Flask.url_for('api.reserve_item'),
-                {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({location_key: current_location, leerlingnummer: person.leerlingnummer, item: "rfid"})});
+            const ret = await fetch(Flask.url_for('api.add_reservation'),
+                {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({location_key: "new-rfid", leerlingnummer: person.leerlingnummer, item: "rfid"})});
             const status = await ret.json();
             if (status.status) {
             } else {
@@ -82,9 +82,14 @@ let context_menu = [
     // {type: "item", iconscout: "wifi", label: "Exporteer leerling printer rekeningen", cb: () => __upload_papercut()},
 ]
 $(document).ready(function () {
-const current_location = localStorage.getItem("view-location");
+    const current_location = localStorage.getItem("overview-location-select");
     context_menu.unshift({type: "item", iconscout: "plus-circle", label: `Nieuwe registratie: ${locations[current_location].locatie}`, cb: ids => __registration_add(current_location, ids)});
     create_context_menu(context_menu);
+    // When the students page is used to update the RFID code of a student
+    rfidusb_set_state(true);
+    rfidusb_set_location("new-rfid");
+    rfidusb_start_timer_to_check_state();
+    // Even on the students page, it is possible to get status-popups
     socketio.start(null, null);
     socketio.subscribe_on_receive("update-status", __socketio_update_status);
 });

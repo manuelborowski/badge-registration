@@ -1,4 +1,4 @@
-import { create_select_locations} from "../project/locations.js";
+import { rfidusb_create_select_locations} from "../project/rfidusb_locations.js";
 
 export function flash_messages(list) {
     for (var i = 0; i < list.length; i++) {
@@ -147,8 +147,8 @@ $(document).ready(() => {
         }
     }
 
-    if (show_badge_location) {
-        navbar_element.appendChild(create_select_locations(locations));
+    if (show_rfidusb_location_select) {
+        navbar_element.appendChild(rfidusb_create_select_locations(locations));
     }
 
     if (stand_alone) {

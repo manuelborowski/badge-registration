@@ -1,7 +1,9 @@
+// Handles the location-selector in the navbar to control where the scanned rfid-code's are sent to
+
 const location_select = document.createElement("select");
 const select_div = document.createElement("div");
 
-export const create_select_locations = locations => {
+export const rfidusb_create_select_locations = locations => {
     select_div.style.display = "none";
     location_select.classList.add("form-select", "form-select-sm");
     location_select.style.marginTop = "8px";
@@ -21,21 +23,23 @@ export const create_select_locations = locations => {
     }
     select_div.appendChild(location_select);
     location_select.addEventListener("change", e => handle_location_select());
-    const saved_location = localStorage.getItem("badge-location");
+    const saved_location = localStorage.getItem("rfidusb-location-select");
     if (saved_location) {
         location_select.value = saved_location;
         handle_location_select(true);
     }
-    check_rfidusb_state()
+    rfidusb_start_timer_to_check_state()
     return select_div
 }
 
 let location_changed_cb = null;
 export const subscribe_location_changed = cb => location_changed_cb = cb;
 
+export const rfidusb_get_current_location = () => location_select.value;
+
 //if location has bevestig_met_pin attribute then, at page reload, do not ask for confirmation via pin
 const handle_location_select = (at_reload = false) => {
-    localStorage.setItem("badge-location", location_select.value)
+    localStorage.setItem("rfidusb-location-select", location_select.value)
     if (location_select.value === "default") {
         location_select.style.backgroundColor = "orange";
         rfidusb_set_state(false);
@@ -86,7 +90,7 @@ const generate_and_confirm_pin = (location_key) => {
     })
 }
 
-const rfidusb_set_location = async location => {
+export const rfidusb_set_location = async location => {
     try {
         const ret = await fetch(`${rfidusb_url}/location/${location}`, {method: 'POST'});
         const status = await ret.json();
@@ -111,7 +115,7 @@ const rfidusb_set_location = async location => {
     }
 }
 
-const rfidusb_set_state = async state => {
+export const rfidusb_set_state = async state => {
     try {
         const ret = await fetch(`${rfidusb_url}/active/${state ? 1 : 0}`, {method: 'POST'});
         const status = await ret.json();
@@ -126,7 +130,7 @@ const rfidusb_set_state = async state => {
 var old_rfidusb_state = false;
 
 // if an RFID reader is attached to a USB port (status.port is e.g. COM4), activate the rfidusb server and show the select-location-button
-const check_rfidusb_state = async () => {
+export const rfidusb_start_timer_to_check_state = async () => {
     try {
         var timeout = 2;
         const ret = await fetch(`${rfidusb_url}/serial_port`);
@@ -141,5 +145,5 @@ const check_rfidusb_state = async () => {
         select_div.style.display = "hidden";
         timeout = 10;
     }
-    setTimeout(check_rfidusb_state, timeout * 1000);
+    setTimeout(rfidusb_start_timer_to_check_state, timeout * 1000);
 }

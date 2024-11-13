@@ -157,7 +157,7 @@ def registration_delete():
 
 @api.route('/api/reservation/add', methods=['POST'])
 @supervisor_key_required
-def reserve_item():
+def add_reservation():
     data = json.loads(request.data)
     leerlingnummer = data["leerlingnummer"]
     location = data["location_key"]

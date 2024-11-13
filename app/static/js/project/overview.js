@@ -4,7 +4,7 @@ import {person_image} from "../../img/base64-person.js";
 import {busy_indication_on, busy_indication_off} from "../base/base.js";
 import {add_to_popup_body, create_checkbox_element, create_input_element, hide_popup, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
 import {add_extra_filters, create_filters, enable_filters, disable_filters, subscribe_reset_button} from "../base/filters.js";
-import {subscribe_location_changed} from "./locations.js";
+import {subscribe_location_changed} from "./rfidusb_locations.js";
 
 let location_element, date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element,
     sms_specific_element, search_text_element;
@@ -41,16 +41,16 @@ $(document).ready(function () {
     date_element.value = now.toISOString().split("T")[0];
     location_element.addEventListener("change", get_current_registrations);
     date_element.addEventListener("change", event => __select_date(event));
-    search_text_element.addEventListener("keydown", (event) => __wait_for_enter(event));
+    search_text_element.addEventListener("keydown", (event) => __do_on_enter_key_pressed(event));
     sort_on_element.addEventListener("change", get_current_registrations);
     view_layout_element.addEventListener("change", get_current_registrations);
     sms_specific_element.addEventListener("change", get_current_registrations);
     period_element.addEventListener("change", get_current_registrations);
     cellphone_specific_element.addEventListener("change", get_current_registrations);
     photo_size_element.addEventListener("change", __resize_photos);
-    subscribe_get_ids(__get_ids_of_selected_items);
+    subscribe_get_ids(__get_ids_of_selected_items_cb);
     subscribe_reset_button(__reset_button_cb);
-    subscribe_location_changed(__rfid_location_changed);
+    subscribe_location_changed(__rfid_location_changed_cb);
     get_current_registrations();
 });
 
@@ -197,8 +197,8 @@ const get_current_registrations = () => {
     socketio.unsubscribe_from_room(current_location);
     current_location = location_element.value;
     socketio.subscribe_to_room(current_location);
-    //store the current view-location
-    localStorage.setItem("view-location", current_location);
+    //store the current overview-location-select
+    localStorage.setItem("overview-location-select", current_location);
     let location_label = location_element.options[location_element.selectedIndex].innerHTML;
     canvas_element.innerHTML = "";
     // Add dummy element to indicate end of list
@@ -331,7 +331,7 @@ async function __enter_remark(ids) {
     show_popup({focus: remark_input.querySelector("input")});
 }
 
-const __get_ids_of_selected_items = mouse_event => {
+const __get_ids_of_selected_items_cb = mouse_event => {
     let ids = [...document.querySelectorAll(".item-select:checked")].map(e => e.parentElement.parentElement.dataset.id); // if checkboxes are checked
     if (ids.length === 0) ids = [mouse_event.target.parentElement.dataset.id]; // if not, select the current row
     return ids;
@@ -359,7 +359,7 @@ const __reset_nbr_registered = () => {
     nbr_registered_element.value = nbr_registered;
 }
 
-const __wait_for_enter = (event) => {
+const __do_on_enter_key_pressed = (event) => {
     if (event.key === "Enter") {
         get_current_registrations();
         search_text_element.value = "";
@@ -380,8 +380,8 @@ const __reset_button_cb = filters => {
     }
 }
 
-// When the location in the menubar is changed (where scanned rfid code is sent to), the overview select follows
-const __rfid_location_changed = location => {
+// When the location-select (where scanned rfid code is sent to) in the menubar is changed, the location-select on the overview page follows
+const __rfid_location_changed_cb = location => {
     location_element.value = location;
     location_element.dispatchEvent(new Event("change"));
 }

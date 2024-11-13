@@ -24,19 +24,21 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
             now = datetime.datetime.now()
         now = now.replace(microsecond=0)
         today = now.date()
-        reservation_margin = flask_app.config["RESERVATION_MARGIN"]
-        minimum_reservation_time = now - datetime.timedelta(seconds=reservation_margin)
-        reservations = mreservation.reservation_get_m([("valid", "=", False), ("timestamp", ">", minimum_reservation_time)])
-        if reservations:
-            reservation = reservations[0]
-            if reservation.item == "rfid":
-                rfid = rfid.upper()
-                reservation.data = rfid
-                reservation.valid = True
-                student = mstudent.student_get([("leerlingnummer", "=", reservation.leerlingnummer)])
-                student.rfid = rfid
-                mreservation.commit()
-                return {"status": True, "is-reservation": True, "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}"}
+        if location_key == "new-rfid":
+            reservation_margin = flask_app.config["RESERVATION_MARGIN"]
+            minimum_reservation_time = now - datetime.timedelta(seconds=reservation_margin)
+            reservations = mreservation.reservation_get_m([("valid", "=", False), ("timestamp", ">", minimum_reservation_time)])
+            if reservations:
+                reservation = reservations[0]
+                if reservation.item == "rfid":
+                    rfid = rfid.upper()
+                    reservation.data = rfid
+                    reservation.valid = True
+                    student = mstudent.student_get([("leerlingnummer", "=", reservation.leerlingnummer)])
+                    student.rfid = rfid
+                    mreservation.commit()
+                    log.info(f'{sys._getframe().f_code.co_name}:  Add reservation for {student.leerlingnummer}, {student.naam} {student.voornaam} {location_key}')
+                    return {"status": True, "is-reservation": True, "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}"}
         if rfid:
             student = mstudent.student_get([("rfid", "=", rfid)])
         elif leerlingnummer:
