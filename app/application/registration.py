@@ -140,6 +140,18 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "sequence_ctr": sequence_counter, "message_sent": message_sent})
                     return ret
 
+            if location["type"] == "toilet":
+                last_registration = mregistration.registration_get([("leerlingnummer", "=", student.leerlingnummer), ("location", "=", location_key)], order_by="-id")
+                if last_registration:
+                    sequence_counter = last_registration.aantal_items + 1
+                else:
+                    sequence_counter = 1
+                registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now,
+                                                               "aantal_items": sequence_counter})
+                if registration:
+                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "sequence_ctr": sequence_counter})
+                    return ret
+
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
             return {"status": False, "data": "Kan geen nieuwe registratie maken"}
         log.info(f'{sys._getframe().f_code.co_name}:  rif/leerlingnummer {rfid}/{leerlingnummer} not found in database')
@@ -165,7 +177,8 @@ def registration_delete(ids):
 
 overview_table_extra_headers = {
     "sms": ["SMS", "Opmerking"],
-    "cellphone": ["Bericht", "Aantal", ]
+    "cellphone": ["Bericht", "Aantal", ],
+    "toilet": ["Aantal", ],
 }
 
 
@@ -226,6 +239,8 @@ def registration_get(filters):
                 item.update({"remark": registration.text1, "remark_ack": registration.flag1, "sms_sent": registration.flag2,})
             elif type == "cellphone":
                 item.update({"sequence_ctr": registration.aantal_items, "message_sent": registration.flag1})
+            elif type == "toilet":
+                item.update({"sequence_ctr": registration.aantal_items})
             data.append(item)
         return ret
     except Exception as e:

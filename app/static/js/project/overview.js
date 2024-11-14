@@ -138,6 +138,8 @@ const socketio_update_status = (type, data) => {
                             } else if (item.sequence_ctr < (limit - 1)) {
                                 registration_container.firstElementChild.firstChild.disabled = true;
                             }
+                        } else if (locations[current_location].type === "toilet") {
+                            registration_container.innerHTML += `<td>${item.sequence_ctr}</td>`;
                         }
                     }
                     registration_container.classList.add("S" + item.leerlingnummer);

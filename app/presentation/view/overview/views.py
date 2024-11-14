@@ -11,7 +11,7 @@ from . import overview
 @overview.route('/overview/show', methods=['POST', 'GET'])
 @login_required
 def show():
-    return render_template('overview/overview.html', title="Overzicht", filters=get_filters(["sms", "cellphone", "nietverplicht", "verkoop"]), show_rfidusb_location_select=True)
+    return render_template('overview/overview.html', title="Overzicht", filters=get_filters(["sms", "cellphone", "nietverplicht", "verkoop", "toilet"]), show_rfidusb_location_select=True)
 
 
 def get_current_registrations(msg, client_sid=None):

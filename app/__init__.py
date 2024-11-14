@@ -122,8 +122,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.64: add dummy location (new-rfid) that is set when the students page is displayed, this to avoid accidentally adding a registration.  Bugfix updating the "soep" field
 # 0.65: when both the overview and students page are opened in seperate tab, select the correct location depending on the visibility of the tab.  Small update when making an RFID reservation
 # 0.66: small bugfix when saving yaml
+# 0.67: add location-type toilet
 
-version = "0.66"
+version = "0.67"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
