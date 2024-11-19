@@ -66,7 +66,7 @@ flask_app.config.from_pyfile('config.py')
 # 0.45: implement rfidusb heartbeat, remove location-select if rfidusb-server is not running, color orange if no badgereader is connect to usb.
 # 0.46: badgreader can update br-url and br-key
 # 0.47: default page after login.  Added sms-registration.  Bugfix import new students.
-# 0.48: reworked api-key.  Added upgrade button (not implemented yet)
+# 0.48: reworked api-key.  Added update button (not implemented yet)
 # 0.49: added support for smsAPI
 # 0.50: updated location selector
 # 0.51: update requirements.txt
@@ -123,8 +123,10 @@ flask_app.config.from_pyfile('config.py')
 # 0.65: when both the overview and students page are opened in seperate tab, select the correct location depending on the visibility of the tab.  Small update when making an RFID reservation
 # 0.66: small bugfix when saving yaml
 # 0.67: add location-type toilet
+# 0.68: bugfixed sw-update.
 
-version = "0.67"
+
+version = "0.68"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -150,7 +152,7 @@ class MyLogFilter(logging.Filter):
         record.username = current_user.username if current_user and current_user.is_active else 'NONE'
         return True
 
-LOG_FILENAME = os.path.join(sys.path[0], app_config[config_name].STATIC_PATH, f'log/{flask_app.config["LOG_FILE"]}.txt')
+LOG_FILENAME = os.path.join(sys.path[0], f'log/{flask_app.config["LOG_FILE"]}.txt')
 try:
     log_level = getattr(logging, app_config[config_name].LOG_LEVEL)
 except:

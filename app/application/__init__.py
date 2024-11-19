@@ -1,4 +1,4 @@
-__all__ = ['tables', 'datatables', 'socketio', 'settings', 'warning', 'cron', "location", "api", "upgrade", "sms", "staff"]
+__all__ = ['tables', 'datatables', 'socketio', 'settings', 'warning', 'cron', "location", "api", "update", "sms", "staff"]
 
 from app.application.student import student_load_from_sdh, push_reservations_to_server
 from app.application.staff import staff_load_from_sdh

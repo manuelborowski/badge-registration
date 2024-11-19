@@ -1,7 +1,7 @@
 from flask import request, send_file
 from . import api
 from app.application import user as muser, settings as msettings, registration as mregistration
-from app.application import socketio as msocketio, location as mlocation, upgrade as mupgrade, balance as mbalance, student as mstudent
+from app.application import socketio as msocketio, location as mlocation, update as mupdate, balance as mbalance, student as mstudent
 from app import log, version
 import json, sys, html, io
 from functools import wraps
@@ -205,9 +205,9 @@ def sync_registrations_data():
 # get software version from server and compare with own version
 # get, from server, all missing sql-scripts and update script
 # run, in sequence, all sql scripts and run update script.
-@api.route('/api/upgrade/client', methods=['POST'])
+@api.route('/api/update/client', methods=['POST'])
 @user_key_required
-def upgrade_software_client():
+def update_software_client():
     data = json.loads(request.data)
     nbr_new, nbr_doubles = mregistration.sync_registrations_server(data["data"])
     ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_doubles": nbr_doubles}}
@@ -215,13 +215,12 @@ def upgrade_software_client():
 
 
 # serverside api
-@api.route('/api/upgrade/server', methods=['GET'])
+@api.route('/api/update/server', methods=['GET'])
 @user_key_required
-def upgrade_software_server():
+def update_software_server():
     versions = request.args.get("versions", "")
-    files = mupgrade.get_upgrade_files(versions)
+    files = mupdate.get_update_files(versions)
     return {"status": True, "data": files}
-
 
 
 @api.route('/api/papercut/upload', methods=['POST'])

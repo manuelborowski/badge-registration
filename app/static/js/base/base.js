@@ -62,9 +62,9 @@ export const start_sync = async () => {
     busy_indication_off();
 }
 
-export const start_upgrade = async () => {
+export const start_update = async () => {
     busy_indication_on();
-    bootbox.confirm("Start met software upgrade...",
+    bootbox.confirm("Start met software update...",
         async result => {const ret = await fetch(Flask.url_for('api.upgrade_software_client'), {method: 'POST', headers: {'x-api-key': api_key,}})});
     busy_indication_off();
 }
