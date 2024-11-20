@@ -1,42 +1,30 @@
-import os, sys
+import os, sys, yaml
+from pathlib import Path
 
 #logging on file level
 import logging
+
 from app import MyLogFilter, top_log_handle
 log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
 
-def get_update_files(versions):
+def get_update_data(versions):
     try:
         versions = versions.split("-")
         first_version = float(versions[0])
         last_version = float(versions[1])
         log.info(f"{sys._getframe().f_code.co_name}: get version from {first_version} till {last_version}")
         update_path = "update"
-        files = os.listdir(update_path)
-        all_prefixes = [float(s.split("-")[0]) for s in files if "-" in s]
-        versions = set([p for p in all_prefixes if p >= first_version and p <= last_version])
-        update_files = []
-        for version in versions:
-            entry = {}
-            if f"{version}-update.sql" in files:
-                content = open(f"{update_path}/{version}-update.sql", "r").read()
-                entry["sql"]= content
-            if f"{version}-config.py" in files:
-                content = open(f"{update_path}/{version}-config.py", "r").read()
-                entry["config"] = content
-            if f"{version}-bash.sh" in files:
-                content = open(f"{update_path}/{version}-bash.sh", "r").read()
-                entry["shell"] = content
-            if entry:
-                entry["version"] = version
-                update_files.append(entry)
-        if "bash.sh" in files:
-            content = open(f"{update_path}/bash.sh", "r").read()
-            update_files.append(({"shell": content}))
-        return update_files
+        filenames = os.listdir(update_path)
+        files2version = [float(Path(s).stem) for s in filenames if "yaml" in s]
+        file_versions = [p for p in files2version if p >= first_version and p <= last_version]
+        updates = []
+        for version in file_versions:
+            content = open(f"{update_path}/{version}.yaml", "r").read()
+            updates.append(yaml.safe_load(content) )
+        return {"status": True, "data": updates}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-        return []
+        return {"status": False, "data": str(e)}
 

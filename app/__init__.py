@@ -124,9 +124,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.66: small bugfix when saving yaml
 # 0.67: add location-type toilet
 # 0.68: bugfixed sw-update.
+# 0.69: reworked version-update
 
-
-version = "0.68"
+version = "0.69"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

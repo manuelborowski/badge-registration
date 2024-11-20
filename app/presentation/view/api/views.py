@@ -219,8 +219,8 @@ def update_software_client():
 @user_key_required
 def update_software_server():
     versions = request.args.get("versions", "")
-    files = mupdate.get_update_files(versions)
-    return {"status": True, "data": files}
+    ret = mupdate.get_update_data(versions)
+    return ret
 
 
 @api.route('/api/papercut/upload', methods=['POST'])
