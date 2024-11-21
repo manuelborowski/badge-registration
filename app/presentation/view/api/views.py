@@ -226,7 +226,7 @@ def update_software_server():
 @api.route('/api/update/version', methods=['GET'])
 @user_key_required
 def get_update_version():
-    ret = mupdate.get_update_data()
+    ret = mupdate.get_latest_update_version()
     return ret
 
 

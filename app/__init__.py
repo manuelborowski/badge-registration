@@ -126,8 +126,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.68: bugfixed sw-update.
 # 0.69: reworked version-update
 # 0.70: reworked version-update
+# 0.71: small bugfix
 
-version = "0.70"
+version = "0.71"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
