@@ -223,6 +223,13 @@ def update_software_server():
     return ret
 
 
+@api.route('/api/update/version', methods=['GET'])
+@user_key_required
+def get_update_version():
+    ret = mupdate.get_update_data()
+    return ret
+
+
 @api.route('/api/papercut/upload', methods=['POST'])
 @user_key_required
 def papercut_upload():

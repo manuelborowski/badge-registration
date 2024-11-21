@@ -125,12 +125,12 @@ flask_app.config.from_pyfile('config.py')
 # 0.67: add location-type toilet
 # 0.68: bugfixed sw-update.
 # 0.69: reworked version-update
+# 0.70: reworked version-update
 
-version = "0.69"
+version = "0.70"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
-
 
 #  The original werkzeug-url-converter cannot handle negative integers (e.g. asset/add/-1/1)
 class IntegerConverter(OrigIntegerConvertor):
