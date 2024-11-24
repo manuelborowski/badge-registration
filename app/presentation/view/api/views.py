@@ -117,7 +117,7 @@ def registration_add():
     if "is-reservation" in ret:
         msocketio.broadcast_message({"type": "update-status", "data": {"item": "reservation", "status": True, "data": ret["data"]}})
     else:
-        msocketio.send_to_room({'type': 'update-current-status', 'data': ret}, location)
+        msocketio.send_to_room({'type': 'update-list-of-registrations', 'data': ret}, location)
     return json.dumps({"status": ret["status"]})
 
 
@@ -129,7 +129,7 @@ def registration_update():
     location = data["location_key"]
     fields = data["fields"]
     ret = mregistration.api_registration_update(location, ids, fields)
-    msocketio.send_to_room({'type': 'update-registration', 'data': ret}, location)
+    msocketio.send_to_room({'type': 'update-items-in-list-of-registrations', 'data': ret}, location)
     return json.dumps({"status": ret["status"]})
 
 
@@ -140,7 +140,7 @@ def registration_send_message():
     ids = data["ids"]
     location = data["location_key"]
     ret = mregistration.api_registration_send_message(ids, location)
-    msocketio.send_to_room({'type': 'update-registration', 'data': ret}, location)
+    msocketio.send_to_room({'type': 'update-items-in-list-of-registrations', 'data': ret}, location)
     return json.dumps({"status": ret["status"]})
 
 
@@ -151,7 +151,7 @@ def registration_delete():
     ids = data["ids"]
     location = data["location"]
     ret = mregistration.api_registration_delete(ids)
-    msocketio.send_to_room({'type': 'update-current-status', 'data': ret}, location)
+    msocketio.send_to_room({'type': 'update-list-of-registrations', 'data': ret}, location)
     return json.dumps(ret)
 
 

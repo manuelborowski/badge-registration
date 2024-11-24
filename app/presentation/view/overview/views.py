@@ -18,9 +18,9 @@ def get_current_registrations(msg, client_sid=None):
     filters = msg["data"]["filters"]
     try:
         ret = mregistration.registration_get(filters)
-        msocketio.send_to_client({'type': 'update-current-status', 'data': ret})
+        msocketio.send_to_client({'type': 'update-list-of-registrations', 'data': ret})
     except Exception as e:
-        msocketio.send_to_client({'type': 'update-current-status', 'data': {'status': False, 'message': str(e)}})
+        msocketio.send_to_client({'type': 'update-list-of-registrations', 'data': {'status': False, 'message': str(e)}})
 
 
 def clear_all_registrations(msg, client_sid=None):
@@ -30,7 +30,7 @@ def clear_all_registrations(msg, client_sid=None):
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
 
 
-msocketio.subscribe_on_type('get-current-registrations', get_current_registrations)
+msocketio.subscribe_on_type('request-list-of-registrations', get_current_registrations)
 msocketio.subscribe_on_type('clear-all-registrations', clear_all_registrations)
 
 

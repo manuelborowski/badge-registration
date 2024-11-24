@@ -2,7 +2,7 @@ import { create_context_menu} from "../base/right_click.js";
 import { ctx, get_data_of_row } from "../datatables/datatables.js"
 import {socketio} from "../base/socketio.js";
 import { formio_popup_create } from "../base/popup.js"
-import {rfidusb_start_timer_to_check_state, rfidusb_set_location, rfidusb_set_state} from "./rfidusb_locations.js";
+import {Rfid} from "./rfidusb.js";
 
 const __registration_add = async (item, ids) => {
    let person = get_data_of_row(ids[0]);
@@ -79,22 +79,22 @@ let context_menu = [
     {type: "item", iconscout: "wifi", label: "RFID code aanpassen", cb: __reserve_student_rfid},
     {type: "divider"},
     {type: "item", iconscout: "export", label: "Exporteer leerling rekeningen", cb: () => __export_student_balances(ctx.popups['export-student-balance'])},
-    // {type: "item", iconscout: "wifi", label: "Exporteer leerling printer rekeningen", cb: () => __upload_papercut()},
 ]
 $(document).ready(function () {
     const current_location = localStorage.getItem("overview-location-select");
     context_menu.unshift({type: "item", iconscout: "plus-circle", label: `Nieuwe registratie: ${locations[current_location].locatie}`, cb: ids => __registration_add(current_location, ids)});
     create_context_menu(context_menu);
     // When the students page is used to update the RFID code of a student
-    rfidusb_set_state(true);
-    rfidusb_set_location("new-rfid");
-    rfidusb_start_timer_to_check_state();
+    Rfid.init();
+    Rfid.set_location("new-rfid");
+    Rfid.set_managed_state(true);
     // Even on the students page, it is possible to get status-popups
     socketio.start(null, null);
     socketio.subscribe_on_receive("update-status", __socketio_update_status);
+    // In case multiple tabs/browsers to this page are opened, the Rfid-location (new-rfid) is set the one that is in focus.
     document.addEventListener("visibilitychange", () => {
         if (!document.hidden) {
-            rfidusb_set_location("new-rfid");
+            Rfid.set_location("new-rfid");
         }
     });
 });

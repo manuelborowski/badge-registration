@@ -10,8 +10,9 @@ from app.presentation.layout import utils
 from app.application import settings as msettings
 import datetime, json, sys
 
-@auth.route(f'/{flask_app.config["AUTO_LOGIN_URL"] if "AUTO_LOGIN_URL" in flask_app.config else "NA"}', methods=['POST', 'GET'])
-def auto_login():
+@auth.route(f'/{flask_app.config["AUTO_LOGIN_URL"] if "AUTO_LOGIN_URL" in flask_app.config else "NA1"}', methods=['POST', 'GET'])
+def auto_login_generic():
+    # remote server, generic auto login
     if "AUTO_LOGIN_URL" in flask_app.config:
         if "AUTO_USER" in flask_app.config:
             user = muser.get_first_user({'username': flask_app.config["AUTO_USER"]})
@@ -22,12 +23,28 @@ def auto_login():
                 log.error('Could not save timestamp')
             return render_template('base.html', default_view=True)
     form = LoginForm(request.form)
-    locations = msettings.get_configuration_setting("location-profiles")
-    return render_template('auth/login.html', form=form, title='Login', locations=locations)
+    return render_template('auth/login.html', form=form, title='Login', suppress_navbar=True)
+
+
+@auth.route(f'/{flask_app.config["AUTO_LOGIN_STAFF_REGISTRATION_URL"] if "AUTO_LOGIN_STAFF_REGISTRATION_URL" in flask_app.config else "NA2"}', methods=['POST', 'GET'])
+def auto_login_staff_registration():
+    # remote server, auto login for staff registration
+    if "AUTO_LOGIN_STAFF_REGISTRATION_URL" in flask_app.config:
+        if "AUTO_STAFF_REGISTRATION_USER" in flask_app.config:
+            user = muser.get_first_user({'username': flask_app.config["AUTO_STAFF_REGISTRATION_USER"]})
+            login_user(user)
+            log.info(u'user {} logged in'.format(user.username))
+            user = muser.update_user(user, {"last_login": datetime.datetime.now()})
+            if not user:
+                log.error('Could not save timestamp')
+            return render_template('register/register.html')
+    form = LoginForm(request.form)
+    return render_template('auth/login.html', form=form, title='Login', suppress_navbar=True)
 
 
 @auth.route('/', methods=['POST', 'GET'])
 def login():
+    # local server, auto login
     if "AUTO_LOGIN" in flask_app.config and flask_app.config["AUTO_LOGIN"]:
         if "AUTO_USER" in flask_app.config:
             user = muser.get_first_user({'username': flask_app.config["AUTO_USER"]})

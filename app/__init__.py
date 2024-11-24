@@ -9,8 +9,10 @@ from functools import wraps
 from flask_socketio import SocketIO
 from flask_apscheduler import APScheduler
 from flask_mail import Mail
+from flask_cors import CORS
 
 flask_app = Flask(__name__, instance_relative_config=True, template_folder='presentation/templates/')
+CORS(flask_app, origins=r"//cdn.datatables.net/*")
 
 # Configuration files...
 from config import app_config
@@ -79,7 +81,7 @@ flask_app.config.from_pyfile('config.py')
 # 0.53-export_leerling_rekening-0.5: small updates
 # 0.54: reworked navbar.  Reworked context-menu
 # 0.55: implemented context-remark and tooltip.
-# 0.55-major-rework-0.2: reworked remark-popup, changed to update-registration iso update-remark.
+# 0.55-major-rework-0.2: reworked remark-popup, changed to update-items-in-list-of-registrations iso update-remark.
 # 0.55-major-rework-0.3: overview update, added fields (sms-sent, remark-acked).  Take into account when 2 browsers, same location but different date, can handle socketio requests (registration updates)
 # 0.55-major-rework-0.4: reworked filters, put in seperate file
 # 0.55-major-rework-0.5: minor updates.  Added concept of extra-filters
@@ -127,8 +129,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.69: reworked version-update
 # 0.70: reworked version-update
 # 0.71: small bugfix
+# 0.72: refactored rfid-usb.  Added cors for datatables.
 
-version = "0.71"
+version = "0.72"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

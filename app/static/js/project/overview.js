@@ -4,7 +4,7 @@ import {person_image} from "../../img/base64-person.js";
 import {busy_indication_on, busy_indication_off} from "../base/base.js";
 import {add_to_popup_body, create_checkbox_element, create_input_element, hide_popup, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
 import {add_extra_filters, create_filters, enable_filters, disable_filters, subscribe_reset_button} from "../base/filters.js";
-import {rfidusb_set_location, subscribe_location_changed} from "./rfidusb_locations.js";
+import {Rfid} from "./rfidusb.js";
 
 let location_element, date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element,
     sms_specific_element, search_text_element;
@@ -14,7 +14,7 @@ let all_filters_element;
 let nbr_registered_element = document.querySelector("#nbr-registered");
 let photo_size_factor = 50;
 let nbr_registered = 0;
-let current_location = "";
+let current_location = null;
 let canvas_container = null;
 
 
@@ -34,33 +34,55 @@ $(document).ready(function () {
 
     socketio.start(null, null);
     current_location = location_element.value;
+    // each location has it own socketio-room.  This prevents socketio calls to browser that display a different location.
     socketio.subscribe_to_room(current_location);
-    socketio.subscribe_on_receive("update-current-status", socketio_update_status);
-    socketio.subscribe_on_receive("update-registration", socketio_update_registration);
+    // When multiple browsers are displaying the same location, they will be updated simultaneously when e.g. a registration is added
+    socketio.subscribe_on_receive("update-list-of-registrations", __socketio_update_list);
+    socketio.subscribe_on_receive("update-items-in-list-of-registrations", __socketio_update_items);
     let now = new Date();
     date_element.value = now.toISOString().split("T")[0];
-    location_element.addEventListener("change", get_current_registrations);
+    location_element.addEventListener("change", __location_selection_changed);
     date_element.addEventListener("change", event => __select_date(event));
     search_text_element.addEventListener("keydown", (event) => __do_on_enter_key_pressed(event));
-    sort_on_element.addEventListener("change", get_current_registrations);
-    view_layout_element.addEventListener("change", get_current_registrations);
-    sms_specific_element.addEventListener("change", get_current_registrations);
-    period_element.addEventListener("change", get_current_registrations);
-    cellphone_specific_element.addEventListener("change", get_current_registrations);
+    sort_on_element.addEventListener("change", __request_list_of_registrations_for_current_location);
+    view_layout_element.addEventListener("change", __request_list_of_registrations_for_current_location);
+    sms_specific_element.addEventListener("change", __request_list_of_registrations_for_current_location);
+    period_element.addEventListener("change", __request_list_of_registrations_for_current_location);
+    cellphone_specific_element.addEventListener("change", __request_list_of_registrations_for_current_location);
     photo_size_element.addEventListener("change", __resize_photos);
     subscribe_get_ids(__get_ids_of_selected_items_cb);
     subscribe_reset_button(__reset_button_cb);
-    subscribe_location_changed(__rfid_location_changed_cb);
-    get_current_registrations();
+    Rfid.init();
+    Rfid.subscribe_state_change_cb(__rfid_status_changed);
+    Rfid.set_managed_state(true);
+    __location_selection_changed();
+    // In case multiple tabs/browsers to this page are opened, the Rfid-location is set the one that is in focus.
     document.addEventListener("visibilitychange", () => {
         if (!document.hidden) {
-            rfidusb_set_location(current_location);
+            Rfid.set_location(current_location)
         }
     });
-
 });
 
-const socketio_update_status = (type, data) => {
+const __location_selection_changed = () => {
+    if (current_location !== null) socketio.unsubscribe_from_room(current_location);
+    current_location = location_element.value;
+    socketio.subscribe_to_room(current_location);
+    Rfid.set_location(current_location);
+    __request_list_of_registrations_for_current_location();
+}
+
+const __rfid_status_changed = status => {
+    if (status === Rfid.state.up) {
+        location_element.style.background = "lightgreen";
+        Rfid.set_location(current_location);
+    } else {
+        location_element.style.background = "white";
+    }
+}
+
+// called by the server when the list of registrations is changed, i.e. one or more items (registrations) are added or removed, or a new list is displayed
+const __socketio_update_list = (type, data) => {
     if (data.status) {
         const view_tile = view_layout_element.value === "tile";
         if (data.search) {
@@ -199,12 +221,9 @@ const extra_filters_pool = {
     default: []
 }
 
-const get_current_registrations = () => {
+const __request_list_of_registrations_for_current_location = () => {
     busy_indication_on();
     const view_tile = view_layout_element.value === "tile";
-    socketio.unsubscribe_from_room(current_location);
-    current_location = location_element.value;
-    socketio.subscribe_to_room(current_location);
     //store the current overview-location-select
     localStorage.setItem("overview-location-select", current_location);
     let location_label = location_element.options[location_element.selectedIndex].innerHTML;
@@ -227,7 +246,7 @@ const get_current_registrations = () => {
     for (const item of Array.from(document.querySelectorAll(".overview-filter"))) {
         filters[item.id] = item.value;
     }
-    socketio.send_to_server("get-current-registrations", {filters});
+    socketio.send_to_server("request-list-of-registrations", {filters});
     __reset_nbr_registered();
 
     let context_menu = locations[current_location].type in context_menu_pool ? context_menu_pool[locations[current_location].type] : context_menu_pool["default"];
@@ -237,7 +256,8 @@ const get_current_registrations = () => {
     add_extra_filters(extra_filters);
 }
 
-const socketio_update_registration = (type, msg) => {
+// Called by the server when one or more items are updated, e.g. smartschool message is sent...
+const __socketio_update_items = (type, msg) => {
     if (msg.status) {
         for (const item of msg.data) {
             if (document.querySelector(`[data-id="${item.id}"]`) !== null) {
@@ -352,7 +372,7 @@ const __clear_checkboxes = ids => {
 
 const __resize_photos = () => {
     photo_size_factor = photo_size_element.value;
-    get_current_registrations();
+    __request_list_of_registrations_for_current_location();
 }
 
 const __update_nbr_registered = (delete_registration = false) => {
@@ -369,27 +389,22 @@ const __reset_nbr_registered = () => {
 
 const __do_on_enter_key_pressed = (event) => {
     if (event.key === "Enter") {
-        get_current_registrations();
+        __request_list_of_registrations_for_current_location();
         search_text_element.value = "";
     }
 }
 
 const __select_date = (event) => {
     sms_specific_element.value = "on-date";
-    get_current_registrations();
+    __request_list_of_registrations_for_current_location();
 }
 
 const __reset_button_cb = filters => {
     for (const filter of filters) {
         if (filter.name === "filter-location") {
             location_element.value = filter.value;
-            get_current_registrations();
+            __request_list_of_registrations_for_current_location();
         }
     }
 }
 
-// When the location-select (where scanned rfid code is sent to) in the menubar is changed, the location-select on the overview page follows
-const __rfid_location_changed_cb = location => {
-    location_element.value = location;
-    location_element.dispatchEvent(new Event("change"));
-}

@@ -286,9 +286,7 @@ $(document).ready(function () {
         },
         pagingType: "full_numbers",
         columns: ctx.table_config.template,
-        language: {
-            url: "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Dutch.json"
-        },
+        language: {url: "//cdn.datatables.net/plug-ins/2.1.8/i18n/nl-NL.json"},
         initComplete: function (settings, json) { //intercept flash messages when the table is loaded
             if ('flash' in json) {
                 bootbox.alert(json['flash'].toString());

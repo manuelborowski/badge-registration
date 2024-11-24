@@ -1,5 +1,3 @@
-import { rfidusb_create_select_locations} from "../project/rfidusb_locations.js";
-
 export function flash_messages(list) {
     for (var i = 0; i < list.length; i++) {
         var message = list[i];
@@ -145,10 +143,6 @@ $(document).ready(() => {
             }
             navbar_element.appendChild(li);
         }
-    }
-
-    if (show_rfidusb_location_select) {
-        navbar_element.appendChild(rfidusb_create_select_locations(locations));
     }
 
     if (stand_alone) {
