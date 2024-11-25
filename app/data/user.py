@@ -23,9 +23,10 @@ class User(UserMixin, db.Model, SerializerMixin):
     class LEVEL:
         USER = 1
         SUPERVISOR = 3
+        SUPERVISOR_PLUS = 4
         ADMIN = 5
 
-        ls = ["GEBRUIKER", "SECRETARIAAT", "ADMINISTRATOR"]
+        ls = ["GEBRUIKER", "SECRETARIAAT", "SECRETARIAAT+", "ADMINISTRATOR"]
 
         @staticmethod
         def i2s(i):
@@ -33,12 +34,14 @@ class User(UserMixin, db.Model, SerializerMixin):
                 return User.LEVEL.ls[0]
             elif i == 3:
                 return User.LEVEL.ls[1]
-            if i == 5:
+            elif i == 4:
                 return User.LEVEL.ls[2]
+            if i == 5:
+                return User.LEVEL.ls[3]
 
     @staticmethod
     def get_zipped_levels():
-        return list(zip(["1", "3", "5"], User.LEVEL.ls))
+        return list(zip(["1", "3", "4", "5"], User.LEVEL.ls))
 
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(256))
@@ -69,6 +72,10 @@ class User(UserMixin, db.Model, SerializerMixin):
     @property
     def is_at_least_supervisor(self):
         return self.level >= User.LEVEL.SUPERVISOR
+
+    @property
+    def is_at_least_supervisor_plus(self):
+        return self.level >= User.LEVEL.SUPERVISOR_PLUS
 
     @property
     def is_at_least_admin(self):

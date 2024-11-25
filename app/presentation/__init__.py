@@ -6,6 +6,8 @@ from flask_login import current_user
 @flask_app.context_processor
 def inject_defaults():
     locations = get_configuration_setting("location-profiles")
+    user_level = current_user.level if current_user.is_authenticated else 1
+    locations = {k: v for [k, v] in locations.items() if "access_level" not in v or v["access_level"] <= user_level}
     api_key = get_api_key(current_user.level) if current_user.is_active else ""
     return dict(version=f'@ 2022 MB. {version}', title=flask_app.config['HTML_TITLE'], site_name=flask_app.config['SITE_NAME'], stand_alone=flask_app.stand_alone, locations=locations,
                 rfidusb_url=flask_app.config["RFIDUSB_API_URL"], api_key=api_key,

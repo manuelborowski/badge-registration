@@ -41,6 +41,30 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     return {"status": True, "is-reservation": True, "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}"}
             log.info(f'{sys._getframe().f_code.co_name}:  No valid reservation for {location_key}')
             return {"status": False, "is-reservation": True, "data": f"Nieuwe RFID niet gelukt.  Misschien te lang gewacht met scannen, probeer nogmaals"}
+        location_settings = msettings.get_configuration_setting("location-profiles")
+        if location_key not in location_settings:
+            log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
+            return {"status": False, "data": f"Locatie {location_key} is niet geldig"}
+        location = location_settings[location_key]
+        if "table" in location and location["table"] == "staff":
+            staff = mstaff.staff_get(("rfid", "=", rfid))
+            log.info(f'{sys._getframe().f_code.co_name}:  Add registration for {staff.code}, {staff.naam} {staff.voornaam} {location_key}')
+            ret = {
+                "status": True,
+                "date": str(today),
+                "action": "add",
+                "data": [{
+                    "leerlingnummer": staff.code,
+                    "naam": staff.naam,
+                    "voornaam": staff.voornaam,
+                    "klascode": staff.code,
+                }]
+            }
+            registration = mregistration.registration_add({"leerlingnummer": staff.code, "location": location_key, "time_in": now})
+            if registration:
+                ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id})
+                return ret
+
         if rfid:
             student = mstudent.student_get([("rfid", "=", rfid)])
         elif leerlingnummer:
@@ -50,12 +74,7 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
         if student:
             photo_obj = mphoto.photo_get({"id": student.foto_id})
             photo = base64.b64encode(photo_obj.photo).decode('utf-8') if photo_obj else ''
-            location_settings = msettings.get_configuration_setting("location-profiles")
-            if location_key not in location_settings:
-                log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
-                return {"status": False, "data": f"Locatie {location_key} is niet geldig"}
             log.info(f'{sys._getframe().f_code.co_name}:  Add registration for {student.leerlingnummer}, {student.naam} {student.voornaam} {location_key}')
-            location = location_settings[location_key]
             ret = {
                 "status": True,
                 "date": str(today),
@@ -182,66 +201,97 @@ overview_table_extra_headers = {
 }
 
 
+# filters priority (high to low)
+# search
+# sms/cellphone specific
+# period
+
 def registration_get(filters):
     try:
-        ret_filter = {}
         locations = msettings.get_configuration_setting("location-profiles")
-        location = filters["filter-location"]
-        type = locations[location]["type"]
-        include_foto = filters["view-layout-select"] == "tile"
+        location_key = filters["filter-location"]
+        location = locations[location_key]
+        type = location["type"]
+        ret = {'status': True, "action": "add", "data": []}
         if filters["search-text"] != "":
-            registrations = mregistration.registration_student_photo_get(location, search=filters["search-text"], include_foto=include_foto)
-            ret_filter = {"search": True}
+            search = filters["search-text"]
         else:
-            flag1 = None
-            flag2 = None
-            time_low = None
-            time_high = None
-            # ignore period filter when the sms-specific or cellphone-specific is used
-            if type == "sms" and filters["sms-specific-select"] == "all" or type == "cellphone" and filters["cellphone-specific-select"] == "all" or type not in ["sms", "cellphone"]:
-                if filters["period-select"] == "on-date":
-                    selected_day = filters["filter-date"]
-                    if not selected_day:
-                        selected_day = str(datetime.datetime.now())
-                    time_low = datetime.datetime.strptime(selected_day, "%Y-%m-%d").date()
-                    time_high = time_low + datetime.timedelta(days=1)
-                    ret_filter = {"date": selected_day}
-                elif filters["period-select"] in ["last-2-months", "last-4-months", "last-week"]:
-                    delta = 60 if filters["period-select"] == "last-2-months" else 120 if filters["period-select"] == "last-4-months" else 7
-                    time_low = datetime.datetime.now() - datetime.timedelta(days=delta)
-            if type == "sms":
-                flag1 = False if filters["sms-specific-select"] == "no-ack" else None
-                flag2 = False if filters["sms-specific-select"] == "no-sms-sent" else None
-            elif type == "cellphone":
-                flag1 = False if filters["cellphone-specific-select"] == "no-message-sent" else None
-            registrations = mregistration.registration_student_photo_get(location, time_low=time_low, time_high=time_high, flag1=flag1, flag2=flag2, include_foto=include_foto)
-        overview_table_headers = ["Tijdstempel", "Naam", "Klas"]
-        if type in overview_table_extra_headers:
-            overview_table_headers += overview_table_extra_headers[type]
-        data = []
-        ret = {'status': True, "action": "add", "data": data, "headers": overview_table_headers}
-        ret.update(ret_filter)
-        for tuple in registrations:
-            registration = tuple[0]
-            student = tuple[1]
-            item = {
-                "leerlingnummer": student.leerlingnummer,
-                "naam": student.naam,
-                "voornaam": student.voornaam,
-                "klascode": student.klascode,
-                "timestamp": str(registration.time_in),
-                "id": registration.id
-            }
-            if include_foto:
-                photo = tuple[2]
-                item.update({"photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else ''})
-            if type == "sms":
-                item.update({"remark": registration.text1, "remark_ack": registration.flag1, "sms_sent": registration.flag2,})
-            elif type == "cellphone":
-                item.update({"sequence_ctr": registration.aantal_items, "message_sent": registration.flag1})
-            elif type == "toilet":
-                item.update({"sequence_ctr": registration.aantal_items})
-            data.append(item)
+            search = None
+        time_low = time_high = selected_day = None
+        flag1 = flag2 = None
+        # ignore period filter when the sms-specific or cellphone-specific is used
+        if search == None:
+        # if type == "sms" and filters["sms-specific-select"] == "all" or type == "cellphone" and filters["cellphone-specific-select"] == "all" or type not in ["sms", "cellphone"]:
+            if filters["period-select"] == "on-date":
+                selected_day = filters["filter-date"]
+                if not selected_day:
+                    selected_day = str(datetime.datetime.now())
+                time_low = datetime.datetime.strptime(selected_day, "%Y-%m-%d").date()
+                time_high = time_low + datetime.timedelta(days=1)
+            elif filters["period-select"] in ["last-2-months", "last-4-months", "last-week"]:
+                delta = 60 if filters["period-select"] == "last-2-months" else 120 if filters["period-select"] == "last-4-months" else 7
+                time_low = datetime.datetime.now() - datetime.timedelta(days=delta)
+        if "table" in location and location["table"] == "staff":
+            # Staff specific data
+            ret.update({"headers": ["Tijdstempel", "Naam", "Code"]})
+            registrations = mregistration.registration_staff_get(location_key, search=search, time_low=time_low, time_high=time_high)
+            for tuple in registrations:
+                registration = tuple[0]
+                staff = tuple[1]
+                item = {
+                    "leerlingnummer": staff.code,
+                    "naam": staff.naam,
+                    "voornaam": staff.voornaam,
+                    "klascode": staff.code,
+                    "timestamp": str(registration.time_in),
+                    "id": registration.id,
+                    "photo": "",
+                }
+                ret["data"].append(item)
+            pass
+        else:
+            # Student specific data
+            include_foto = filters["view-layout-select"] == "tile"
+            if search == None:
+                if type == "sms":
+                    flag1 = False if filters["sms-specific-select"] == "no-ack" else None
+                    flag2 = False if filters["sms-specific-select"] == "no-sms-sent" else None
+                elif type == "cellphone":
+                    flag1 = False if filters["cellphone-specific-select"] == "no-message-sent" else None
+                if flag1 != None or flag2 != None:
+                    time_low = time_high = selected_day = None
+            registrations = mregistration.registration_student_photo_get(location_key, search=search, time_low=time_low, time_high=time_high, flag1=flag1, flag2=flag2, include_foto=include_foto)
+            headers = ["Tijdstempel", "Naam", "Klas"]
+            if type in overview_table_extra_headers:
+                headers += overview_table_extra_headers[type]
+            ret.update({"headers": headers})
+            for tuple in registrations:
+                registration = tuple[0]
+                student = tuple[1]
+                item = {
+                    "leerlingnummer": student.leerlingnummer,
+                    "naam": student.naam,
+                    "voornaam": student.voornaam,
+                    "klascode": student.klascode,
+                    "timestamp": str(registration.time_in),
+                    "id": registration.id
+                }
+                if include_foto:
+                    photo = tuple[2]
+                    item.update({"photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else ''})
+                if type == "sms":
+                    item.update({"remark": registration.text1, "remark_ack": registration.flag1, "sms_sent": registration.flag2,})
+                elif type == "cellphone":
+                    item.update({"sequence_ctr": registration.aantal_items, "message_sent": registration.flag1})
+                elif type == "toilet":
+                    item.update({"sequence_ctr": registration.aantal_items})
+                ret["data"].append(item)
+
+            if search != None:
+                ret.update({"search": True})
+            elif selected_day != None:
+                ret.update({"date": selected_day})
+
         return ret
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')

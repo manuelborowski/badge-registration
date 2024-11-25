@@ -34,6 +34,10 @@ $(document).ready(function () {
 
     socketio.start(null, null);
     current_location = location_element.value;
+    if (!(current_location in locations)) {
+        current_location = location_element.options[0].value;
+        location_element.options[0].selected = true;
+    }
     // each location has it own socketio-room.  This prevents socketio calls to browser that display a different location.
     socketio.subscribe_to_room(current_location);
     // When multiple browsers are displaying the same location, they will be updated simultaneously when e.g. a registration is added
@@ -218,6 +222,7 @@ const context_menu_pool = {
 
 const extra_filters_pool = {
     sms: ["sms-specific-select"],
+    cellphone: ["cellphone-specific-select"],
     default: []
 }
 

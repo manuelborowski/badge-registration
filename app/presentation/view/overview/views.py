@@ -11,7 +11,7 @@ from . import overview
 @overview.route('/overview/show', methods=['POST', 'GET'])
 @login_required
 def show():
-    return render_template('overview/overview.html', title="Overzicht", filters=get_filters(["sms", "cellphone", "nietverplicht", "verkoop", "toilet"]), show_rfidusb_location_select=True)
+    return render_template('overview/overview.html', title="Overzicht", filters=get_filters())
 
 
 def get_current_registrations(msg, client_sid=None):
@@ -34,13 +34,12 @@ msocketio.subscribe_on_type('request-list-of-registrations', get_current_registr
 msocketio.subscribe_on_type('clear-all-registrations', clear_all_registrations)
 
 
-def get_filters(location_types):
+def get_filters():
     try:
         locations = msettings.get_configuration_setting("location-profiles")
         if locations:
-            if type(location_types) is not list:
-                location_types = [location_types]
-            location_choices = [[k, l["locatie"]] for k, l in locations.items() if l["type"] in location_types]
+            user_level = current_user.level if current_user.is_authenticated else 1
+            location_choices = [[k, l["locatie"]] for k, l in locations.items() if "access_level" not in l or l["access_level"] <= user_level]
             location_choices.sort(key=lambda x: x[1])
             return [
                 {
@@ -93,7 +92,7 @@ def get_filters(location_types):
                     'name': 'period-select',
                     'label': 'Periode',
                     'choices': [["on-date", "Op datum"], ["last-week", "Laatste week"], ["last-2-months", "Laatste 2 maanden"], ["last-4-months", "Laatste 4 maandend"]],
-                    'default': "on-date",
+                    'default': "last-week",
                     "store": True
                 },
                 {
