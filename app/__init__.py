@@ -132,8 +132,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.72: refactored rfid-usb.  Added cors for datatables.
 # 0.72-time-registration-0.1: take user-level into account when creating the select-list of locations.  Started with timeregistration.  Added user secretariaat+
 # 0.72-time-registration-0.2: added option "inout" to timeregistration.  Timeregistration is up and running.
+# 0.73: merged from 0.72-time-registration-0.2
 
-version = "0.72-time-registration-0.2"
+version = "0.73"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
