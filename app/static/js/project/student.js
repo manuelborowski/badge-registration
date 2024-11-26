@@ -90,7 +90,7 @@ $(document).ready(function () {
     Rfid.set_managed_state(true);
     // Even on the students page, it is possible to get status-popups
     socketio.start(null, null);
-    socketio.subscribe_on_receive("update-status", __socketio_update_status);
+    socketio.subscribe_on_receive("alert-pop-up", __alert_pop_up);
     // In case multiple tabs/browsers to this page are opened, the Rfid-location (new-rfid) is set the one that is in focus.
     document.addEventListener("visibilitychange", () => {
         if (!document.hidden) {
@@ -99,6 +99,6 @@ $(document).ready(function () {
     });
 });
 
-const __socketio_update_status = (type, data) => {
+const __alert_pop_up = (type, data) => {
     alert(`${data.data}`);
 }

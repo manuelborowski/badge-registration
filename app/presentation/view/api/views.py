@@ -114,11 +114,11 @@ def registration_add():
     location = data["location_key"]
     timestamp = data["timestamp"] if "timestamp" in data else None
     ret = mregistration.api_registration_add(location, timestamp, leerlingnummer, code)
-    if "is-reservation" in ret:
-        msocketio.broadcast_message({"type": "update-status", "data": {"item": "reservation", "status": True, "data": ret["data"]}})
-    else:
-        msocketio.send_to_room({'type': 'update-list-of-registrations', 'data': ret}, location)
-    return json.dumps({"status": ret["status"]})
+    if ret["type"] in ["alert-pop-up", "update-items-in-list-of-registrations"]:
+        msocketio.broadcast_message(ret)
+    elif ret["type"] in ["update-list-of-registrations"]:
+        msocketio.send_to_room(ret, location)
+    return json.dumps({"status": ret["data"]["status"]})
 
 
 @api.route('/api/registration/update', methods=['POST'])

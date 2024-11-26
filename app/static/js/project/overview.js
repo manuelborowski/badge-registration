@@ -166,6 +166,8 @@ const __socketio_update_list = (type, data) => {
                             }
                         } else if (locations[current_location].type === "toilet") {
                             registration_container.innerHTML += `<td>${item.sequence_ctr}</td>`;
+                        } else if (locations[current_location].type === "timeregistration") {
+                            registration_container.innerHTML += `<td data-col="time-out">${item.time_out}</td>`;
                         }
                     }
                     registration_container.classList.add("S" + item.leerlingnummer);
@@ -280,6 +282,9 @@ const __socketio_update_items = (type, msg) => {
                 }
                 if (item.ss_message_sent !== undefined) {
                     if (view_list) row.querySelector('[data-col="message"]').innerHTML = "verstuurd";
+                }
+                if (item.time_out !== undefined) {
+                    if (view_list) row.querySelector('[data-col="time-out"]').innerHTML = item.time_out;
                 }
             }
         }
