@@ -136,8 +136,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.74: small bugifx
 # 0.75: auto-reload page to reset socketio
 # 0.76: small updates in auto-reload
+# 0.77: firefox specific update
 
-version = "0.76"
+version = "0.77"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
