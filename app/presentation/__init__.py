@@ -13,7 +13,8 @@ def inject_defaults():
                 rfidusb_url=flask_app.config["RFIDUSB_API_URL"], api_key=api_key,
                 rfidusb_br_url=flask_app.config["RFIDUSB_BR_URL"] if "RFIDUSB_BR_URL" in flask_app.config else "",
                 rfidusb_br_key=flask_app.config["RFIDUSB_BR_KEY"] if "RFIDUSB_BR_KEY" in flask_app.config else "",
-                reservation_margin=flask_app.config["RESERVATION_MARGIN"] if "RESERVATION_MARGIN" in flask_app.config else ""
+                reservation_margin=flask_app.config["RESERVATION_MARGIN"] if "RESERVATION_MARGIN" in flask_app.config else "",
+                reload_page_moments = flask_app.config["RELOAD_PAGE_MOMENTS"],
                 )
 
 

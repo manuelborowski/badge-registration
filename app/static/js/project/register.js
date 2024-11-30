@@ -15,6 +15,7 @@ $(document).ready(function () {
         }
     });
     __update_clock();
+    __reload_page();
 });
 
 let timer_id = null;
@@ -40,7 +41,6 @@ const __socketio_update_item_in_list = (type, data) => {
     }
 }
 
-
 const __update_clock = () => {
     const now = new Date();
     const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',};
@@ -49,4 +49,22 @@ const __update_clock = () => {
     setTimeout(__update_clock, 1000);
 }
 
-
+// reload the page at certain moments to reset the socketio connections
+const __reload_page = () => {
+    const today = new Date().toDateString();
+    const now = Date.now();
+    let moments = reload_page_moments.map(m => Date.parse(`${today} ${m} GMT+1`)).sort();
+    moments.push(moments[0] + 24 * 3600 * 1000);  // first moment is added at end with 24 hours added to handle array overflow
+    let stored_moment = parseInt(localStorage.getItem("reload_page_at"));
+    if (stored_moment === null || !moments.includes(stored_moment)) { // Not stored yet, store the first (earliest) moment
+        localStorage.setItem("reload_page_at", moments[0]);
+        stored_moment = moments[0];
+    }
+    if (now >= stored_moment) {
+        const next_moment = moments.filter(m => m > now)[0];
+        localStorage.setItem("reload_page_at", next_moment);
+        console.log(`Reload page at ${new Date()}`);
+        location.reload();
+    }
+    setTimeout(__reload_page, 1000 * 60 * 10);
+}
