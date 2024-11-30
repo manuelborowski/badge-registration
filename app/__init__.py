@@ -135,8 +135,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.73: merged from 0.72-time-registration-0.2
 # 0.74: small bugifx
 # 0.75: auto-reload page to reset socketio
+# 0.76: small updates in auto-reload
 
-version = "0.75"
+version = "0.76"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

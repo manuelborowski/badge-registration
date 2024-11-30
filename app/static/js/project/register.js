@@ -49,6 +49,7 @@ const __update_clock = () => {
     setTimeout(__update_clock, 1000);
 }
 
+let logged_once = false;
 // reload the page at certain moments to reset the socketio connections
 const __reload_page = () => {
     const today = new Date().toDateString();
@@ -60,11 +61,14 @@ const __reload_page = () => {
         localStorage.setItem("reload_page_at", moments[0]);
         stored_moment = moments[0];
     }
+    if (!logged_once) {
+        console.log(`Next reload at ${new Date(stored_moment)}`);
+        logged_once = true;
+    }
     if (now >= stored_moment) {
         const next_moment = moments.filter(m => m > now)[0];
         localStorage.setItem("reload_page_at", next_moment);
-        console.log(`Reload page at ${new Date()}`);
         location.reload();
     }
-    setTimeout(__reload_page, 1000 * 60 * 10);
+    setTimeout(__reload_page, 1000 * 10);
 }
