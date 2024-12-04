@@ -137,8 +137,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.75: auto-reload page to reset socketio
 # 0.76: small updates in auto-reload
 # 0.77: firefox specific update
+# 0.78: export student print balance, added support for US_en
 
-version = "0.77"
+version = "0.78"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

@@ -79,6 +79,7 @@ let context_menu = [
     {type: "item", iconscout: "wifi", label: "RFID code aanpassen", cb: __reserve_student_rfid},
     {type: "divider"},
     {type: "item", iconscout: "export", label: "Exporteer leerling rekeningen", cb: () => __export_student_balances(ctx.popups['export-student-balance'])},
+    {type: "item", iconscout: "print", label: "Exporteer leerling printer rekeningen", cb: () => __upload_papercut()},
 ]
 $(document).ready(function () {
     const current_location = localStorage.getItem("overview-location-select");

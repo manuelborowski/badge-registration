@@ -42,7 +42,8 @@ def get_balance(key, startdate, enddate):
         return f"error: {str(e)}", "error.txt"
 
 
-maand2index = ["jan", "feb", "mrt", "apr", "jun", "jul", "aug", "sept", "okt", "nov", "dec"]
+maand2index_nl = ["jan", "feb", "mrt", "apr", "jun", "jul", "aug", "sept", "okt", "nov", "dec"]
+maand2index_en = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 papercut_data = {}
 
 def papercut_upload(files):
@@ -56,21 +57,37 @@ def papercut_upload(files):
             lines.pop(0) # comment
             date = lines.pop(0)
             #line 1 contains start and end date
-            [d, m, y] = re.search("Vanaf datum = (.*) 0:00:00", date).group(1).split("-")
-            m = maand2index.index(m) + 1
-            papercut_data["startdate"] = f"{y}{m:02}{int(d):02}"
-            [d, m, y] = re.search("Tot datum = (.*) 23:59", date).group(1).split("-")
-            m = maand2index.index(m) + 1
-            papercut_data["enddate"] = f"{y}{m:02}{int(d):02}"
-            header = lines.pop(0) # header
-            for total_pages_index, f in enumerate(header.split(";")):
-                if f == "Totaal aantal afgedrukte Pagina's":
-                    break
+            try:
+                if "From date" in date:
+                    # English format
+                    # From date = Sep 1, 2024 12:00:00 AM, To date = Dec 4, 2024 11:59:59 PM"
+                    [m, d, y] = list(re.findall("From date = (\w+) (\d+), (\d+)", date)[0])
+                    m = maand2index_en.index(m) + 1
+                    papercut_data["startdate"] = f"{y}{m:02}{int(d):02}"
+                    [m, d, y] = list(re.findall("To date = (\w+) (\d+), (\d+)", date)[0])
+                    m = maand2index_en.index(m) + 1
+                    papercut_data["enddate"] = f"{y}{m:02}{int(d):02}"
+                else:
+                    # Dutch format
+                    # Vanaf datum = 16-mrt-2024 0:00:00, Tot datum = 21-jun-2024 23:59:59"
+                    [d, m, y] = re.search("Vanaf datum = (.*) 0:00:00", date).group(1).split("-")
+                    m = maand2index_nl.index(m) + 1
+                    papercut_data["startdate"] = f"{y}{m:02}{int(d):02}"
+                    [d, m, y] = re.search("Tot datum = (.*) 23:59", date).group(1).split("-")
+                    m = maand2index_nl.index(m) + 1
+                    papercut_data["enddate"] = f"{y}{m:02}{int(d):02}"
+            except Exception as e:
+                return {"status": False, "data": f"Kan datum info in 2de lijn niet interpreteren:<br>{date}"}
 
+            split_character = "," if "From date" in date else ";"
+            header = lines.pop(0) # header
+            for total_pages_index, f in enumerate(header.split(split_character)):
+                if f == "Totaal aantal afgedrukte Pagina's" or f == "Total Printed Pages":
+                    break
             students = mstudent.student_get_m()
             username2student = {s.username.lower(): s for s in students}
             for line in lines:
-                fields = line.split(";")
+                fields = line.split(split_character)
                 if fields[0].lower() in username2student:
                     student = username2student[fields[0].lower()]
                     if student.klascode[0] in ["1", "2"]:
