@@ -67,7 +67,6 @@ export function update_cell(row_id, column_name, value) {
     ctx.table.cell(row_idx, column_idx).data(value);
 }
 
-
 function button_pushed(action) {
     switch (action) {
         case 'delete':
@@ -94,49 +93,8 @@ function button_pushed(action) {
             if (is_exactly_one_checkbox_selected()) {
             }
             break
-        case 'pdf':
-            if (is_at_least_one_checkbox_selected()) {
-                const chbxs = document.querySelectorAll('.chbx_all:checked')
-                chbxs.forEach(chbx => {
-                    const id = chbx.value;
-
-                    get_form('care.get_form', id);
-                });
-            }
-            break
     }
 }
-
-
-const get_form = async (endpoint, id) => {
-    const form_options = {
-        sanitizeConfig: {addTags: ['iframe'], addAttr: ['allow'], ALLOWED_TAGS: ['iframe'], ALLOWED_ATTR: ['allow']},
-        // noAlerts: true,
-    }
-    //Get form from server
-    const ret = await fetch(Flask.url_for(endpoint, {form: "pdf", extra: id}))
-    const form_data = await ret.json();
-    if (form_data.status) {
-        //Render and display form
-        formio = await Formio.createForm(document.getElementById('formio-form'), form_data.data.template, form_options)
-        if ('defaults' in form_data.data) {
-            Object.entries(form_data.data.defaults).forEach(([k, v]) => {
-                try {
-                    formio.getComponent(k).setValue(v);
-                } catch (error) {
-                    console.log("skipped ", k, v);
-                }
-            });
-        }
-        const doc = new jsPDF();
-        doc.html(document.getElementById('formio-form'), {
-            callback: function (doc) {
-                doc.save();
-            }
-        })
-    }
-}
-
 
 export function clear_filter_setting() {
     localStorage.clear(`Filter-${ctx.table_config.view}`);

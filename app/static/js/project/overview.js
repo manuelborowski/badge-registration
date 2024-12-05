@@ -2,7 +2,7 @@ import {socketio} from "../base/socketio.js";
 import {subscribe_get_ids, create_context_menu} from "../base/right_click.js";
 import {person_image} from "../../img/base64-person.js";
 import {busy_indication_on, busy_indication_off} from "../base/base.js";
-import {add_to_popup_body, create_checkbox_element, create_input_element, hide_popup, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
+import {add_to_popup_body, create_checkbox_element, create_input_element, formio_popup_create, hide_popup, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
 import {add_extra_filters, create_filters, enable_filters, disable_filters, subscribe_reset_button} from "../base/filters.js";
 import {Rfid} from "./rfidusb.js";
 
@@ -212,14 +212,17 @@ const context_menu_pool = {
         {type: "item", iconscout: "text", label: "Reden", cb: __enter_remark, layout: "list"},
         {type: "item", iconscout: "check", label: "Bevestig reden", cb: to_server_confirm_remark, layout: "list"},
         {type: "item", iconscout: "envelope-send", label: "Stuur sms", cb: to_server_send_message, layout: "list"},
-        {type: "divider", layout: "list"},
-        {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}],
+        {type: "divider", layout: "list"}
+    ],
     cellphone: [
         {type: "item", iconscout: "envelope-send", label: "Stuur Smartschool bericht", cb: to_server_send_message, layout: "list"},
-        {type: "divider", layout: "list"},
-        {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}],
+        {type: "divider", layout: "list"}
+    ],
     default: [
-        {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration}]
+        {type: "item", iconscout: "export", label: "Exporteer registraties", cb: () => formio_popup_create(popups["popup-export-registrations"], __export_registrations_cb)},
+        {type: "divider", layout: "list"},
+        {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration},
+        ]
 }
 
 const extra_filters_pool = {
@@ -256,7 +259,14 @@ const __request_list_of_registrations_for_current_location = () => {
     socketio.send_to_server("request-list-of-registrations", {filters});
     __reset_nbr_registered();
 
-    let context_menu = locations[current_location].type in context_menu_pool ? context_menu_pool[locations[current_location].type] : context_menu_pool["default"];
+    let context_menu = [];
+    if (locations[current_location].type in context_menu_pool) {
+        context_menu = context_menu_pool[locations[current_location].type];
+        context_menu =  context_menu.concat(context_menu_pool["default"]);
+    } else
+    {
+        context_menu = context_menu_pool["default"];
+    }
     context_menu = context_menu.filter(i => !("layout" in i) || i.layout === view_layout_element.value)
     create_context_menu(context_menu);
     const extra_filters = locations[current_location].type in extra_filters_pool ? extra_filters_pool[locations[current_location].type] : extra_filters_pool["default"];
@@ -329,6 +339,12 @@ async function to_server_send_message(ids) {
             __clear_checkboxes();
         }
     });
+}
+
+const __export_registrations_cb = (action, opaque, data=null) => {
+    if (action === 'submit') {
+        window.open(`/overview/export/${current_location}/${data.startdate}/${data.enddate}`, '_blank');
+    }
 }
 
 async function to_server_confirm_remark(ids) {

@@ -131,6 +131,7 @@ default_configuration_settings = {
 
     'popup-new-update-user': ({}, Settings.SETTING_TYPE.E_JSON),
     'popup-export-student-balance': ({}, Settings.SETTING_TYPE.E_JSON),
+    'popup-export-registrations': ({}, Settings.SETTING_TYPE.E_JSON),
 
     'logging-inform-emails': ('', Settings.SETTING_TYPE.E_STRING),
 

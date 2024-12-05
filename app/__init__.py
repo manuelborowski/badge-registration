@@ -138,8 +138,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.76: small updates in auto-reload
 # 0.77: firefox specific update
 # 0.78: export student print balance, added support for US_en
+# 0.79: export registrations.  Optimized context-menu
 
-version = "0.78"
+version = "0.79"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

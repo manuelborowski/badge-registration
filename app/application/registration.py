@@ -1,4 +1,4 @@
-import datetime, sys, base64, requests
+import datetime, sys, base64, requests, io, pandas as pd
 import app.application
 import app.application.api
 import app
@@ -7,6 +7,7 @@ from app.data import student as mstudent, registration as mregistration, photo a
 from app.application.util import get_api_key
 from app.application.smartschool import send_message as ss_send_message
 from flask_login import current_user
+from flask import make_response
 from app.application.sms import send_sms
 
 #logging on file level
@@ -570,3 +571,39 @@ def __send_ss_message(registration, location, student, force=False):
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return False
+
+def registration_export(location_key, start_date, stop_date):
+    try:
+        location_settings = msettings.get_configuration_setting("location-profiles")
+        location = location_settings[location_key]
+        registrations_to_export = []
+        if "table" in location and location["table"] == "staff":
+            registrations = mregistration.registration_staff_get(location_key, time_low=start_date, time_high=stop_date)
+            for (registration, staff) in registrations:
+                item = {"naam": staff.naam, "voornaam": staff.voornaam, "code": staff.code, "tijd-in": str(registration.time_in), "tijd-uit": str(registration.time_out) if registration.time_out else ""}
+                registrations_to_export.append(item)
+        else:
+            registrations = mregistration.registration_student_photo_get(location_key, time_low=start_date, time_high=stop_date)
+            for (registration, student) in registrations:
+                item = {"naam": student.naam, "voornaam": student.voornaam, "klas": student.klascode, "leerlingnummer": student.leerlingnummer, "tijd": str(registration.time_in)}
+                if location["type"] == "cellphone":
+                    item.update({"bericht-gestuurd": "JA" if registration.flag1 else "NEE"})
+                elif location["type"] == "sms":
+                    item.update({"bevestigd": "JA" if registration.flag1 else "NEE"})
+                    item.update({"sms-gestuurd": "JA" if registration.flag2 else "NEE"})
+                registrations_to_export.append(item)
+
+        df = pd.DataFrame(registrations_to_export)
+        out = io.BytesIO()
+        excel_writer = pd.ExcelWriter(out, engine="xlsxwriter")
+        df.to_excel(excel_writer, index=False)
+        excel_writer.close()
+        res = make_response(out.getvalue())
+        res.headers["Content-Disposition"] = f"attachment; filename=export-{location['locatie']}-{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M')}.xlsx"
+        res.headers["Content-type"] = "data:text/xlsx"
+        log.info(f'{sys._getframe().f_code.co_name}: Exported registration info, {len(registrations_to_export)} registrations for {location["locatie"]}')
+        return res
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"data": f"Fout: {e}"}
+

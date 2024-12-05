@@ -36,7 +36,7 @@ const __reserve_student_rfid = async (ids) => {
     });
 }
 
-const export_student_balances_cb = (action, opaque, data=null) => {
+const __export_student_balances_cb = (action, opaque, data=null) => {
     if (action === 'submit') {
         for (const [key, location] of Object.entries(locations)) {
             if (location.type === "verkoop") {
@@ -70,15 +70,11 @@ const __upload_papercut = async () =>  {
     input.click();
 }
 
-const __export_student_balances = (popup) => {
-    formio_popup_create(popup, export_student_balances_cb);
-}
-
 let context_menu = [
     {type: "divider"},
     {type: "item", iconscout: "wifi", label: "RFID code aanpassen", cb: __reserve_student_rfid},
     {type: "divider"},
-    {type: "item", iconscout: "export", label: "Exporteer leerling rekeningen", cb: () => __export_student_balances(ctx.popups['export-student-balance'])},
+    {type: "item", iconscout: "export", label: "Exporteer leerling rekeningen", cb: () => formio_popup_create(ctx.popups['export-student-balance'], __export_student_balances_cb)},
     {type: "item", iconscout: "print", label: "Exporteer leerling printer rekeningen", cb: () => __upload_papercut()},
 ]
 $(document).ready(function () {

@@ -218,6 +218,16 @@ settings_formio = \
                     "key": "popup-export-student-balance",
                     "type": "textarea",
                     "input": true
+                  },
+                  {
+                    "label": "Exporteer registraties",
+                    "applyMaskOn": "change",
+                    "autoExpand": false,
+                    "tableView": true,
+                    "validateWhenHidden": false,
+                    "key": "popup-export-registrations",
+                    "type": "textarea",
+                    "input": true
                   }
                 ]
               }

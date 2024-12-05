@@ -6,12 +6,14 @@ from flask_login import login_required, current_user
 from app import log, flask_app
 from app.application import socketio as msocketio, registration as mregistration, settings as msettings, util as mutil
 from . import overview
+from app.application.settings import get_configuration_setting
 
 
 @overview.route('/overview/show', methods=['POST', 'GET'])
 @login_required
 def show():
-    return render_template('overview/overview.html', title="Overzicht", filters=get_filters())
+    popups = {'popup-export-registrations': get_configuration_setting("popup-export-registrations")}
+    return render_template('overview/overview.html', title="Overzicht", filters=get_filters(), popups=popups)
 
 
 def get_current_registrations(msg, client_sid=None):
@@ -33,6 +35,14 @@ def clear_all_registrations(msg, client_sid=None):
 msocketio.subscribe_on_type('request-list-of-registrations', get_current_registrations)
 msocketio.subscribe_on_type('clear-all-registrations', clear_all_registrations)
 
+@overview.route('/overview/export/<string:key>/<string:startdate>/<string:enddate>', methods=['GET'])
+def export_registrations(key, startdate, enddate):
+    try:
+        ret = mregistration.registration_export(key, startdate, enddate)
+        return ret
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"status": False, "data": f'{sys._getframe().f_code.co_name}: {e}'}
 
 def get_filters():
     try:
