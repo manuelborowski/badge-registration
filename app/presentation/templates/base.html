@@ -76,13 +76,7 @@
 
     <div class="right-click-wrapper"><ul class="menu"></ul></div>
 
-    <div class="modal fade" id="formio-popup" tabindex="-1" aria-labelledby="popup-label" aria-hidden="true">
-        <div class="modal-dialog" id="formio-popup-dialog">
-            <div class="modal-content">
-                <div id="formio-popup-content" style="padding: 10px;"></div>
-            </div>
-        </div>
-    </div>
+    {% include "lib/formio-popup.j2" %}
 
 {% endblock %}
 

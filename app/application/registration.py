@@ -17,6 +17,10 @@ log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
 
+# depending on the "to" parameter, return values are sent to:
+# ip: only to the client/terminal the registration came from.  Used for alerts, messages, ... due to registering
+# location: all the clients/terminals that display/are set to said location
+# broadcast: all the clients/terminals
 def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=None):
     try:
         if timestamp:
@@ -39,56 +43,70 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     student.rfid = rfid
                     mreservation.commit()
                     log.info(f'{sys._getframe().f_code.co_name}:  Add reservation for {student.leerlingnummer}, {student.naam} {student.voornaam} {location_key}')
-                    return {"type": "alert-pop-up", "data": {"item": "reservation", "status": True, "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}"}}
+                    return [{"to":"ip", "type": "alert-popup", "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}"}]
             log.info(f'{sys._getframe().f_code.co_name}:  No valid reservation for {location_key}')
-            return {"type": "alert-pop-up", "data": {"item": "reservation", "status": False, "data": f"Nieuwe RFID niet gelukt.  Misschien te lang gewacht met scannen, probeer nogmaals"}}
+            return [{"to":"ip", "type": "alert-popup", "data": f"Nieuwe RFID niet gelukt.  Misschien te lang gewacht met scannen, probeer nogmaals"}]
         location_settings = msettings.get_configuration_setting("location-profiles")
         if location_key not in location_settings:
             log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
-            return {'type': 'update-list-of-registrations', 'data': {"status": False, "data": f"Locatie {location_key} is niet geldig"}}
+            return [{"to":"ip", "type": "alert-popup", "data": f"Locatie {location_key} is niet geldig"}]
 
         location = location_settings[location_key]
+        backoff = location["backoff"] if "backoff" in location else None
+        inout =  location["inout"] if "inout" in location else None
 
         # Staff specific registrations
         if "table" in location and location["table"] == "staff":
             staff = mstaff.staff_get(("rfid", "=", rfid))
             if staff:
                 log.info(f'{sys._getframe().f_code.co_name}:  Add registration for {staff.code}, {staff.naam} {staff.voornaam} {location_key}')
-                if "inout" in location and location["inout"]:
+                if location["type"] == "timeregistration":
                     registrations = mregistration.registration_get_m([("leerlingnummer", "=", staff.code), ("location", "=", location_key), ("time_in", ">", today)], order_by="id")
-                    if registrations and registrations[-1].time_out is None:
-                        last_registration = registrations[-1]
+                    last_registration = registrations[-1] if len(registrations) > 0 else None
+                    if last_registration and backoff:
+                        if (now - (last_registration.time_in if last_registration.time_out == None else last_registration.time_out)).seconds < backoff:
+                            return [{"to":"ip", 'type': 'alert-popup', "data": f"Sorry, u moet langer wachten om terug te scannen"}]
+                    if last_registration and last_registration.time_out is None:
                         mregistration.registration_update(last_registration, {"time_out": now})
                         log.info(f'{sys._getframe().f_code.co_name}: Badge out, {staff.code} at {now}')
-                        # This socketio is also used to send the info to the register.html page, which uses it in a pop-up to inform the user
-                        return {'type': 'update-items-in-list-of-registrations', 'data': {"status": True, "data": [{"id": last_registration.id, "time_out": str(now),
-                                                                        "leerlingnummer": staff.code, "naam": staff.naam, "voornaam": staff.voornaam, "klascode": staff.code,
-                                                                        "time_in": str(last_registration.time_in)}]}}
+                        ret_location = {"to": "location", 'type': 'update-items-in-list-of-registrations',
+                                'data': {"status": True, "data": [{"id": last_registration.id, "time_out": str(now)}]}}
+                        ret_ip = {"to": "ip", 'type': 'alert-popup',
+                                "data": f"{staff.voornaam} {staff.naam}<br>"
+                                        f"Je bent IN gescand om {last_registration.time_in}<br>"
+                                        f"Je bent UIT gescand om {last_registration.time_out}"}
+                        return [ret_location, ret_ip]
                     else:
-                        ret = {"status": True, "date": str(today), "action": "add",
-                            "data": [{"leerlingnummer": staff.code, "naam": staff.naam, "voornaam": staff.voornaam, "klascode": staff.code, "time_out": ""}]
-                        }
+                        ret_location = {"to": "location", 'type': 'update-list-of-registrations',
+                                'data': {"status": True, "date": str(today), "action": "add",
+                                "data": [{"leerlingnummer": staff.code, "naam": staff.naam, "voornaam": staff.voornaam, "klascode": staff.code, "time_out": ""}]
+                        }}
                         registration = mregistration.registration_add({"leerlingnummer": staff.code, "location": location_key, "time_in": now})
                         if registration:
-                            ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id})
-                            return {'type': 'update-list-of-registrations', 'data': ret}
+                            ret_location["data"]["data"][0].update({"timestamp": str(now), "id": registration.id})
+                            ret_ip = {"to": "ip", 'type': 'alert-popup', "data": f"{staff.voornaam} {staff.naam}<br>Je bent IN gescand om {now}<br>"}
+                            return [ret_location, ret_ip]
             log.info(f'{sys._getframe().f_code.co_name}: rfid {rfid} not found in table: staff')
-            return {'type': 'update-list-of-registrations', 'data': {"status": False, "data": f"Kan personeelslid met rfid {rfid} niet vinden in database"}}
+            return [{"to": "ip", 'type': 'alert-popup', "data": f"Kan personeelslid met rfid {rfid} niet vinden in database"}]
 
+        # student specific registrations
         if rfid:
             student = mstudent.student_get([("rfid", "=", rfid)])
         elif leerlingnummer:
             student = mstudent.student_get([("leerlingnummer", "=", leerlingnummer)])
         else:
-            return {'type': 'update-list-of-registrations', 'data': {"status": False, "data": "Geen RFID of leerlingnummer gevonden"}}
+            return [{"to": "ip", 'type': 'alert-popup', "data": "Geen RFID of leerlingnummer gevonden"}]
         if student:
             photo_obj = mphoto.photo_get({"id": student.foto_id})
             photo = base64.b64encode(photo_obj.photo).decode('utf-8') if photo_obj else ''
             log.info(f'{sys._getframe().f_code.co_name}:  Add registration for {student.leerlingnummer}, {student.naam} {student.voornaam} {location_key}')
-            ret = {
-                "status": True, "date": str(today), "action": "add",
-                "data": [{"leerlingnummer": student.leerlingnummer, "naam": student.naam, "voornaam": student.voornaam, "photo": photo, "klascode": student.klascode,}]
+            ret_location = {
+                "to": "location", 'type': 'update-list-of-registrations',
+                "data": {"status": True, "date": str(today), "action": "add",
+                "data": [{"leerlingnummer": student.leerlingnummer, "naam": student.naam, "voornaam": student.voornaam, "photo": photo, "klascode": student.klascode, "timestamp": str(now)}]}
             }
+            ret_ip = {"to": "ip", 'type': 'alert-popup', "data": f"Student {student.naam} {student.voornaam} heeft gescand om {str(now)}"}
+
             if location["type"] == "nietverplicht":
                 registrations = mregistration.registration_get_m([("leerlingnummer", "=", student.leerlingnummer), ("location", "=", location_key), ("time_in", ">", today)], order_by="id")
                 if registrations:
@@ -100,8 +118,8 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now})
                 if registration:
                     log.info(f'{sys._getframe().f_code.co_name}: Badge in, {student.leerlingnummer} at {now}')
-                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})
-                    return {'type': 'update-list-of-registrations', 'data': ret}
+                    ret_location["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})
+                    return {'type': 'update-list-of-registrations', 'data': ret_location}
             if location["type"] == "verkoop":
                 artikel = msettings.get_configuration_setting("artikel-profiles")[location["artikel"]]
                 nbr_items = 1
@@ -109,13 +127,15 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     mask = getattr(student, location["dagmasker"])
                     if mask == "":
                         log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer}, cannot have this artikel')
-                        return {'type': 'update-list-of-registrations', 'data': {"status": False, "data": f"Student {student.naam} {student.voornaam} is niet ingeschreven voor dit artikel"}}
+                        return [{"to": "ip", 'type': 'alert-popup', "data": f"Student {student.naam} {student.voornaam} is niet ingeschreven voor dit artikel"}]
                     day_index = datetime.datetime.now().weekday()
+                    if day_index > 4:
+                        return [{"to": "ip", 'type': 'alert-popup', "data": f"Dit kan alleen gescand worden tijdens weekdagen"}]
                     max_qty = int(mask[day_index])
                     current_qty = int(mask[day_index+6])
                     if current_qty >= max_qty:
                         log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer}, dagmasker, exceeded quantity {current_qty}/{max_qty} ')
-                        return {'type': 'update-list-of-registrations', 'data': {"status": False, "data": f"Student {student.naam} {student.voornaam} heeft het maximum aantal van {max_qty} artikel(s) bereikt"}}
+                        return [{"to": "ip", 'type': 'alert-popup', "data": f"Student {student.naam} {student.voornaam} heeft het maximum aantal van {max_qty} artikel(s) bereikt"}]
                     current_qty += 1
                     mask = mask[:day_index+6] + str(current_qty) + mask[day_index+7:]
                     mstudent.student_update(student, {location["dagmasker"]: mask})
@@ -123,8 +143,8 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                                                                "prijs_per_item": artikel["prijs-per-item"], "aantal_items": nbr_items})
                 if registration:
                     log.info(f'{sys._getframe().f_code.co_name}: Verkoop({location["locatie"]}), {student.leerlingnummer} at {now}, price-per-item {artikel["prijs-per-item"]}, nbr items {nbr_items}')
-                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id})
-                    return {'type': 'update-list-of-registrations', 'data': ret}
+                    ret_location["data"]["data"][0].update({"id": registration.id})
+                    return [ret_location, ret_ip]
 
             # When a student is too late in, scan its badge.  An sms is sent to the parents and a why-too-late reason needs to be added
             # If the student returns with a valid proof of being late, tick the registration as being acknowledged/finished
@@ -138,9 +158,8 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     if "auto" in location and location["auto"]:  # send sms when badge is scanned
                         sms_sent = __send_sms(registration, location, student)
                     auto_remark = location["auto_remark"] if "auto_remark" in location else False
-                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "remark": "", "remark_ack": False,
-                                           "sms_sent": sms_sent, "auto_remark": auto_remark})
-                    return {'type': 'update-list-of-registrations', 'data': ret}
+                    ret_location["data"]["data"][0].update({"id": registration.id, "remark": "", "remark_ack": False, "sms_sent": sms_sent, "auto_remark": auto_remark})
+                    return [ret_location, ret_ip]
             # When a student needs to hand in its cellphone, scan its badge.  After 4 scans (to be configurable), the student is highlighted and
             # has to stay over after school
             # aantal_items: store the sequence-counter
@@ -157,8 +176,8 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     message_sent = False
                     if "auto" in location and location["auto"]: # send message when badge is scanned
                         message_sent = __send_ss_message(registration, location, student)
-                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "sequence_ctr": sequence_counter, "message_sent": message_sent})
-                    return {'type': 'update-list-of-registrations', 'data': ret}
+                    ret_location["data"]["data"][0].update({"id": registration.id, "sequence_ctr": sequence_counter, "message_sent": message_sent})
+                    return [ret_location, ret_ip]
 
             if location["type"] == "toilet":
                 last_registration = mregistration.registration_get([("leerlingnummer", "=", student.leerlingnummer), ("location", "=", location_key)], order_by="-id")
@@ -169,17 +188,16 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now,
                                                                "aantal_items": sequence_counter})
                 if registration:
-                    ret["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, "sequence_ctr": sequence_counter})
-                    return {'type': 'update-list-of-registrations', 'data': ret}
+                    ret_location["data"]["data"][0].update({"id": registration.id, "sequence_ctr": sequence_counter})
+                    return [ret_location, ret_ip]
 
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
-            return {'type': 'update-list-of-registrations', 'data': {"status": False, "data": "Kan geen nieuwe registratie maken"}}
+            return [{"to":"ip", "type": "alert-popup", "data": "Kan geen nieuwe registratie maken"}]
         log.info(f'{sys._getframe().f_code.co_name}:  rif/leerlingnummer {rfid}/{leerlingnummer} not found in database')
-        return {'type': 'update-list-of-registrations', 'data': {"status": False, "data": f"Kan student met rfid {rfid} / leerlingnummer {leerlingnummer} niet vinden in database"}}
+        return [{"to": "ip", "type": "alert-popup", "data": f"Kan student met rfid {rfid} / leerlingnummer {leerlingnummer} niet vinden in database"}]
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-        return {'type': 'update-list-of-registrations', 'data': {"status": False, "data": f"Fout, {str(e)}"}}
-
+        return [{"to": "ip", 'type': 'alert-popup', "data": f"Fout, {str(e)}"}]
 
 def registration_delete(ids):
     try:
@@ -325,15 +343,6 @@ def api_schoolrekening_get(options):
         for leerlingnummer, nbr in leerlingnummers.items():
             data_out.append({"leerlingnummer": leerlingnummer, "info": info.replace("$aantal$", str(nbr)), "bedrag": prijs_per_item * nbr / 100})
         return {"status": True, "data": data_out}
-    except Exception as e:
-        log.error(f'{sys._getframe().f_code.co_name}: {e}')
-        return {"status": False, "data": str(e)}
-
-
-def api_registration_add(location_key, timestamp, leerlingnummer=None, code=None):
-    try:
-        ret = registration_add(location_key, timestamp, leerlingnummer, code)
-        return ret
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}

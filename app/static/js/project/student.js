@@ -3,6 +3,7 @@ import { ctx, get_data_of_row } from "../datatables/datatables.js"
 import {socketio} from "../base/socketio.js";
 import { formio_popup_create } from "../base/popup.js"
 import {Rfid} from "./rfidusb.js";
+import {check_server_alive, get_my_ip, timed_popup} from "../base/misc.js";
 
 const __registration_add = async (item, ids) => {
    let person = get_data_of_row(ids[0]);
@@ -11,10 +12,7 @@ const __registration_add = async (item, ids) => {
             const ret = await fetch(Flask.url_for('api.registration_add'),
                 {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({location_key: item, leerlingnummer: person.leerlingnummer})});
             const status = await ret.json();
-            if (status.status) {
-            } else {
-                bootbox.alert(status.data)
-            }
+            if (!status.status) bootbox.alert(status.data)
             ctx.reload_table();
         }
     });
@@ -27,10 +25,7 @@ const __reserve_student_rfid = async (ids) => {
             const ret = await fetch(Flask.url_for('api.add_reservation'),
                 {headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({location_key: "new-rfid", leerlingnummer: person.leerlingnummer, item: "rfid"})});
             const status = await ret.json();
-            if (status.status) {
-            } else {
-                bootbox.alert(status.data)
-            }
+            if (!status.status) bootbox.alert(status.data)
             ctx.reload_table();
         }
     });
@@ -77,7 +72,8 @@ let context_menu = [
     {type: "item", iconscout: "export", label: "Exporteer leerling rekeningen", cb: () => formio_popup_create(ctx.popups['export-student-balance'], __export_student_balances_cb)},
     {type: "item", iconscout: "print", label: "Exporteer leerling printer rekeningen", cb: () => __upload_papercut()},
 ]
-$(document).ready(function () {
+
+$(document).ready(async function () {
     const current_location = localStorage.getItem("overview-location-select");
     context_menu.unshift({type: "item", iconscout: "plus-circle", label: `Nieuwe registratie: ${locations[current_location].locatie}`, cb: ids => __registration_add(current_location, ids)});
     create_context_menu(context_menu);
@@ -87,15 +83,11 @@ $(document).ready(function () {
     Rfid.set_managed_state(true);
     // Even on the students page, it is possible to get status-popups
     socketio.start(null, null);
-    socketio.subscribe_on_receive("alert-pop-up", __alert_pop_up);
+    socketio.subscribe_to_room(await get_my_ip());
+    socketio.subscribe_on_receive("alert-popup", (type, data) => timed_popup(type, data, 3000));
     // In case multiple tabs/browsers to this page are opened, the Rfid-location (new-rfid) is set the one that is in focus.
     document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) {
-            Rfid.set_location("new-rfid");
-        }
+        if (!document.hidden) Rfid.set_location("new-rfid");
     });
+    check_server_alive();
 });
-
-const __alert_pop_up = (type, data) => {
-    alert(`${data.data}`);
-}

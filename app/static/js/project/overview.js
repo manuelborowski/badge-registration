@@ -1,10 +1,11 @@
-import {socketio} from "../base/socketio.js";
+import {socketio, Socketio} from "../base/socketio.js";
 import {subscribe_get_ids, create_context_menu} from "../base/right_click.js";
 import {person_image} from "../../img/base64-person.js";
 import {busy_indication_on, busy_indication_off} from "../base/base.js";
 import {add_to_popup_body, create_checkbox_element, create_input_element, formio_popup_create, hide_popup, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
 import {add_extra_filters, create_filters, enable_filters, disable_filters, subscribe_reset_button} from "../base/filters.js";
 import {Rfid} from "./rfidusb.js";
+import {check_server_alive, get_my_ip, timed_popup} from "../base/misc.js";
 
 let location_element, date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element,
     sms_specific_element, search_text_element;
@@ -18,7 +19,7 @@ let current_location = null;
 let canvas_container = null;
 
 
-$(document).ready(function () {
+$(document).ready(async function () {
     all_filters_element = document.querySelector(".filters");
     create_filters("Overview", all_filters_element, filters);
     location_element = document.querySelector("#filter-location");
@@ -31,6 +32,12 @@ $(document).ready(function () {
     period_element = document.querySelector("#period-select");
     sms_specific_element = document.querySelector("#sms-specific-select")
     cellphone_specific_element = document.querySelector("#cellphone-specific-select")
+
+    // client specific socketio channel
+    const private_channel = new Socketio();
+    private_channel.start(null, null)
+    socketio.subscribe_to_room(await get_my_ip());
+    socketio.subscribe_on_receive("alert-popup", (type, data) => timed_popup(type, data, 3000));
 
     socketio.start(null, null);
     current_location = location_element.value;
@@ -60,6 +67,7 @@ $(document).ready(function () {
     Rfid.subscribe_state_change_cb(__rfid_status_changed);
     Rfid.set_managed_state(true);
     __location_selection_changed();
+    check_server_alive();
     // In case multiple tabs/browsers to this page are opened, the Rfid-location is set the one that is in focus.
     document.addEventListener("visibilitychange", () => {
         if (!document.hidden) {
@@ -307,7 +315,7 @@ async function to_server_delete_registration(ids) {
         const name = document.querySelector(`[data-id='${ids[0]}']`).dataset.name;
         message = `Wilt u de registratie van ${name} verwijderen?`;
     } else {
-        message = `Wilt u de registraties van ${ids.length} studenten verwijderen?`;
+        message = `Wilt u de registraties van ${ids.length} personen verwijderen?`;
     }
     bootbox.confirm(message, async result => {
         if (result) {

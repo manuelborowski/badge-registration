@@ -139,8 +139,15 @@ flask_app.config.from_pyfile('config.py')
 # 0.77: firefox specific update
 # 0.78: export student print balance, added support for US_en
 # 0.79: export registrations.  Optimized context-menu
+# 0.80:
+# -scketio: set cors to *
+# -added jina include for generic popup
+# -added misc.js for common functions
+# -added unicast socketio channel for generic warnings/popups/messages
+# -added heartbeat-code to check the server status and autorelead in case the server comes back up
+# -registration_add: major rework to split return messages, unicast to terminals, multicast (group) to client's overview page
 
-version = "0.79"
+version = "0.80"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -214,9 +221,7 @@ jsglue = JSGlue(flask_app)
 db.app = flask_app  #  hack:-(
 db.init_app(flask_app)
 
-
-socketio = SocketIO(flask_app, async_mode=flask_app.config['SOCKETIO_ASYNC_MODE'], ping_timeout=10, ping_interval=5, cors_allowed_origins=flask_app.config['SOCKETIO_CORS_ALLOWED_ORIGIN'])
-
+socketio = SocketIO(flask_app, async_mode=flask_app.config['SOCKETIO_ASYNC_MODE'], ping_timeout=10, ping_interval=5, cors_allowed_origins="*")
 
 # configure e-mailclient
 email = Mail(flask_app)

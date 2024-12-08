@@ -20,6 +20,7 @@ def api_core(api_level, func, *args, **kwargs):
                 key_level = api_level + i
                 log.info(f"API access by '{keys_per_level[header_key]}', keylevel {key_level}, from {remote_ip}, URI {request.url}")
                 try:
+                    kwargs["remote_ip"] = remote_ip
                     return func(*args, **kwargs)
                 except Exception as e:
                     log.error(f'{func.__name__}: {e}')
@@ -54,7 +55,7 @@ def admin_key_required(func):
 
 @api.route('/api/user/add', methods=['POST'])
 @admin_key_required
-def user_add():
+def user_add(**kwargs):
     data = json.loads(request.data)
     ret = muser.api_user_add(data)
     return(json.dumps(ret))
@@ -62,7 +63,7 @@ def user_add():
 
 @api.route('/api/user/update', methods=['POST'])
 @admin_key_required
-def user_update():
+def user_update(**kwargs):
     data = json.loads(request.data)
     ret = muser.api_user_update(data)
     return(json.dumps(ret))
@@ -70,7 +71,7 @@ def user_update():
 
 @api.route('/api/user/delete', methods=['POST'])
 @admin_key_required
-def user_delete():
+def user_delete(**kwargs):
     data = json.loads(request.data)
     ret = muser.api_user_delete(data)
     return(json.dumps(ret))
@@ -78,7 +79,7 @@ def user_delete():
 
 @api.route('/api/user/get', methods=['GET'])
 @admin_key_required
-def user_get():
+def user_get(**kwargs):
     options = request.args
     ret = muser.api_user_get(options)
     return(json.dumps(ret))
@@ -86,7 +87,7 @@ def user_get():
 
 @api.route('/api/schoolrekening/get', methods=['GET'])
 @user_key_required
-def schoolrekening_get():
+def schoolrekening_get(**kwargs):
     options = request.args
     ret = mregistration.api_schoolrekening_get(options)
     return(json.dumps(ret))
@@ -94,36 +95,44 @@ def schoolrekening_get():
 
 @api.route('/api/schoolrekening/artikels', methods=['GET'])
 @user_key_required
-def schoolrekening_artikels_get():
+def schoolrekening_artikels_get(**kwargs):
     ret = mregistration.api_schoolrekening_artikels_get()
     return(json.dumps(ret))
 
 
 @api.route('/api/schoolrekening/info', methods=['GET'])
-def schoolrekening_info():
+def schoolrekening_info(**kwargs):
     ret = mregistration.api_schoolrekening_info()
     return ret
 
 
 @api.route('/api/registration/add', methods=['POST'])
 @user_key_required
-def registration_add():
+def registration_add(*args, **kwargs):
+    client_ip = kwargs['remote_ip'] if 'remote_ip' in kwargs else None
     data = json.loads(request.data)
     code = data["badge_code"] if "badge_code" in data else None
     leerlingnummer = data["leerlingnummer"] if "leerlingnummer" in data else None
     location = data["location_key"]
     timestamp = data["timestamp"] if "timestamp" in data else None
-    ret = mregistration.api_registration_add(location, timestamp, leerlingnummer, code)
-    if ret["type"] in ["alert-pop-up", "update-items-in-list-of-registrations"]:
-        msocketio.broadcast_message(ret)
-    elif ret["type"] in ["update-list-of-registrations"]:
-        msocketio.send_to_room(ret, location)
-    return json.dumps({"status": ret["data"]["status"]})
+    ret = mregistration.registration_add(location, timestamp, leerlingnummer, code)
+
+    for item in ret:
+        if item["to"] == "ip" and client_ip:
+            msocketio.send_to_room(item, client_ip)
+        elif item["to"] == "location":
+            msocketio.send_to_room(item, location)
+        elif item["to"] == "broadcast":
+            msocketio.broadcast_message(item)
+        else:
+            log.error(f'{sys._getframe().f_code.co_name}: No valid "to" parameter: {item["to"]}')
+            return json.dumps({"status": False, "data": f'No valid "to" parameter: {item["to"]}'})
+    return json.dumps({"status": True})
 
 
 @api.route('/api/registration/update', methods=['POST'])
 @user_key_required
-def registration_update():
+def registration_update(**kwargs):
     data = json.loads(request.data)
     ids = data["ids"]
     location = data["location_key"]
@@ -135,7 +144,7 @@ def registration_update():
 
 @api.route('/api/registration/message', methods=['POST'])
 @user_key_required
-def registration_send_message():
+def registration_send_message(**kwargs):
     data = json.loads(request.data)
     ids = data["ids"]
     location = data["location_key"]
@@ -146,7 +155,7 @@ def registration_send_message():
 
 @api.route('/api/registration/delete', methods=['POST'])
 @supervisor_key_required
-def registration_delete():
+def registration_delete(**kwargs):
     data = json.loads(request.data)
     ids = data["ids"]
     location = data["location"]
@@ -157,7 +166,7 @@ def registration_delete():
 
 @api.route('/api/reservation/add', methods=['POST'])
 @supervisor_key_required
-def add_reservation():
+def add_reservation(**kwargs):
     data = json.loads(request.data)
     leerlingnummer = data["leerlingnummer"]
     location = data["location_key"]
@@ -168,14 +177,14 @@ def add_reservation():
 
 @api.route('/api/location/get', methods=['GET'])
 @user_key_required
-def locations_get():
+def locations_get(**kwargs):
     ret = mlocation.get_locations()
     return(json.dumps(ret))
 
 
 @api.route('/api/location_article/get', methods=['GET'])
 @user_key_required
-def locations_articles_get():
+def locations_articles_get(**kwargs):
     ret = mlocation.get_locations_articles()
     return(json.dumps(ret))
 
@@ -183,7 +192,7 @@ def locations_articles_get():
 #get the software version
 @api.route('/api/version/get', methods=['GET'])
 @user_key_required
-def version_get_server():
+def version_get_server(**kwargs):
     ret = {"version": version}
     return(json.dumps(ret))
 
@@ -194,7 +203,7 @@ def version_get_server():
 # matching registrations are skipped
 @api.route('/api/sync/registrations/data', methods=['POST'])
 @supervisor_key_required
-def sync_registrations_data():
+def sync_registrations_data(**kwargs):
     data = json.loads(request.data)
     nbr_new, nbr_doubles = mregistration.sync_registrations_server(data["data"])
     ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_doubles": nbr_doubles}}
@@ -207,7 +216,7 @@ def sync_registrations_data():
 # run, in sequence, all sql scripts and run update script.
 @api.route('/api/update/client', methods=['POST'])
 @user_key_required
-def update_software_client():
+def update_software_client(**kwargs):
     data = json.loads(request.data)
     nbr_new, nbr_doubles = mregistration.sync_registrations_server(data["data"])
     ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_doubles": nbr_doubles}}
@@ -217,7 +226,7 @@ def update_software_client():
 # serverside api
 @api.route('/api/update/server', methods=['GET'])
 @user_key_required
-def update_software_server():
+def update_software_server(**kwargs):
     versions = request.args.get("versions", "")
     ret = mupdate.get_update_data(versions)
     return ret
@@ -225,17 +234,28 @@ def update_software_server():
 
 @api.route('/api/update/version', methods=['GET'])
 @user_key_required
-def get_update_version():
+def get_update_version(**kwargs):
     ret = mupdate.get_latest_update_version()
     return ret
 
-
 @api.route('/api/papercut/upload', methods=['POST'])
 @user_key_required
-def papercut_upload():
+def papercut_upload(**kwargs):
     files = [f for f in request.files.getlist("papercut_file")]
     ret = mbalance.papercut_upload(files)
     return ret
+
+@api.route('/api/my_ip', methods=['GET'])
+@user_key_required
+def get_my_ip(**kwargs):
+    ret = {"ipaddress":  kwargs["remote_ip"] if "remote_ip" in kwargs else ""}
+    return json.dumps(ret)
+
+
+@api.route('/api/hb', methods=['GET'])
+def hb():
+    ret = {"hb": True}
+    return json.dumps(ret)
 
 
 
