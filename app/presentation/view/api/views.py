@@ -3,7 +3,7 @@ from . import api
 from app.application import user as muser, settings as msettings, registration as mregistration
 from app.application import socketio as msocketio, location as mlocation, update as mupdate, balance as mbalance, student as mstudent
 from app import log, version
-import json, sys, html, io
+import json, sys, html, datetime
 from functools import wraps
 
 
@@ -251,10 +251,10 @@ def get_my_ip(**kwargs):
     ret = {"ipaddress":  kwargs["remote_ip"] if "remote_ip" in kwargs else ""}
     return json.dumps(ret)
 
-
+hb_timestamp = int(datetime.datetime.now().timestamp())
 @api.route('/api/hb', methods=['GET'])
 def hb():
-    ret = {"hb": True}
+    ret = {"hb": hb_timestamp}
     return json.dumps(ret)
 
 

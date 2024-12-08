@@ -146,6 +146,7 @@ flask_app.config.from_pyfile('config.py')
 # -added unicast socketio channel for generic warnings/popups/messages
 # -added heartbeat-code to check the server status and autorelead in case the server comes back up
 # -registration_add: major rework to split return messages, unicast to terminals, multicast (group) to client's overview page
+# 0.81: update of heartbeat to cover cornercases
 
 version = "0.80"
 
