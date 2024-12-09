@@ -6,6 +6,7 @@ from app import flask_app
 from app.data import student as mstudent, registration as mregistration, photo as mphoto, settings as msettings, staff as mstaff, reservation as mreservation
 from app.application.util import get_api_key
 from app.application.smartschool import send_message as ss_send_message
+from app.application.student import push_reservations_to_server
 from flask_login import current_user
 from flask import make_response
 from app.application.sms import send_sms
@@ -42,8 +43,17 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     student = mstudent.student_get([("leerlingnummer", "=", reservation.leerlingnummer)])
                     student.rfid = rfid
                     mreservation.commit()
-                    log.info(f'{sys._getframe().f_code.co_name}:  Add reservation for {student.leerlingnummer}, {student.naam} {student.voornaam} {location_key}')
-                    return [{"to":"ip", "type": "alert-popup", "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}"}]
+                    if flask_app.config["SDH_PUSH_RESERVATION_ON_THE_FLY"]:
+                        ret = push_reservations_to_server()
+                        if len(ret["data"]["errors"]) == 0:
+                            log.info(f'{sys._getframe().f_code.co_name}:  Add reservation and push to SDH for {student.leerlingnummer}, {student.naam} {student.voornaam}')
+                            return [{"to":"ip", "type": "alert-popup", "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}<br>Student kan ook al afdrukken met de badge"}]
+                        else:
+                            log.error(f'{sys._getframe().f_code.co_name}:  Add reservation and push to SDH for {student.leerlingnummer}, {student.naam} {student.voornaam}, returned error: {ret["data"]["errors"][0]}')
+                            return [{"to":"ip", "type": "alert-popup", "data": f"<b>Foutmelding</b>: {ret["data"]["errors"][0]}"}]
+                    else:
+                        log.info(f'{sys._getframe().f_code.co_name}:  Add reservation for {student.leerlingnummer}, {student.naam} {student.voornaam} {location_key}')
+                        return [{"to":"ip", "type": "alert-popup", "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}"}]
             log.info(f'{sys._getframe().f_code.co_name}:  No valid reservation for {location_key}')
             return [{"to":"ip", "type": "alert-popup", "data": f"Nieuwe RFID niet gelukt.  Misschien te lang gewacht met scannen, probeer nogmaals"}]
         location_settings = msettings.get_configuration_setting("location-profiles")

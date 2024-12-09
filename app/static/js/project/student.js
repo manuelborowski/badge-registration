@@ -84,7 +84,7 @@ $(document).ready(async function () {
     // Even on the students page, it is possible to get status-popups
     socketio.start(null, null);
     socketio.subscribe_to_room(await get_my_ip());
-    socketio.subscribe_on_receive("alert-popup", (type, data) => timed_popup(type, data, 3000));
+    socketio.subscribe_on_receive("alert-popup", (type, data) => timed_popup(type, data, 6000));
     // In case multiple tabs/browsers to this page are opened, the Rfid-location (new-rfid) is set the one that is in focus.
     document.addEventListener("visibilitychange", () => {
         if (!document.hidden) Rfid.set_location("new-rfid");

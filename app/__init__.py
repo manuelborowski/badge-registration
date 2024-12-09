@@ -148,8 +148,9 @@ flask_app.config.from_pyfile('config.py')
 # -registration_add: major rework to split return messages, unicast to terminals, multicast (group) to client's overview page
 # 0.81: update of heartbeat to cover cornercases
 # 0.82: small update
+# 0.83: new rfid (for student) is directly pushed to sdh
 
-version = "0.82"
+version = "0.83"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

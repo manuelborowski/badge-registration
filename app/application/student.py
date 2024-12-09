@@ -1,4 +1,4 @@
-from app.data import settings as msettings, student as mstudent, photo as mphoto, utils as mutils, reservation as mreservation
+from app.data import student as mstudent, photo as mphoto, utils as mutils, reservation as mreservation
 import sys, requests, base64, datetime
 
 #logging on file level
@@ -168,7 +168,7 @@ def api_reservation_add(leerlingnummer, location_key, item):
         return {"status": False, "data": str(e)}
 
 
-def  push_reservations_to_server(opaque=None, **kwargs):
+def push_reservations_to_server(opaque=None, **kwargs):
     try:
         sdh_student_url = flask_app.config["SDH_SET_STUDENT_URL"]
         sdh_key = flask_app.config["SDH_SET_API_KEY"]
@@ -176,19 +176,26 @@ def  push_reservations_to_server(opaque=None, **kwargs):
         reservations = mreservation.reservation_get_m(("valid", "=", True))
         nbr_students_ok = 0
         nbr_students_nok = 0
+        error_log = []
         for reservation in reservations:
             if reservation.item == "rfid":
                 res = requests.post(sdh_student_url, headers={'x-api-key': sdh_key}, json={"leerlingnummer": reservation.leerlingnummer, "rfid": reservation.data, "test": sdh_test})
                 if res.status_code == 200:
-                    log.info(f'{sys._getframe().f_code.co_name}: Updated student RFID to SDH, {reservation.leerlingnummer}, {reservation.data}')
-                    nbr_students_ok += 1
+                    data = res.json()
+                    if data["status"]:
+                        log.info(f'{sys._getframe().f_code.co_name}: Updated student RFID to SDH, {reservation.leerlingnummer}, {reservation.data}')
+                        nbr_students_ok += 1
+                    else:
+                        log.info(f'{sys._getframe().f_code.co_name}: SDH returned, {data["data"]}')
+                        nbr_students_nok += 1
+                        error_log.append(data["data"])
                 else:
                     log.error(f'{sys._getframe().f_code.co_name}: api call to {sdh_student_url} returned {res.status_code}')
                     nbr_students_nok += 1
         reservations = mreservation.reservation_get_m()
         delete_reservations = [r.id for r in reservations]
         mreservation.reservation_delete_m(ids=delete_reservations)
-        return {"status": True, "data": {"nbr_ok": nbr_students_ok, "nbr_nok": nbr_students_nok}}
+        return {"status": True, "data": {"nbr_ok": nbr_students_ok, "nbr_nok": nbr_students_nok, "errors": error_log}}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}
