@@ -12,7 +12,6 @@ from flask_mail import Mail
 from flask_cors import CORS
 
 flask_app = Flask(__name__, instance_relative_config=True, template_folder='presentation/templates/')
-CORS(flask_app, origins=r"//cdn.datatables.net/*")
 
 # Configuration files...
 from config import app_config
@@ -149,8 +148,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.81: update of heartbeat to cover cornercases
 # 0.82: small update
 # 0.83: new rfid (for student) is directly pushed to sdh
+# 0.84: ignore inactive registrations.
 
-version = "0.83"
+version = "0.84"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

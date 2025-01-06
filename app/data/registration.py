@@ -80,7 +80,7 @@ def registration_student_photo_get(location_key, search=None, time_low=None, tim
             q = db.session.query(Registration, Student).join(Student, Student.leerlingnummer == Registration.leerlingnummer)
         if search is not None:
             q = q.filter(or_(Student.naam.like(f"%{search}%"),Student.voornaam.like(f"%{search}%")))
-        q = q.filter(Registration.location == location_key)
+        q = q.filter(Registration.location == location_key, Registration.active == True)
         if time_low:
             q = q.filter(Registration.time_in >= time_low)
         if time_high:

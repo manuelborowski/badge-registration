@@ -17,8 +17,8 @@ def show():
 
 
 def get_current_registrations(msg, client_sid=None):
-    filters = msg["data"]["filters"]
     try:
+        filters = msg["data"]["filters"]
         ret = mregistration.registration_get(filters)
         msocketio.send_to_client({'type': 'update-list-of-registrations', 'data': ret})
     except Exception as e:

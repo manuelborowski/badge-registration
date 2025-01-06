@@ -39,8 +39,7 @@
                                         <select class="form-control table-filter" id="{{ f.name }}"
                                                 name="{{ f.name }} {{ f.multiple }}">
                                             {% for o in f.choices %}
-                                                <option value="{{ o[0] }}"
-                                                        {% if o[0] == f.default %}selected{% endif %}>{{ o[1] }}</option>
+                                                <option value="{{ o[0] }}" {% if o[0] == f.default %}selected{% endif %}>{{ o[1] }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -101,26 +100,6 @@
         </div>
     {% endif %}
 
-    {% if table_config.right_click %}
-        <div class="right-click-wrapper">
-                <ul class="menu">
-                    {% for item in table_config.right_click.menu %}
-                        {% if item.item == "horizontal-line" %}
-                            <li class="item">
-                                <span>---------------------</span>
-                            </li>
-                        {% else %}
-                            <li class="item" onclick=item_clicked("{{ item.item }}")>
-                                {% if 'iconscout' in item %}
-                                    <i class="uil uil-{{ item.iconscout }}"></i>
-                                {% endif %}
-                                <span>{{ item.label }}</span>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                </ul>
-        </div>
-    {% endif %}
     <div class="modal fade" id="popup" tabindex="-1" aria-labelledby="popup-label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
