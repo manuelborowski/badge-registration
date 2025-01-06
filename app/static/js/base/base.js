@@ -73,7 +73,18 @@ var menu = [
     ["student.show", "Studenten", 1],
     ["user.show", "Gebruikers", 5],
     ["settings.show", "Instellingen", 5],
+    ["divider", "", 0],
+    [[], "Extra", 3],
 ]
+
+export const append_to_extra_menu = menu_list => {
+    for(const item of menu) {
+        if (item[1] === "Extra") {
+            item[0] = item[0].concat(menu_list);
+            return
+        }
+    }
+}
 
 
 export const inject_menu = new_menu => {
@@ -91,12 +102,13 @@ $(document).ready(() => {
     for (const item of menu) {
         if (current_user_level >= item[2]) {
             const li = document.createElement("li");
-            if (Array.isArray(item[0])) {
+            if (Array.isArray(item[0]) && item[0].length > 0) {
                 // dropdown menu-item
                 li.classList.add("nav-item", "dropdown");
                 const a = document.createElement("a");
                 li.appendChild(a)
                 a.classList.add("nav-link", "dropdown-toggle");
+                a.style.color = "white";
                 a.href = "#";
                 a.id = `dd${dd_ctr}`
                 a.setAttribute("role", "button");
@@ -114,7 +126,8 @@ $(document).ready(() => {
                         divd.classList.add("dropdown-divider");
                         div.appendChild(divd)
                     } else {
-                        if (current_user_level >= sitem[2]) {
+                        const include_item = sitem[3] !== undefined && sitem[3] !== "" ? window.location.href.includes(Flask.url_for(sitem[3])) : true;
+                        if (current_user_level >= sitem[2] && include_item) {
                             const a = document.createElement("a");
                             div.appendChild(a)
                             a.classList.add("dropdown-item");
@@ -128,6 +141,18 @@ $(document).ready(() => {
                     }
                 }
                 dd_ctr++;
+            } else if (item[0] === "divider") {
+                // regular menu-item
+                li.classList.add("nav-item");
+                const a = document.createElement("a");
+                a.classList.add("nav-link");
+                a.style.color = "white";
+                a.style.backgroundColor = "white";
+                a.style.paddingLeft = 0;
+                a.style.paddingRight = 0;
+                a.href = "#";
+                a.innerHTML = "i";
+                li.appendChild(a);
             } else {
                 // regular menu-item
                 const url_path = Flask.url_for(item[0]);
@@ -144,6 +169,7 @@ $(document).ready(() => {
             navbar_element.appendChild(li);
         }
     }
+
 
     if (stand_alone) {
         const btn_div = document.createElement("div");

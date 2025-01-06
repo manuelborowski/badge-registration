@@ -149,8 +149,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.82: small update
 # 0.83: new rfid (for student) is directly pushed to sdh
 # 0.84: ignore inactive registrations.
+# 0.85: added menu option to reset counters of a location
 
-version = "0.84"
+version = "0.85"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

@@ -1,6 +1,6 @@
-import sys
+import sys, json
 
-from flask import render_template
+from flask import render_template, request
 from flask_login import login_required, current_user
 
 from app import log, flask_app
@@ -43,6 +43,14 @@ def export_registrations(key, startdate, enddate):
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": f'{sys._getframe().f_code.co_name}: {e}'}
+
+@overview.route('/overview/reset_counters', methods=['POST', 'GET'])
+@login_required
+def reset_counters():
+    data = json.loads(request.data)
+    location = data["location"]
+    ret = mregistration.registration_zero_counters(location)
+    return json.dumps(ret)
 
 def get_filters():
     try:

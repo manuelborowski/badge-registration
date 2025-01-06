@@ -1,7 +1,7 @@
 import {socketio, Socketio} from "../base/socketio.js";
 import {subscribe_get_ids, create_context_menu} from "../base/right_click.js";
 import {person_image} from "../../img/base64-person.js";
-import {busy_indication_on, busy_indication_off} from "../base/base.js";
+import {busy_indication_on, busy_indication_off, append_to_extra_menu} from "../base/base.js";
 import {add_to_popup_body, create_checkbox_element, create_input_element, formio_popup_create, hide_popup, init_popup, show_popup, subscribe_btn_ok} from "../base/popup.js";
 import {add_extra_filters, create_filters, enable_filters, disable_filters, subscribe_reset_button} from "../base/filters.js";
 import {Rfid} from "./rfidusb.js";
@@ -163,7 +163,7 @@ const __socketio_update_list = (type, data) => {
                         } else if (locations[current_location].type === "cellphone") {
                             const limit = locations[current_location].limiet;
                             registration_container.innerHTML += `
-                                <td data-col="message">${(item.sequence_ctr < (limit-1)) ? "NVT" : item.message_sent ? "verstuurd" : "niet verstuurd"}</td> 
+                                <td data-col="message">${(item.sequence_ctr < (limit - 1)) ? "NVT" : item.message_sent ? "verstuurd" : "niet verstuurd"}</td> 
                                 <td>${item.sequence_ctr}</td>`;
                             if (item.sequence_ctr === limit) {
                                 registration_container.style.background = "orangered"
@@ -230,7 +230,7 @@ const context_menu_pool = {
         {type: "item", iconscout: "export", label: "Exporteer registraties", cb: () => formio_popup_create(popups["popup-export-registrations"], __export_registrations_cb)},
         {type: "divider", layout: "list"},
         {type: "item", iconscout: "trash-alt", label: "Verwijder registratie", cb: to_server_delete_registration},
-        ]
+    ]
 }
 
 const extra_filters_pool = {
@@ -270,9 +270,8 @@ const __request_list_of_registrations_for_current_location = () => {
     let context_menu = [];
     if (locations[current_location].type in context_menu_pool) {
         context_menu = context_menu_pool[locations[current_location].type];
-        context_menu =  context_menu.concat(context_menu_pool["default"]);
-    } else
-    {
+        context_menu = context_menu.concat(context_menu_pool["default"]);
+    } else {
         context_menu = context_menu_pool["default"];
     }
     context_menu = context_menu.filter(i => !("layout" in i) || i.layout === view_layout_element.value)
@@ -349,7 +348,7 @@ async function to_server_send_message(ids) {
     });
 }
 
-const __export_registrations_cb = (action, opaque, data=null) => {
+const __export_registrations_cb = (action, opaque, data = null) => {
     if (action === 'submit') {
         window.open(`/overview/export/${current_location}/${data.startdate}/${data.enddate}`, '_blank');
     }
@@ -442,3 +441,23 @@ const __reset_button_cb = filters => {
     }
 }
 
+
+const __counters_to_zero = () => {
+    if ("reset_counters" in locations[current_location] && locations[current_location].reset_counters) {
+        const location_label = location_element.options[location_element.selectedIndex].innerHTML;
+        bootbox.confirm(`Wilt u de tellers van ${location_label} op nul zetten?`, async result => {
+            if (result) {
+                const ret = await fetch(Flask.url_for('overview.reset_counters'), {method: 'POST', body: JSON.stringify({location: current_location})});
+                const status = await ret.json();
+                if (status.status) bootbox.alert(status.data)
+            }
+        });
+    } else bootbox.alert("Sorry, kan de tellers niet op nul zetten");
+
+}
+
+const extra_menu = [
+    [() => __counters_to_zero(), "Tellers op nul zetten", 3, "overview.show"],
+];
+
+append_to_extra_menu(extra_menu)

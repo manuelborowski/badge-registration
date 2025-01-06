@@ -6,7 +6,7 @@ from app import flask_app
 from app.data import student as mstudent, registration as mregistration, photo as mphoto, settings as msettings, staff as mstaff, reservation as mreservation
 from app.application.util import get_api_key
 from app.application.smartschool import send_message as ss_send_message
-from app.application.student import push_reservations_to_server
+from app.application.student import push_reservations_to_server, klassen_get_unique
 from flask_login import current_user
 from flask import make_response
 from app.application.sms import send_sms
@@ -217,6 +217,19 @@ def registration_delete(ids):
                 "action": "delete",
                 "data": [{"id": id} for id in ids]
             }
+        return ret
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"status": False, "data": f"Fout, {str(e)}"}
+
+
+def registration_zero_counters(location):
+    try:
+        registrations = mregistration.registration_get_m(("location", "=", location))
+        for registration in registrations:
+            registration.active = False
+        mregistration.commit()
+        ret = {"status": True, "data": "Ok, tellers zijn op nul gezet"}
         return ret
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
