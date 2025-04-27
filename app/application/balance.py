@@ -61,19 +61,19 @@ def papercut_upload(files):
                 if "From date" in date:
                     # English format
                     # From date = Sep 1, 2024 12:00:00 AM, To date = Dec 4, 2024 11:59:59 PM"
-                    [m, d, y] = list(re.findall("From date = (\w+) (\d+), (\d+)", date)[0])
+                    [m, d, y] = list(re.findall(r"From date = (\w+) (\d+), (\d+)", date)[0])
                     m = maand2index_en.index(m) + 1
                     papercut_data["startdate"] = f"{y}{m:02}{int(d):02}"
-                    [m, d, y] = list(re.findall("To date = (\w+) (\d+), (\d+)", date)[0])
+                    [m, d, y] = list(re.findall(r"To date = (\w+) (\d+), (\d+)", date)[0])
                     m = maand2index_en.index(m) + 1
                     papercut_data["enddate"] = f"{y}{m:02}{int(d):02}"
                 else:
                     # Dutch format
                     # Vanaf datum = 16-mrt-2024 0:00:00, Tot datum = 21-jun-2024 23:59:59"
-                    [d, m, y] = re.search("Vanaf datum = (.*) 0:00:00", date).group(1).split("-")
+                    [d, m, y] = re.search(r"Vanaf datum = (.*) 0:00:00", date).group(1).split("-")
                     m = maand2index_nl.index(m) + 1
                     papercut_data["startdate"] = f"{y}{m:02}{int(d):02}"
-                    [d, m, y] = re.search("Tot datum = (.*) 23:59", date).group(1).split("-")
+                    [d, m, y] = re.search(r"Tot datum = (.*) 23:59", date).group(1).split("-")
                     m = maand2index_nl.index(m) + 1
                     papercut_data["enddate"] = f"{y}{m:02}{int(d):02}"
             except Exception as e:

@@ -35,7 +35,7 @@ def api_process_options(options):
 
 
 # generic function to retrieve model data (from the database)
-# model is the model reauired
+# model is the model required
 # options is a string with fields and filters (see above)
 def api_get_model_data(model, options=None):
     try:

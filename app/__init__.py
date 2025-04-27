@@ -150,8 +150,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.83: new rfid (for student) is directly pushed to sdh
 # 0.84: ignore inactive registrations.
 # 0.85: added menu option to reset counters of a location
+# 0.86: small bugfix when creating default account in database
 
-version = "0.85"
+version = "0.86"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -234,17 +235,17 @@ flask_app.extensions['mail'].debug = 0
 
 
 def create_admin():
-    try:
-        with flask_app.app_context():
+    with flask_app.app_context():
+        try:
             from app.data.user import User
             find_admin = User.query.filter(User.username == 'admin').first()
             if not find_admin:
                 admin = User(username='admin', password='admin', level=User.LEVEL.ADMIN, user_type=User.USER_TYPE.LOCAL)
                 db.session.add(admin)
                 db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        except Exception as e:
+            db.session.rollback()
+            log.error(f'{sys._getframe().f_code.co_name}: {e}')
 
 
 flask_app.url_map.converters['int'] = IntegerConverter
