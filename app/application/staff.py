@@ -37,6 +37,8 @@ def staff_load_from_sdh(opaque=None, **kwargs):
                             update["naam"] = staff["naam"]
                         if db_staff.rfid != staff["rfid"]:
                             update["rfid"] = staff["rfid"]
+                        if db_staff.extra != staff["extra"]:
+                            update["extra"] = staff["extra"]
                         if db_staff.ss_internal_nbr != staff["ss_internal_nbr"] if staff["ss_internal_nbr"] is not None else "":
                             update["ss_internal_nbr"] = staff["ss_internal_nbr"]
                         if update:
@@ -46,7 +48,7 @@ def staff_load_from_sdh(opaque=None, **kwargs):
                     else:
                         # new staff
                         new_staff.append({"code": staff["code"], "voornaam": staff["voornaam"], "naam": staff["naam"],
-                                          "ss_internal_nbr": staff["ss_internal_nbr"], "rfid": staff["rfid"],})
+                                          "ss_internal_nbr": staff["ss_internal_nbr"], "rfid": staff["rfid"], "extra": staff["extra"]})
                 # removed staff
                 for staff in db_code2staff.values():
                     deleted_staff.append(staff)

@@ -274,8 +274,10 @@ def registration_get(filters):
                 time_low = datetime.datetime.now() - datetime.timedelta(days=delta)
         if "table" in location and location["table"] == "staff":
             # Staff specific data
-            ret.update({"headers": ["Tijd in", "Naam", "Code", "Tijd uit"]})
+            ret.update({"headers": ["Naam", "Code", "Tijd in", "Startuur", "Tijd uit", "Einduur"]})
             registrations = mregistration.registration_staff_get(location_key, search=search, time_low=time_low, time_high=time_high)
+            staff_cache = {}
+            weekday = datetime.date.today().weekday()
             for tuple in registrations:
                 registration = tuple[0]
                 staff = tuple[1]
@@ -283,6 +285,16 @@ def registration_get(filters):
                     "leerlingnummer": staff.code, "naam": staff.naam, "voornaam": staff.voornaam, "klascode": staff.code, "timestamp": str(registration.time_in), "id": registration.id,
                     "photo": "", "time_out": str(registration.time_out) if registration.time_out else ""
                 }
+                if staff.code in staff_cache:
+                    item.update({"startuur": staff_cache[staff.code]["startuur"], "einduur": staff_cache[staff.code]["einduur"]})
+                else:
+                    slices = staff.extra.split(",")
+                    if len(slices) == 10:
+                        staff_cache[staff.code] = {"startuur": slices[weekday * 2], "einduur": slices[weekday * 2 + 1]}
+                    else:
+                        staff_cache[staff.code] = {"startuur": "", "einduur": ""}
+                    item.update({"startuur": staff_cache[staff.code]["startuur"], "einduur": staff_cache[staff.code]["einduur"]})
+
                 ret["data"].append(item)
         else:
             # Student specific data

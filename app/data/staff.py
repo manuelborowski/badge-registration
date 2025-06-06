@@ -24,6 +24,7 @@ class Staff(db.Model, SerializerMixin):
     code = db.Column(db.String(256), default='')
     rfid = db.Column(db.String(256), default='')
     ss_internal_nbr = db.Column(db.String(256), default='')
+    extra = db.Column(db.TEXT, default='')
 
     timestamp = db.Column(db.DateTime)
 

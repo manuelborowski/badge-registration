@@ -151,8 +151,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.84: ignore inactive registrations.
 # 0.85: added menu option to reset counters of a location
 # 0.86: small bugfix when creating default account in database
+# 0.87: timeregistrations, add extra columns: starthour, endhour
 
-version = "0.86"
+version = "0.87"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

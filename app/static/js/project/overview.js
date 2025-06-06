@@ -175,7 +175,12 @@ const __socketio_update_list = (type, data) => {
                         } else if (locations[current_location].type === "toilet") {
                             registration_container.innerHTML += `<td>${item.sequence_ctr}</td>`;
                         } else if (locations[current_location].type === "timeregistration") {
-                            registration_container.innerHTML += `<td data-col="time-out">${item.time_out}</td>`;
+                            registration_container.innerHTML = `
+                            <td><input class="item-select" type="checkbox" ""}></td>
+                            <td data-col="name">${item.naam} ${item.voornaam}</td>
+                            <td>${item.klascode}</td>
+                            <td>${item.timestamp}</td><td>${item.startuur}</td>
+                            <td data-col="time-out">${item.time_out}</td><td>${item.einduur}</td>`
                         }
                     }
                     registration_container.classList.add("S" + item.leerlingnummer);
