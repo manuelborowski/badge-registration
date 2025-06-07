@@ -152,8 +152,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.86: small bugfix when creating default account in database
 # 0.87: timeregistrations, add extra columns: starthour, endhour
 # 0.88: timeregistration, bufix and added columns
+# 0.89: small update
 
-version = "0.88"
+version = "0.89"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

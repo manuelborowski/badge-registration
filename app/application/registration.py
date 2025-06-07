@@ -274,7 +274,7 @@ def registration_get(filters):
                 time_low = datetime.datetime.now() - datetime.timedelta(days=delta)
         if "table" in location and location["table"] == "staff":
             # Staff specific data
-            ret.update({"headers": ["Naam", "Code", "Tijd in", "Startuur", "Verschil", "Tijd uit", "Einduur", "Verschil", "Totaal verschil"]})
+            ret.update({"headers": ["Naam", "Code", "Tijd in", "Startuur", "Verschil", "Tijd uit", "Einduur", "Verschil", "Dagverschil"]})
             registrations = mregistration.registration_staff_get(location_key, search=search, time_low=time_low, time_high=time_high)
             staff_cache = {}
             for tuple in registrations:
