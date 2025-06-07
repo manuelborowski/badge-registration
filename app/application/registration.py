@@ -274,10 +274,9 @@ def registration_get(filters):
                 time_low = datetime.datetime.now() - datetime.timedelta(days=delta)
         if "table" in location and location["table"] == "staff":
             # Staff specific data
-            ret.update({"headers": ["Naam", "Code", "Tijd in", "Startuur", "Tijd uit", "Einduur"]})
+            ret.update({"headers": ["Naam", "Code", "Tijd in", "Startuur", "Verschil", "Tijd uit", "Einduur", "Verschil", "Totaal verschil"]})
             registrations = mregistration.registration_staff_get(location_key, search=search, time_low=time_low, time_high=time_high)
             staff_cache = {}
-            weekday = datetime.date.today().weekday()
             for tuple in registrations:
                 registration = tuple[0]
                 staff = tuple[1]
@@ -290,6 +289,7 @@ def registration_get(filters):
                 else:
                     slices = staff.extra.split(",")
                     if len(slices) == 10:
+                        weekday = registration.time_in.weekday()
                         staff_cache[staff.code] = {"startuur": slices[weekday * 2], "einduur": slices[weekday * 2 + 1]}
                     else:
                         staff_cache[staff.code] = {"startuur": "", "einduur": ""}

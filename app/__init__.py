@@ -9,7 +9,6 @@ from functools import wraps
 from flask_socketio import SocketIO
 from flask_apscheduler import APScheduler
 from flask_mail import Mail
-from flask_cors import CORS
 
 flask_app = Flask(__name__, instance_relative_config=True, template_folder='presentation/templates/')
 
@@ -152,8 +151,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.85: added menu option to reset counters of a location
 # 0.86: small bugfix when creating default account in database
 # 0.87: timeregistrations, add extra columns: starthour, endhour
+# 0.88: timeregistration, bufix and added columns
 
-version = "0.87"
+version = "0.88"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
