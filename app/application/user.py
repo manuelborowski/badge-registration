@@ -1,6 +1,8 @@
+import sys, qrcode, secrets, base64, io
 import app.application.student
-from app.data import user as muser, settings as msettings
-import sys
+from app.data import user as muser, settings as msettings, models as mmodels
+from flask import request
+from app import flask_app
 
 #logging on file level
 import logging
@@ -72,6 +74,39 @@ def api_user_get(data):
 def user_delete(ids):
     muser.delete_users(ids)
 
+def login_url_generate(user):
+    try:
+        url_token = secrets.token_urlsafe(32)
+        user.url_token = url_token
+        mmodels.commit()
+        return url_token
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return None
+
+def qr_get(user, new_qr=False):
+    try:
+        if new_qr: user.url_token = None
+        url_token = user.url_token if user.url_token else login_url_generate(user)
+        root_url = request.root_url
+        if "localhost" in root_url:
+            # hostname = socket.getfqdn()
+            # host_address = socket.gethostbyname_ex(hostname)[2][0]
+            # root_url = f"http://{host_address}:{flask_app.config["FLASK_PORT"]}/"
+            root_url = flask_app.config["SMARTSCHOOL_OUATH_REDIRECT_URI"]
+        url = f"{root_url}m/{url_token}"
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4, )
+        qr.add_data(url)
+        qr.make(fit=True)
+        img = qr.make_image(fill="black", back_color="white")
+        img_io = io.BytesIO()
+        img.save(img_io, format="PNG")
+        img_io.seek(0)
+        img_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
+        return {"qr": img_base64}
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {e}')
+        return {"status": "error", "msg": {str(e)}}
 
 ############## formio forms #############
 def prepare_add_registration_form():

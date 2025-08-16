@@ -130,3 +130,16 @@ def login_ss():
     else:
         redirect_uri = f'{flask_app.config["SMARTSCHOOL_OUATH_REDIRECT_URI"]}/ss'
         return redirect(f'{flask_app.config["SMARTSCHOOL_OAUTH_SERVER"]}?app_uri={redirect_uri}')
+
+@auth.route('/m/<string:user_token>', methods=['POST', 'GET'])
+def login_m(user_token):
+    try:
+        user = muser.get_first_user({'url_token': user_token})
+        if user:
+            login_user(user)
+            log.info(f'User {user.username} logged in')
+            return redirect(url_for('register.m_show'))
+        return "geen toegang"
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: {str(e)}')
+

@@ -1,5 +1,5 @@
-from flask import redirect, url_for
-from flask_login import login_required
+from flask import redirect, url_for, request
+from flask_login import login_required, current_user
 from app import admin_required, data
 from . import user
 from app.application import user as muser
@@ -8,6 +8,13 @@ from app.data.datatables import DatatableConfig
 import app.data.user
 import app.application.user
 from app.application.settings import get_configuration_setting
+import sys
+
+#logging on file level
+import logging
+from app import MyLogFilter, top_log_handle
+log = logging.getLogger(f"{top_log_handle}.{__name__}")
+log.addFilter(MyLogFilter())
 
 @user.route('/user', methods=['GET', 'POST'])
 @admin_required
@@ -36,6 +43,19 @@ def table_ajax():
 @admin_required
 def table_action(action, ids=None):
     return redirect(url_for('user.show'))
+
+
+@user.route('/user/qr', methods=['GET'])
+@login_required
+def qr():
+    try:
+        if request.method == "GET":
+            generate_new_qr = request.args.get("new")
+            qr = muser.qr_get(current_user, generate_new_qr)
+            return qr
+    except Exception as e:
+        log.error(f'{sys._getframe().f_code.co_name}: Exception, {e}')
+        return {"qr": None}
 
 
 class UserConfig(DatatableConfig):

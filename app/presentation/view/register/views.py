@@ -30,4 +30,8 @@ def sync_locations_articles():
     return json.dumps(ret)
 
 
+@register.route('/mregister', methods=['GET'])
+@login_required
+def m_show():
+    return render_template("m/register.html")
 

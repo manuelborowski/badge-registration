@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Layout</title>
+    <link href="static/css/m/register.css" rel="stylesheet">
+</head>
+<body>
+<nav>
+    <div>
+        <button id="repair-new-btn" class="green">RFC</button>
+    </div>
+    <div>
+        <input id="search-input" type="text" placeholder="Zoeken...">
+    </div>
+</nav>
+<main>
+    <table id="incident-table"></table>
+</main>
+
+<footer><p class="copyright text-muted small">{{ version }}</p></footer>
+
+{{ JSGlue.include() }}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="module" src="/static/js/m/register.js"></script>
+
+
+</body>
+
+</html>

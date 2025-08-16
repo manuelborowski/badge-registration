@@ -153,8 +153,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.87: timeregistrations, add extra columns: starthour, endhour
 # 0.88: timeregistration, bufix and added columns
 # 0.89: small update
+# 0.90: added rfc-via-mobile-chrome, first steps
 
-version = "0.89"
+version = "0.90"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

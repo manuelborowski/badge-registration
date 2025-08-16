@@ -10,7 +10,7 @@ class User(UserMixin, db.Model, SerializerMixin):
 
     date_format = '%d/%m/%Y'
     datetime_format = '%d/%m/%Y %H:%M'
-    serialize_rules = ("-password_hash",)
+    serialize_rules = ("-password_hash","-url_token")
 
     class USER_TYPE:
         LOCAL = 'local'
@@ -52,6 +52,7 @@ class User(UserMixin, db.Model, SerializerMixin):
     level = db.Column(db.Integer)
     user_type = db.Column(db.String(256))
     last_login = db.Column(db.DateTime())
+    url_token = db.Column(db.String(256), default=None)
 
     @property
     def is_local(self):

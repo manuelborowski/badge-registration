@@ -1,0 +1,58 @@
+.form-row {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.form-row > * {
+    margin-right: 10px;
+}
+
+.form-row button {
+    margin: 0;
+}
+
+.form-element {
+    display: flex;
+    align-items: center;
+}
+
+.form-element > * {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.form-element > label {
+    display: flex;
+    align-items: center;
+}
+
+.form-element > label > input {
+    vertical-align: middle;
+    margin-top: 0;
+    padding-left: 3px;
+}
+
+.form-element > label > textarea {
+    line-height: 1;
+    padding-left: 2px;
+}
+
+.form-element > label > * {
+    margin-left: 10px;
+    margin-right: 5px;
+}
+
+.form-element select, .form-element input {
+    height: 28px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+}
+.form-element th, .form-element td {
+    border: thin;
+    border-style: solid;
+    padding-right: 5px;
+}
+
+.form-element .required {
+    color: orangered;
+}
