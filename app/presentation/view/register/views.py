@@ -21,6 +21,14 @@ def sync_registrations():
     ret = {"status": True, "data": {"nbr_new": nbr_new, "nbr_doubles": nbr_doubles}}
     return json.dumps(ret)
 
+@register.route('/register/meta', methods=['GET'])
+@login_required
+def meta():
+    location_profiles = msettings.get_configuration_setting("location-profiles")
+    locations = [{"value": k, "label": v["locatie"]} for k, v in location_profiles.items()]
+    ret = {"locations": locations}
+    return json.dumps(ret)
+
 
 @register.route('/location_article/sync', methods=['GET'])
 @login_required
@@ -34,4 +42,15 @@ def sync_locations_articles():
 @login_required
 def m_show():
     return render_template("m/register.html")
+
+@register.route('/register/add', methods=['POST'])
+@login_required
+def registration(*args, **kwargs):
+    data = json.loads(request.data)
+    code = data["badge_code"] if "badge_code" in data else None
+    leerlingnummer = data["leerlingnummer"] if "leerlingnummer" in data else None
+    location = data["location_key"]
+    timestamp = data["timestamp"] if "timestamp" in data else None
+    ret = mregistration.registration_add(location, timestamp, leerlingnummer, code)
+    return json.dumps(ret)
 

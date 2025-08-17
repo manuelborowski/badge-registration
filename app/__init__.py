@@ -154,8 +154,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.88: timeregistration, bufix and added columns
 # 0.89: small update
 # 0.90: added rfc-via-mobile-chrome, first steps
+# 0.91: mobile scanner, implemented test location, local storage of scans, button to clear list
 
-version = "0.90"
+version = "0.91"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

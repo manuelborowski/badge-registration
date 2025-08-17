@@ -116,3 +116,18 @@ th {
 label:has(input[type="checkbox"]) {
     display: inline-flex;
 }
+
+.register-not-active {
+  background: white;
+  animation: mymove 2s infinite;
+}
+
+@keyframes mymove {
+  from {background-color: white;}
+  to {background-color: orange;}
+}
+
+.register-active {
+  background: white;
+}
+

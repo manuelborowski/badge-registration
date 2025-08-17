@@ -1,6 +1,8 @@
 
 // From the server, get my (client, webbrowser) local ip address
 export const get_my_ip = async  () => {
+    // For some reason, the fetch can cause an error on the console: "Endpoint not found".
+    // The error occurs when loading the students page, but not when loading the overview page???
     const ret = await fetch(Flask.url_for('api.get_my_ip'), {headers: {'x-api-key': api_key}, signal: AbortSignal.timeout(2000) });
     const res = await ret.json();
     return res.ipaddress;

@@ -11,9 +11,10 @@ from flask_login import current_user
 from flask import make_response
 from app.application.sms import send_sms
 
-#logging on file level
+# logging on file level
 import logging
 from app import MyLogFilter, top_log_handle
+
 log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
@@ -47,23 +48,35 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                         ret = push_reservations_to_server()
                         if len(ret["data"]["errors"]) == 0:
                             log.info(f'{sys._getframe().f_code.co_name}:  Add reservation and push to SDH for {student.leerlingnummer}, {student.naam} {student.voornaam}')
-                            return [{"to":"ip", "type": "alert-popup", "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}<br>Student kan ook al afdrukken met de badge"}]
+                            return [{"to": "ip", "type": "alert-popup", "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}<br>Student kan ook al afdrukken met de badge"}]
                         else:
                             log.error(f'{sys._getframe().f_code.co_name}:  Add reservation and push to SDH for {student.leerlingnummer}, {student.naam} {student.voornaam}, returned error: {ret["data"]["errors"][0]}')
-                            return [{"to":"ip", "type": "alert-popup", "data": f"<b>Foutmelding</b>: {ret["data"]["errors"][0]}"}]
+                            return [{"to": "ip", "type": "alert-popup", "data": f"<b>Foutmelding</b>: {ret["data"]["errors"][0]}"}]
                     else:
                         log.info(f'{sys._getframe().f_code.co_name}:  Add reservation for {student.leerlingnummer}, {student.naam} {student.voornaam} {location_key}')
-                        return [{"to":"ip", "type": "alert-popup", "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}"}]
+                        return [{"to": "ip", "type": "alert-popup", "data": f"Student {student.naam} {student.voornaam} heeft nu RFID code {rfid}"}]
             log.info(f'{sys._getframe().f_code.co_name}:  No valid reservation for {location_key}')
-            return [{"to":"ip", "type": "alert-popup", "data": f"Nieuwe RFID niet gelukt.  Misschien te lang gewacht met scannen, probeer nogmaals"}]
+            return [{"to": "ip", "type": "alert-popup", "data": f"Nieuwe RFID niet gelukt.  Misschien te lang gewacht met scannen, probeer nogmaals"}]
+
+        if location_key == "test":
+            student = mstudent.student_get([("rfid", "=", rfid)])
+            if student:
+                log.info(f'{sys._getframe().f_code.co_name}: test, {student.leerlingnummer} at {now}')
+                return [{
+                    "to": "location", 'type': 'update-list-of-registrations',
+                    "data": {"status": True, "date": str(today), "action": "add",
+                             "data": [{"leerlingnummer": student.leerlingnummer, "naam": student.naam, "voornaam": student.voornaam, "klascode": student.klascode, "timestamp": str(now)}]}}]
+            else:
+                return [{"to": "ip", 'type': 'alert-popup', "data": f"Badge met code {rfid} niet in database"}]
+
         location_settings = msettings.get_configuration_setting("location-profiles")
         if location_key not in location_settings:
             log.info(f'{sys._getframe().f_code.co_name}:  {location_key} is not valid')
-            return [{"to":"ip", "type": "alert-popup", "data": f"Locatie {location_key} is niet geldig"}]
+            return [{"to": "ip", "type": "alert-popup", "data": f"Locatie {location_key} is niet geldig"}]
 
         location = location_settings[location_key]
         backoff = location["backoff"] if "backoff" in location else None
-        inout =  location["inout"] if "inout" in location else None
+        inout = location["inout"] if "inout" in location else None
 
         # Staff specific registrations
         if "table" in location and location["table"] == "staff":
@@ -75,22 +88,22 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     last_registration = registrations[-1] if len(registrations) > 0 else None
                     if last_registration and backoff:
                         if (now - (last_registration.time_in if last_registration.time_out == None else last_registration.time_out)).seconds < backoff:
-                            return [{"to":"ip", 'type': 'alert-popup', "data": f"Sorry, u moet langer wachten om terug te scannen"}]
+                            return [{"to": "ip", 'type': 'alert-popup', "data": f"Sorry, u moet langer wachten om terug te scannen"}]
                     if last_registration and last_registration.time_out is None:
                         mregistration.registration_update(last_registration, {"time_out": now})
                         log.info(f'{sys._getframe().f_code.co_name}: Badge out, {staff.code} at {now}')
                         ret_location = {"to": "location", 'type': 'update-items-in-list-of-registrations',
-                                'data': {"status": True, "data": [{"id": last_registration.id, "time_out": str(now)}]}}
+                                        'data': {"status": True, "data": [{"id": last_registration.id, "time_out": str(now)}]}}
                         ret_ip = {"to": "ip", 'type': 'alert-popup',
-                                "data": f"{staff.voornaam} {staff.naam}<br>"
-                                        f"Je bent IN gescand om {last_registration.time_in}<br>"
-                                        f"Je bent UIT gescand om {last_registration.time_out}"}
+                                  "data": f"{staff.voornaam} {staff.naam}<br>"
+                                          f"Je bent IN gescand om {last_registration.time_in}<br>"
+                                          f"Je bent UIT gescand om {last_registration.time_out}"}
                         return [ret_location, ret_ip]
                     else:
                         ret_location = {"to": "location", 'type': 'update-list-of-registrations',
-                                'data': {"status": True, "date": str(today), "action": "add",
-                                "data": [{"leerlingnummer": staff.code, "naam": staff.naam, "voornaam": staff.voornaam, "klascode": staff.code, "time_out": ""}]
-                        }}
+                                        'data': {"status": True, "date": str(today), "action": "add",
+                                                 "data": [{"leerlingnummer": staff.code, "naam": staff.naam, "voornaam": staff.voornaam, "klascode": staff.code, "time_out": ""}]
+                                                 }}
                         registration = mregistration.registration_add({"leerlingnummer": staff.code, "location": location_key, "time_in": now})
                         if registration:
                             ret_location["data"]["data"][0].update({"timestamp": str(now), "id": registration.id})
@@ -113,7 +126,7 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
             ret_location = {
                 "to": "location", 'type': 'update-list-of-registrations',
                 "data": {"status": True, "date": str(today), "action": "add",
-                "data": [{"leerlingnummer": student.leerlingnummer, "naam": student.naam, "voornaam": student.voornaam, "photo": photo, "klascode": student.klascode, "timestamp": str(now)}]}
+                         "data": [{"leerlingnummer": student.leerlingnummer, "naam": student.naam, "voornaam": student.voornaam, "photo": photo, "klascode": student.klascode, "timestamp": str(now)}]}
             }
             ret_ip = {"to": "ip", 'type': 'alert-popup', "data": f"Student {student.naam} {student.voornaam} heeft gescand om {str(now)}"}
 
@@ -124,11 +137,11 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     if last_registration.time_out is None:
                         mregistration.registration_update(last_registration, {"time_out": now})
                         log.info(f'{sys._getframe().f_code.co_name}: Badge out, {student.leerlingnummer} at {now}')
-                        return {'type': 'update-list-of-registrations', 'data':  {"status": True, "action": "delete", "data": [{"id": last_registration.id}]}}
+                        return {'type': 'update-list-of-registrations', 'data': {"status": True, "action": "delete", "data": [{"id": last_registration.id}]}}
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now})
                 if registration:
                     log.info(f'{sys._getframe().f_code.co_name}: Badge in, {student.leerlingnummer} at {now}')
-                    ret_location["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id,})
+                    ret_location["data"][0].update({"timestamp": str(registration.time_in), "id": registration.id, })
                     return {'type': 'update-list-of-registrations', 'data': ret_location}
             if location["type"] == "verkoop":
                 artikel = msettings.get_configuration_setting("artikel-profiles")[location["artikel"]]
@@ -142,12 +155,12 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     if day_index > 4:
                         return [{"to": "ip", 'type': 'alert-popup', "data": f"Dit kan alleen gescand worden tijdens weekdagen"}]
                     max_qty = int(mask[day_index])
-                    current_qty = int(mask[day_index+6])
+                    current_qty = int(mask[day_index + 6])
                     if current_qty >= max_qty:
                         log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer}, dagmasker, exceeded quantity {current_qty}/{max_qty} ')
                         return [{"to": "ip", 'type': 'alert-popup', "data": f"Student {student.naam} {student.voornaam} heeft het maximum aantal van {max_qty} artikel(s) bereikt"}]
                     current_qty += 1
-                    mask = mask[:day_index+6] + str(current_qty) + mask[day_index+7:]
+                    mask = mask[:day_index + 6] + str(current_qty) + mask[day_index + 7:]
                     mstudent.student_update(student, {location["dagmasker"]: mask})
                 registration = mregistration.registration_add({"leerlingnummer": student.leerlingnummer, "location": location_key, "time_in": now,
                                                                "prijs_per_item": artikel["prijs-per-item"], "aantal_items": nbr_items})
@@ -184,7 +197,7 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                                                                "aantal_items": sequence_counter})
                 if registration:
                     message_sent = False
-                    if "auto" in location and location["auto"]: # send message when badge is scanned
+                    if "auto" in location and location["auto"]:  # send message when badge is scanned
                         message_sent = __send_ss_message(registration, location, student)
                     ret_location["data"]["data"][0].update({"id": registration.id, "sequence_ctr": sequence_counter, "message_sent": message_sent})
                     return [ret_location, ret_ip]
@@ -202,7 +215,7 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
                     return [ret_location, ret_ip]
 
             log.info(f'{sys._getframe().f_code.co_name}:  {student.leerlingnummer} could not make a registration')
-            return [{"to":"ip", "type": "alert-popup", "data": "Kan geen nieuwe registratie maken"}]
+            return [{"to": "ip", "type": "alert-popup", "data": "Kan geen nieuwe registratie maken"}]
         log.info(f'{sys._getframe().f_code.co_name}:  rif/leerlingnummer {rfid}/{leerlingnummer} not found in database')
         return [{"to": "ip", "type": "alert-popup", "data": f"Kan student met rfid {rfid} / leerlingnummer {leerlingnummer} niet vinden in database"}]
     except Exception as e:
@@ -213,10 +226,10 @@ def registration_delete(ids):
     try:
         mregistration.registration_delete_m(ids)
         ret = {
-                "status": True,
-                "action": "delete",
-                "data": [{"id": id} for id in ids]
-            }
+            "status": True,
+            "action": "delete",
+            "data": [{"id": id} for id in ids]
+        }
         return ret
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
@@ -323,7 +336,7 @@ def registration_get(filters):
                     photo = tuple[2]
                     item.update({"photo": base64.b64encode(photo.photo).decode('utf-8') if photo and photo.photo else ''})
                 if type == "sms":
-                    item.update({"remark": registration.text1, "remark_ack": registration.flag1, "sms_sent": registration.flag2,})
+                    item.update({"remark": registration.text1, "remark_ack": registration.flag1, "sms_sent": registration.flag2, })
                 elif type == "cellphone":
                     item.update({"sequence_ctr": registration.aantal_items, "message_sent": registration.flag1})
                 elif type == "toilet":
@@ -361,7 +374,7 @@ def api_schoolrekening_get(options):
         filters = [(k, o, v) for k, o, v in filters if k != "artikel"]
         locations = msettings.get_configuration_setting("location-profiles")
         artikel_profiel = msettings.get_configuration_setting("artikel-profiles")[artikel]
-        location_keys = [k for k,v in locations.items() if v["type"] == "verkoop" and v["artikel"] == artikel]
+        location_keys = [k for k, v in locations.items() if v["type"] == "verkoop" and v["artikel"] == artikel]
         data_out = []
         leerlingnummers = {}
         for key in location_keys:
@@ -503,7 +516,7 @@ def sync_registrations_server(data):
         return 0, 0
 
 
-#get registrations from local client database and send to remote server
+# get registrations from local client database and send to remote server
 def sync_registrations_client():
     try:
         registrations = mregistration.registration_get_m()
@@ -616,6 +629,7 @@ def __send_ss_message(registration, location, student, force=False):
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return False
 
+
 def registration_export(location_key, start_date, stop_date):
     try:
         location_settings = msettings.get_configuration_setting("location-profiles")
@@ -650,4 +664,3 @@ def registration_export(location_key, start_date, stop_date):
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"data": f"Fout: {e}"}
-
