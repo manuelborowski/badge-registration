@@ -69,8 +69,8 @@ $(document).ready(async () => {
                 if (register_type_select.value in registration_cache) {
                     delete registration_cache[register_type_select.value];
                     localStorage.setItem("registrations", JSON.stringify(registration_cache));
-                    register_list.innerHTML = "";
                 }
+                register_list.innerHTML = "";
             }
         });
     });

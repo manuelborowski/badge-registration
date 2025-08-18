@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Layout</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+          integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <link href="static/css/m/register.css" rel="stylesheet">
+    <style>
+        img {
+            display: block;
+            margin: auto;
+            width: 75%;
+            margin-top: 15%
+        }
+    </style>
+</head>
+<body>
+<nav>
+</nav>
+<main id="main">
+    <img src="/static/img/badge-registration.png" alt="aanmelden via smartschool">
+    <a href="{{ url_for('auth.login_ss',mobile="m") }}"><img src="/static/img/btn_aanmelden_op_smartschool_290x40.png"
+                                                             alt="aanmelden via smartschool"></a>
+</main>
+
+<footer><p class="copyright text-muted small">{{ version }}</p></footer>
+
+{{ JSGlue.include() }}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
+        crossorigin="anonymous"></script>
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.5.2/bootbox.min.js"></script>
+
+</body>
+
+</html>

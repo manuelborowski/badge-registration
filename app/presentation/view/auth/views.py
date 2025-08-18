@@ -25,7 +25,6 @@ def auto_login_generic():
     form = LoginForm(request.form)
     return render_template('auth/login.html', form=form, title='Login', suppress_navbar=True)
 
-
 @auth.route(f'/{flask_app.config["AUTO_LOGIN_STAFF_REGISTRATION_URL"] if "AUTO_LOGIN_STAFF_REGISTRATION_URL" in flask_app.config else "NA2"}', methods=['POST', 'GET'])
 def auto_login_staff_registration():
     # remote server, auto login for staff registration
@@ -40,7 +39,6 @@ def auto_login_staff_registration():
             return render_template('register/register.html')
     form = LoginForm(request.form)
     return render_template('auth/login.html', form=form, title='Login', suppress_navbar=True)
-
 
 @auth.route('/', methods=['POST', 'GET'])
 def login():
@@ -76,7 +74,6 @@ def login():
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return render_template('auth/login.html', form=form, title='Login', suppress_navbar=True)
 
-
 @auth.route('/logout')
 @login_required
 def logout():
@@ -84,16 +81,15 @@ def logout():
     logout_user()
     return redirect(url_for('auth.login'))
 
-
 SMARTSCHOOL_ALLOWED_BASE_ROLES = [
     'Andere',
     'Leerkracht',
     'Directie'
 ]
 
-
 @auth.route('/ss', methods=['POST', 'GET'])
-def login_ss():
+@auth.route('/ss/<string:mobile>', methods=['POST', 'GET'])
+def login_ss(mobile=""):
     if 'version' in request.args:
         profile = json.loads(request.args['profile'])
 
@@ -126,13 +122,18 @@ def login_ss():
                 log.error('Could not save user')
                 return redirect(url_for('auth.login'))
             # Ok, continue
-            return render_template('base.html', default_view=True)
+            if mobile == "m":
+                return redirect(url_for('register.m_show'))
+            else:
+                return render_template('base.html', default_view=True)
     else:
         redirect_uri = f'{flask_app.config["SMARTSCHOOL_OUATH_REDIRECT_URI"]}/ss'
+        if mobile == "m":
+            redirect_uri += "/m"
         return redirect(f'{flask_app.config["SMARTSCHOOL_OAUTH_SERVER"]}?app_uri={redirect_uri}')
 
 @auth.route('/m/<string:user_token>', methods=['POST', 'GET'])
-def login_m(user_token):
+def login_m_token(user_token):
     try:
         user = muser.get_first_user({'url_token': user_token})
         if user:
@@ -142,4 +143,8 @@ def login_m(user_token):
         return "geen toegang"
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {str(e)}')
+
+@auth.route('/m', methods=['GET'])
+def login_m():
+    return render_template('m/login.html')
 

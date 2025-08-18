@@ -94,7 +94,10 @@ def qr_get(user, new_qr=False):
             # host_address = socket.gethostbyname_ex(hostname)[2][0]
             # root_url = f"http://{host_address}:{flask_app.config["FLASK_PORT"]}/"
             root_url = flask_app.config["SMARTSCHOOL_OUATH_REDIRECT_URI"]
-        url = f"{root_url}m/{url_token}"
+        # using a token will log the user out when the browser is minimized.
+        # Added a smartphone login page to log in using smartschool
+        # url = f"{root_url}m/{url_token}"
+        url = f"{root_url}m"
         qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4, )
         qr.add_data(url)
         qr.make(fit=True)
