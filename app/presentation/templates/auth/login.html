@@ -3,36 +3,45 @@
 {% endblock %}
 
 {% block body %}
-<div class="content-section  background-image">
-    <br>
-    <br>
-    <br>
-    <br>
-    <div class="center">
-        <div class="container">
-            <div class="thick-green-border" style="width: 600px">
-                <div class="row">
-                    <h1>Aanmelden </h1>
+    <div class="content-section  background-image">
+        <br>
+        <br>
+        <br>
+        <br>
+        <div class="center">
+            <div class="container">
+                <div style="display: flex;flex-wrap: wrap;">
+                    <div style="display: flex;flex-direction: column;align-items: center;background-color: white">
+                        <img id="login-url-img" src="data:image/png;base64,{{ qr }}" alt="QR Code" class="login-image">
+                        <b>Mobiele scanner (Android only)</b>
+                    </div>
+
+                    <div class="thick-green-border" style="width: 600px">
+                        <div class="row">
+                            <h1>Aanmelden </h1>
+                        </div>
+                        <div class="row thick-green-border">
+                            <form style="width: 100%" method="post" action="{{ url_for('auth.login') }}">
+                                {{ form.csrf_token }}
+                                <div style="display: flex; justify-content: space-between">{{ form.username.label }} {{ form.username() }}</div>
+                                <div style="display: flex; justify-content: space-between">{{ form.password.label }} {{ form.password() }}</div>
+                                <br>
+                                <button class="btn btn-default" type="submit">Aanmelden</button>
+                            </form>
+                        </div>
+                        <br>
+                        <a href="{{ url_for('auth.login_ss') }}"><img
+                                src="/static/img/btn_aanmelden_op_smartschool_290x40.png"
+                                alt="aanmelden via smartschool"></a>
+                    </div>
                 </div>
-                <div class="row thick-green-border" >
-                    <form style="width: 100%" method="post" action="{{url_for('auth.login')}}">
-                        {{ form.csrf_token }}
-                        <div style="display: flex; justify-content: space-between">{{ form.username.label }} {{ form.username() }}</div>
-                        <div style="display: flex; justify-content: space-between">{{ form.password.label }} {{ form.password() }}</div>
-                    <br>
-                    <button class="btn btn-default" type="submit" >Aanmelden</button>
-                    </form>
-                </div>
-                <br>
-                <a href="{{ url_for('auth.login_ss') }}"><img src="/static/img/btn_aanmelden_op_smartschool_290x40.png" alt="aanmelden via smartschool"></a>
             </div>
         </div>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
     </div>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-</div>
 
 {% endblock %}

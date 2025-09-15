@@ -1,6 +1,7 @@
 from flask import redirect, render_template, url_for, request
 from flask_login import login_required, login_user, logout_user
 from sqlalchemy import func
+from user_agents import parse
 
 from app import log, flask_app
 from . import auth
@@ -8,7 +9,7 @@ from .forms import LoginForm
 from app.data import user as muser
 from app.presentation.layout import utils
 from app.application import settings as msettings
-import datetime, json, sys
+import datetime, json, sys, qrcode, base64, io
 
 @auth.route(f'/{flask_app.config["AUTO_LOGIN_URL"] if "AUTO_LOGIN_URL" in flask_app.config else "NA1"}', methods=['POST', 'GET'])
 def auto_login_generic():
@@ -68,11 +69,24 @@ def login():
         else:
             utils.flash_plus(u'Ongeldige gebruikersnaam of paswoord')
             log.error(u'Invalid username/password')
+    user_agent_str = request.headers.get('User-Agent')
+    user_agent = parse(user_agent_str)
+    if user_agent.is_mobile:
+        return render_template('m/login.html')
+    url = f"{request.root_url}"
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4, )
+    qr.add_data(url)
+    qr.make(fit=True)
+    img = qr.make_image(fill="black", back_color="white")
+    img_io = io.BytesIO()
+    img.save(img_io, format="PNG")
+    img_io.seek(0)
+    img_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
     try:
-        return render_template('auth/login.html', form=form, title='Login', suppress_navbar=True)
+        return render_template('auth/login.html', form=form, title='Login', suppress_navbar=True, qr=img_base64)
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
-        return render_template('auth/login.html', form=form, title='Login', suppress_navbar=True)
+        return render_template('auth/login.html', form=form, title='Login', suppress_navbar=True, qr=img_base64)
 
 @auth.route('/logout')
 @login_required
@@ -88,8 +102,7 @@ SMARTSCHOOL_ALLOWED_BASE_ROLES = [
 ]
 
 @auth.route('/ss', methods=['POST', 'GET'])
-@auth.route('/ss/<string:mobile>', methods=['POST', 'GET'])
-def login_ss(mobile=""):
+def login_ss():
     if 'version' in request.args:
         profile = json.loads(request.args['profile'])
 
@@ -122,14 +135,14 @@ def login_ss(mobile=""):
                 log.error('Could not save user')
                 return redirect(url_for('auth.login'))
             # Ok, continue
-            if mobile == "m":
+            user_agent_str = request.headers.get('User-Agent')
+            user_agent = parse(user_agent_str)
+            if user_agent.is_mobile:
                 return redirect(url_for('register.m_show'))
             else:
                 return render_template('base.html', default_view=True)
     else:
         redirect_uri = f'{flask_app.config["SMARTSCHOOL_OUATH_REDIRECT_URI"]}/ss'
-        if mobile == "m":
-            redirect_uri += "/m"
         return redirect(f'{flask_app.config["SMARTSCHOOL_OAUTH_SERVER"]}?app_uri={redirect_uri}')
 
 @auth.route('/m/<string:user_token>', methods=['POST', 'GET'])
@@ -143,8 +156,3 @@ def login_m_token(user_token):
         return "geen toegang"
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {str(e)}')
-
-@auth.route('/m', methods=['GET'])
-def login_m():
-    return render_template('m/login.html')
-

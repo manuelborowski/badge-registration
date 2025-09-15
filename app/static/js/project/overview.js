@@ -6,7 +6,6 @@ import {add_to_popup_body, create_checkbox_element, create_input_element, formio
 import {add_extra_filters, create_filters, enable_filters, disable_filters, subscribe_reset_button} from "../base/filters.js";
 import {Rfid} from "./rfidusb.js";
 import {check_server_alive, get_my_ip, timed_popup} from "../base/misc.js";
-import {setting_form} from "../templates/settings.js"
 
 let location_element, date_element, canvas_element, photo_size_element, view_layout_element, sort_on_element,
     sms_specific_element, search_text_element;
@@ -466,36 +465,6 @@ const __reset_button_cb = filters => {
     }
 }
 
-const __setting_form = async () => {
-    bootbox.dialog({
-        title: "Instellingen",
-        message: setting_form,
-        buttons: {
-            cancel: {
-                label: "Sluiten", className: "btn-secondary", callback: async () => {
-                }
-            },
-        },
-        onShown: async () => {
-            const new_login_url_btn = document.getElementById("new-login-url-btn");
-            const new_login_url_chk = document.getElementById("new-login-url-chk");
-
-            // generate new QR code
-            new_login_url_btn.addEventListener("click", async (e) => {
-                e.preventDefault();
-                const ret = await fetch(Flask.url_for('user.qr', {new: true}));
-                const resp = await ret.json();
-                if (resp) document.getElementById("login-url-img").src = `data:image/png;base64,${resp.qr}`;
-            });
-            new_login_url_chk.addEventListener("click", e => new_login_url_btn.disabled = !e.target.checked);
-            const ret = await fetch(Flask.url_for('user.qr', {new: false}));
-            const resp = await ret.json();
-            if (resp) document.getElementById("login-url-img").src = `data:image/png;base64,${resp.qr}`;
-        },
-    });
-}
-
-
 const __counters_to_zero = () => {
     if ("reset_counters" in locations[current_location] && locations[current_location].reset_counters) {
         const location_label = location_element.options[location_element.selectedIndex].innerHTML;
@@ -512,7 +481,6 @@ const __counters_to_zero = () => {
 
 const extra_menu = [
     [() => __counters_to_zero(), "Tellers op nul zetten", 3, "overview.show"],
-    [() => __setting_form(), "Instellingen", 3, "overview.show"],
 ];
 
 append_to_extra_menu(extra_menu)

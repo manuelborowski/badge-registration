@@ -156,8 +156,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.90: added rfc-via-mobile-chrome, first steps
 # 0.91: mobile scanner, implemented test location, local storage of scans, button to clear list
 # 0.92: smartphone scanner, deprecate individual token, user must log in via smartschool
+# 0.93: improve mobile login
 
-version = "0.92"
+version = "0.93"
 
 db = SQLAlchemy()
 login_manager = LoginManager()

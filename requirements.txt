@@ -100,6 +100,7 @@ prompt_toolkit==3.0.48
 propcache==0.2.0
 psycopg2-binary==2.9.9
 pure_eval==0.2.3
+pyaml==25.7.0
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 pycparser==2.22
@@ -112,6 +113,7 @@ python-editor==1.0.4
 python-engineio==4.10.1
 python-socketio==5.11.4
 pytz==2024.2
+pywin32==308; platform_system=="Windows"
 PyYAML==6.0.2
 pyzmq==26.2.0
 qrcode==8.2
@@ -137,7 +139,10 @@ traitlets==5.14.3
 typing_extensions==4.12.2
 tzdata==2024.2
 tzlocal==5.2
+ua-parser==1.0.1
+ua-parser-builtins==0.18.0.post1
 urllib3==2.2.3
+user-agents==2.2.0
 wcwidth==0.2.13
 webencodings==0.5.1
 Werkzeug==3.0.4
