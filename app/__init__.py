@@ -157,8 +157,9 @@ flask_app.config.from_pyfile('config.py')
 # 0.91: mobile scanner, implemented test location, local storage of scans, button to clear list
 # 0.92: smartphone scanner, deprecate individual token, user must log in via smartschool
 # 0.93: improve mobile login
+# 0.94: small update
 
-version = "0.93"
+version = "0.94"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
