@@ -222,6 +222,7 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return [{"to": "ip", 'type': 'alert-popup', "data": f"Fout, {str(e)}"}]
 
+
 def registration_delete(ids):
     try:
         mregistration.registration_delete_m(ids)
@@ -297,16 +298,15 @@ def registration_get(filters):
                     "leerlingnummer": staff.code, "naam": staff.naam, "voornaam": staff.voornaam, "klascode": staff.code, "timestamp": str(registration.time_in), "id": registration.id,
                     "photo": "", "time_out": str(registration.time_out) if registration.time_out else ""
                 }
-                if staff.code in staff_cache:
-                    item.update({"startuur": staff_cache[staff.code]["startuur"], "einduur": staff_cache[staff.code]["einduur"]})
-                else:
+                weekday = registration.time_in.weekday()
+                key = f"{staff.code}{weekday}"
+                if key not in staff_cache:
                     slices = staff.extra.split(",")
                     if len(slices) == 10:
-                        weekday = registration.time_in.weekday()
-                        staff_cache[staff.code] = {"startuur": slices[weekday * 2], "einduur": slices[weekday * 2 + 1]}
+                        staff_cache[key] = {"startuur": slices[weekday * 2], "einduur": slices[weekday * 2 + 1]}
                     else:
-                        staff_cache[staff.code] = {"startuur": "", "einduur": ""}
-                    item.update({"startuur": staff_cache[staff.code]["startuur"], "einduur": staff_cache[staff.code]["einduur"]})
+                        staff_cache[key] = {"startuur": "", "einduur": ""}
+                item.update({"startuur": staff_cache[key]["startuur"], "einduur": staff_cache[key]["einduur"]})
 
                 ret["data"].append(item)
         else:
@@ -632,14 +632,79 @@ def __send_ss_message(registration, location, student, force=False):
 
 def registration_export(location_key, start_date, stop_date):
     try:
+        def __create_line(header, line, cache):
+            for staff in header:
+                if staff in cache:
+                    seconds = cache[staff]
+                    if seconds < 0:
+                        seconds *= -1
+                        sign = "-"
+                    else:
+                        sign = ""
+                    hours = int(seconds / 3600)
+                    minutes = int((seconds - hours * 3600) / 60)
+                    seconds = seconds - hours * 3600 - minutes * 60
+                    time_string = f"{minutes:02d}:{seconds:02d}"
+                    if hours > 0:
+                        time_string = f"{hours:02d}:{time_string}"
+                    line.append(f"{sign}{time_string}")
+                else:
+                    line.append("")
+            return line
+
         location_settings = msettings.get_configuration_setting("location-profiles")
         location = location_settings[location_key]
         registrations_to_export = []
+        header = None
         if "table" in location and location["table"] == "staff":
+            stop_date = stop_date.replace("00:00:00", "21:59:59")
             registrations = mregistration.registration_staff_get(location_key, time_low=start_date, time_high=stop_date)
+            start_eind_cache = {}
+            rows = []
+            header = []
+            current_day_month = None
+            row_cache = {}
+            running_total = {}
             for (registration, staff) in registrations:
-                item = {"naam": staff.naam, "voornaam": staff.voornaam, "code": staff.code, "tijd-in": str(registration.time_in), "tijd-uit": str(registration.time_out) if registration.time_out else ""}
-                registrations_to_export.append(item)
+                registration_day_month = registration.time_in.month * 100 + registration.time_in.day
+                if registration_day_month != current_day_month:
+                    if current_day_month:
+                        rows.append({"datum": f"{current_day_month % 100}/{int(current_day_month / 100)}", "staff": row_cache})
+                        row_cache = {}
+                    current_day_month = registration_day_month
+                if staff.code not in start_eind_cache:
+                    slices = staff.extra.split(",")
+                    start_eind_cache[staff.code] = []
+                    if len(slices) == 10:
+                        for weekday in range(5):
+                            hour, minute = slices[weekday * 2].split(":")
+                            start_eind_cache[staff.code].append(int(hour) * 3600 + int(minute) * 60)
+                            hour, minute = slices[weekday * 2 + 1].split(":")
+                            start_eind_cache[staff.code].append(int(hour) * 3600 + int(minute) * 60)
+                    else:
+                        log.error(f'{sys._getframe().f_code.co_name}: error, staff {staff.code} start, einduur not correctly configured')
+                        return {"data": f"Fout: staff {staff.code} start, einduur niet correct geconfigureerd"}
+                key = f"{staff.naam} {staff.voornaam} {staff.code}"
+                if key not in header: header.append(key)
+                weekday = registration.time_in.weekday()
+                if registration.time_out:
+                    time_in = registration.time_in.hour * 3600 + registration.time_in.minute * 60 + registration.time_in.second
+                    time_out = registration.time_out.hour * 3600 + registration.time_out.minute * 60 + registration.time_out.second
+                    row_cache[key] = start_eind_cache[staff.code][weekday * 2] - time_in + time_out - start_eind_cache[staff.code][weekday * 2 + 1]
+                    if key in running_total:
+                        running_total[key] += row_cache[key]
+                    else:
+                        running_total[key] = row_cache[key]
+            rows.append({"datum": f"{current_day_month % 100}/{int(current_day_month / 100)}", "staff": row_cache})
+            registrations_to_export = []
+            for row in rows:
+                line = [row["datum"]]
+                line = __create_line(header, line, row["staff"])
+                registrations_to_export.append(line)
+            line = ["totaal"]
+            line = __create_line(header, line, running_total)
+            registrations_to_export.append(line)
+            header = ["datum"] + header
         else:
             registrations = mregistration.registration_student_photo_get(location_key, time_low=start_date, time_high=stop_date)
             for (registration, student) in registrations:
@@ -651,7 +716,10 @@ def registration_export(location_key, start_date, stop_date):
                     item.update({"sms-gestuurd": "JA" if registration.flag2 else "NEE"})
                 registrations_to_export.append(item)
 
-        df = pd.DataFrame(registrations_to_export)
+        if header:
+            df = pd.DataFrame(registrations_to_export, columns=header)
+        else:
+            df = pd.DataFrame(registrations_to_export)
         out = io.BytesIO()
         excel_writer = pd.ExcelWriter(out, engine="xlsxwriter")
         df.to_excel(excel_writer, index=False)
@@ -664,3 +732,5 @@ def registration_export(location_key, start_date, stop_date):
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"data": f"Fout: {e}"}
+
+
