@@ -18,7 +18,6 @@ from app import MyLogFilter, top_log_handle
 log = logging.getLogger(f"{top_log_handle}.{__name__}")
 log.addFilter(MyLogFilter())
 
-
 # depending on the "to" parameter, return values are sent to:
 # ip: only to the client/terminal the registration came from.  Used for alerts, messages, ... due to registering
 # location: all the clients/terminals that display/are set to said location
@@ -222,7 +221,6 @@ def registration_add(location_key, timestamp=None, leerlingnummer=None, rfid=Non
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return [{"to": "ip", 'type': 'alert-popup', "data": f"Fout, {str(e)}"}]
 
-
 def registration_delete(ids):
     try:
         mregistration.registration_delete_m(ids)
@@ -236,7 +234,6 @@ def registration_delete(ids):
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": f"Fout, {str(e)}"}
 
-
 def registration_zero_counters(location):
     try:
         registrations = mregistration.registration_get_m(("location", "=", location))
@@ -249,13 +246,11 @@ def registration_zero_counters(location):
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": f"Fout, {str(e)}"}
 
-
 overview_table_extra_headers = {
     "sms": ["SMS", "Opmerking"],
     "cellphone": ["Bericht", "Aantal", ],
     "toilet": ["Aantal", ],
 }
-
 
 # filters priority (high to low)
 # search
@@ -288,7 +283,7 @@ def registration_get(filters):
                 time_low = datetime.datetime.now() - datetime.timedelta(days=delta)
         if "table" in location and location["table"] == "staff":
             # Staff specific data
-            ret.update({"headers": ["Naam", "Code", "Tijd in", "Startuur", "Verschil", "Tijd uit", "Einduur", "Verschil", "Dagverschil"]})
+            ret.update({"headers": ["Naam", "Code", "Tijd in", "Startuur", "Verschil", "Tijd uit", "Einduur", "Verschil", "Dagverschil", "Opmerking"]})
             registrations = mregistration.registration_staff_get(location_key, search=search, time_low=time_low, time_high=time_high)
             staff_cache = {}
             for tuple in registrations:
@@ -296,7 +291,7 @@ def registration_get(filters):
                 staff = tuple[1]
                 item = {
                     "leerlingnummer": staff.code, "naam": staff.naam, "voornaam": staff.voornaam, "klascode": staff.code, "timestamp": str(registration.time_in), "id": registration.id,
-                    "photo": "", "time_out": str(registration.time_out) if registration.time_out else ""
+                    "photo": "", "time_out": str(registration.time_out) if registration.time_out else "", "info": registration.info
                 }
                 weekday = registration.time_in.weekday()
                 key = f"{staff.code}{weekday}"
@@ -353,7 +348,6 @@ def registration_get(filters):
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {'status': False, 'message': str(e)}
 
-
 def clear_all_registrations(location):
     try:
         now = datetime.datetime.now()
@@ -365,7 +359,6 @@ def clear_all_registrations(location):
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return False
-
 
 def api_schoolrekening_get(options):
     try:
@@ -395,7 +388,6 @@ def api_schoolrekening_get(options):
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}
 
-
 def api_registration_update(location_key, ids, fields):
     try:
         location_settings = msettings.get_configuration_setting("location-profiles")
@@ -418,12 +410,13 @@ def api_registration_update(location_key, ids, fields):
                 if item:
                     item["id"] = id
                     data.append(item)
-            mregistration.registration_update(registration, new_fields)
+                mregistration.registration_update(registration, new_fields)
+            else:
+                mregistration.registration_update(registration, fields)
         return {"status": True, "data": data}
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}
-
 
 def api_registration_send_message(ids, location_key):
     try:
@@ -448,7 +441,6 @@ def api_registration_send_message(ids, location_key):
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}
 
-
 def api_registration_delete(ids):
     try:
         ret = registration_delete(ids)
@@ -456,7 +448,6 @@ def api_registration_delete(ids):
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}
-
 
 def api_schoolrekening_artikels_get():
     try:
@@ -466,11 +457,9 @@ def api_schoolrekening_artikels_get():
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return {"status": False, "data": str(e)}
 
-
 def api_schoolrekening_info():
     info_page = msettings.get_configuration_setting("api-schoolrekening-info")
     return info_page
-
 
 # sync registrations from remote (client) into local (server-database).
 def sync_registrations_server(data):
@@ -515,7 +504,6 @@ def sync_registrations_server(data):
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return 0, 0
 
-
 # get registrations from local client database and send to remote server
 def sync_registrations_client():
     try:
@@ -532,7 +520,6 @@ def sync_registrations_client():
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return 0, 0
-
 
 def __send_sms(registration, location, student, force=False):
     try:
@@ -562,7 +549,6 @@ def __send_sms(registration, location, student, force=False):
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return False
-
 
 def __send_ss_message(registration, location, student, force=False):
     try:
@@ -628,7 +614,6 @@ def __send_ss_message(registration, location, student, force=False):
     except Exception as e:
         log.error(f'{sys._getframe().f_code.co_name}: {e}')
         return False
-
 
 def registration_export(location_key, start_date, stop_date):
     try:

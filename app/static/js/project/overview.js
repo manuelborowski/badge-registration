@@ -175,31 +175,28 @@ const __socketio_update_list = (type, data) => {
                         } else if (locations[current_location].type === "toilet") {
                             registration_container.innerHTML += `<td>${item.sequence_ctr}</td>`;
                         } else if (locations[current_location].type === "timeregistration") {
-
                             const time_delta_timestamp_in = Date.parse(item.timestamp.split(" ")[0] + ` ${item.startuur}:00`) - Date.parse(item.timestamp);
                             const time_delta_in = new Date(Math.abs(time_delta_timestamp_in));
                             const delta_string_in = `${time_delta_timestamp_in < 0 ? "-" : "&nbsp;"}${(time_delta_in.getHours() - 1).toString().padStart(2, "0")}:${time_delta_in.getMinutes().toString().padStart(2, "0")}:${time_delta_in.getSeconds().toString().padStart(2, "0")}`
-
                             let delta_string_out = "";
                             let delta_string = "";
                             if (item.time_out !== "") {
                                 const time_delta_timestamp_out = Date.parse(item.time_out) - Date.parse(item.timestamp.split(" ")[0] + ` ${item.einduur}:00`);
                                 const time_delta_out = new Date(Math.abs(time_delta_timestamp_out));
                                 delta_string_out = `${time_delta_timestamp_out < 0 ? "-" : "&nbsp;"}${(time_delta_out.getHours() - 1).toString().padStart(2, "0")}:${time_delta_out.getMinutes().toString().padStart(2, "0")}:${time_delta_out.getSeconds().toString().padStart(2, "0")}`
-
                                 const time_delta_timestamp = time_delta_timestamp_in + time_delta_timestamp_out;
                                 const time_delta = new Date(Math.abs(time_delta_timestamp));
                                 delta_string = `${time_delta_timestamp < 0 ? "-" : "&nbsp;"}${(time_delta.getHours() - 1).toString().padStart(2, "0")}:${time_delta.getMinutes().toString().padStart(2, "0")}:${time_delta.getSeconds().toString().padStart(2, "0")}`
                             }
-
-
                             registration_container.innerHTML = `
                             <td><input class="item-select" type="checkbox" ""}></td>
                             <td data-col="name">${item.naam} ${item.voornaam}</td>
                             <td>${item.klascode}</td>
                             <td>${item.timestamp}</td><td>${item.startuur}</td><td>${delta_string_in}</td>
                             <td data-col="time-out">${item.time_out}</td><td>${item.einduur}</td><td>${delta_string_out}</td>
-                            <td>${delta_string}</td>`
+                            <td>${delta_string}</td>
+                            <td class="edit-input">${item.info}</td>
+                            `
                         }
                     }
                     registration_container.classList.add("S" + item.leerlingnummer);
@@ -222,6 +219,26 @@ const __socketio_update_list = (type, data) => {
                     if (locations[current_location].type === "sms") {
                         if (item.auto_remark) __enter_remark([item.id]);
                     }
+                    registration_container.querySelectorAll(".edit-input").forEach(td => {
+                        td.addEventListener("click", e => {
+                            const input = document.createElement("input");
+                            input.type = "text";
+                            input.value = e.target.innerHTML;
+                            e.target.innerHTML = "";
+                            e.target.appendChild(input);
+                            input.focus();
+                            e.target.addEventListener("change", async e => {
+                                const td = e.target.closest("td");
+                                const ids = [td.closest("tr").dataset.id];
+                                const ret = await fetch(Flask.url_for('api.registration_update'), {
+                                    headers: {'x-api-key': api_key,}, method: 'POST', body: JSON.stringify({ids, location_key: current_location, fields: {info: e.target.value}}),
+                                });
+                                const status = await ret.json();
+                                if (!status.status) bootbox.alert(status.data);
+                                td.innerHTML = e.target.value;
+                            })
+                        });
+                    });
                 }
             }
         } else if (data.action === "delete") {

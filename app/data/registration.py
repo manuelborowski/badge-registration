@@ -2,7 +2,7 @@ import sys, json
 
 import app.data.models
 from app import log, db
-from sqlalchemy import text, func, desc, or_
+from sqlalchemy import UnicodeText, desc, or_
 from sqlalchemy_serializer import SerializerMixin
 from app.data.student import Student
 from app.data.staff import Staff
@@ -33,6 +33,7 @@ class Registration(db.Model, SerializerMixin):
     flag3 = db.Column(db.Boolean, default=False)
     flag4 = db.Column(db.Boolean, default=False)
     flag5 = db.Column(db.Boolean, default=False)
+    info = db.Column(UnicodeText, default="")
 
 
 def get_columns():
