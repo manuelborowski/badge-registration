@@ -159,8 +159,8 @@ flask_app.config.from_pyfile('config.py')
 # 0.93: improve mobile login
 # 0.94: small update
 # 0.95: bugfix timeregistration.  Updated export timeregistration to give an overview.
-
-version = "0.95"
+# 0.96: timeregistration, add info column
+version = "0.96"
 
 db = SQLAlchemy()
 login_manager = LoginManager()
